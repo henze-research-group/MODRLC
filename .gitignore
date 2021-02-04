@@ -1,3 +1,6 @@
+.idea
+.python-version
+examples/python/som3_mpc1/*
 *.pyc
 *.txt
 !worker/requirements/*.txt

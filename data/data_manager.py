@@ -374,7 +374,7 @@ class Data_Manager(object):
         
         # Load the test case data
         for f in files:
-            df = pd.read_csv(z_fmu.open(f))
+            df = pd.read_csv(z_fmu.open(f), comment='#')
             cols = df.keys()
             if 'time' in cols:
                 for col in cols.drop('time'):

@@ -28,7 +28,7 @@ copy_testcase_to_jm:
 	make copy_to_jm ARGS=testcases/${TESTCASE}
 	docker cp ../testcase.py ${IMG_NAME}:/usr/local/testing/${TESTCASE}
 	make exec_jm ARGS="touch ${TESTCASE}/__init__.py"
-	
+
 copy_from_jm:
 	docker cp ${IMG_NAME}:/usr/local/testing/${ARGS} ../${ARGS}
 
@@ -48,7 +48,7 @@ compile_testcase_model:
 	make copy_to_jm ARGS=parsing
 	make copy_to_jm ARGS=data
 	make copy_to_jm ARGS=testcases/${TESTCASE}
-	make exec_jm ARGS="python set_library_versions.py ${TESTCASE} && cd ${TESTCASE}/models && python compile_fmu.py"
+	make exec_jm ARGS="ls -la && python set_library_versions.py ${TESTCASE} && cd ${TESTCASE}/models && python compile_fmu.py"
 	make copy_testcase_from_jm ARGS=${TESTCASE}/models/wrapped.fmu
 	make copy_testcase_from_jm ARGS=${TESTCASE}/models/wrapped.mo
 	make stop_jm
@@ -86,7 +86,7 @@ test_testcase1:
 
 test_testcase2:
 # Compile testcase model
-	make compile_testcase_model TESTCASE=testcase2 
+	make compile_testcase_model TESTCASE=testcase2
 # Build testcase image
 	cd .. && make build TESTCASE=testcase2
 # Deploy testcase container
@@ -101,7 +101,7 @@ test_testcase2:
 	cd .. && make stop TESTCASE=testcase2
 # Remove testcase image
 	cd ../examples/julia && make remove-image Script=testcase2
-	
+
 test_bestest_air:
 # Compile testcase model
 	make compile_testcase_model TESTCASE=bestest_air
@@ -128,7 +128,7 @@ test_testcase3:
 	cd .. && python testing/test_testcase3.py
 # Stop testcase container
 	cd .. && make stop TESTCASE=testcase3
-	
+
 test_bestest_hydronic:
 # Compile testcase model
 	make compile_testcase_model TESTCASE=bestest_hydronic
@@ -184,7 +184,7 @@ test_data:
 	docker cp ${IMG_NAME}:/usr/local/testing/test_data.log ./test_data.log
 # Stop jm docker container
 	make stop_jm
-	
+
 test_forecast:
 # Compile testcase model
 	make compile_testcase_model TESTCASE=testcase2
@@ -203,7 +203,7 @@ test_forecast:
 	docker cp ${IMG_NAME}:/usr/local/testing/test_forecast.log ./test_forecast.log
 # Stop jm docker container
 	make stop_jm
-	
+
 test_kpis:
 # Compile testcase model
 	make compile_testcase_model TESTCASE=testcase2
