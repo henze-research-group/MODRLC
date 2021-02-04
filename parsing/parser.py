@@ -66,8 +66,6 @@ def parse_instances(model_path, file_name):
             print(var, instance)
             label = 'Overwrite'
             unit = fmu.get_variable_unit(instance+'.u')
-            # TODO: This may be fixed
-            # description = "WhyHastThouFailedMe" #fmu.get(instance+'.description')[0] cannot parse the String
             description = fmu.get(instance+'.description')[0]
             mini = fmu.get_variable_min(instance+'.u')
             maxi = fmu.get_variable_max(instance+'.u')
