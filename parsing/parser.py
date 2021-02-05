@@ -44,7 +44,9 @@ def parse_instances(model_path, file_name):
     # Compile fmu
     fmu_path = compile_fmu(model_path, file_name)
     # Load fmu
+    print(fmu_path)
     fmu = load_fmu(fmu_path)
+    print(fmu)
     # Check version
     if fmu.get_version() != '2.0':
         raise ValueError('FMU version must be 2.0')
@@ -60,13 +62,15 @@ def parse_instances(model_path, file_name):
         instance = '.'.join(var.split('.')[:-1])
         # Overwrite
         if 'boptestOverwrite' in var:
+            print(var, instance)
             label = 'Overwrite'
             unit = fmu.get_variable_unit(instance+'.u')
-            description = fmu.get(instance+'.description')[0]
+            description = "WhyHastThouFailedMe" #fmu.get(instance+'.description')[0] cannot parse the String
             mini = fmu.get_variable_min(instance+'.u')
             maxi = fmu.get_variable_max(instance+'.u')
         # Read
         elif 'boptestRead' in var:
+            print(var, instance)
             label = 'Read'
             unit = fmu.get_variable_unit(instance+'.y')
             description = fmu.get(instance+'.description')[0]
@@ -74,6 +78,7 @@ def parse_instances(model_path, file_name):
             maxi = None
         # KPI
         elif 'KPIs' in var:
+            print(var, instance)
             label = 'kpi'
         else:
             continue
@@ -84,7 +89,11 @@ def parse_instances(model_path, file_name):
             instances[label][instance]['Minimum'] = mini
             instances[label][instance]['Maximum'] = maxi
         else:
-            signal_type = fmu.get_variable_declared_type(var).items[fmu.get(var)[0]][0]
+            print("Debug : {}".format(var))
+            print(fmu.get_variable_declared_type(var))
+            print(fmu.get_variable_declared_type(var).items)
+            print(fmu.get(var))
+            signal_type = fmu.get_variable_declared_type(var).items[fmu.get(var)[0]][0] #fmu.get(var) is giving errors (Failed to get the Integer values)
             # Split certain signal types for multi-zone
             if signal_type in ['AirZoneTemperature',
                                'RadiativeZoneTemperature',

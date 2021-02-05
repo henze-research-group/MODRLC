@@ -1,0 +1,7 @@
+*.so filter=lfs diff=lfs merge=lfs -text
+*.epw filter=lfs diff=lfs merge=lfs -text
+*.idf filter=lfs diff=lfs merge=lfs -text
+*.mos filter=lfs diff=lfs merge=lfs -text
+*.idd filter=lfs diff=lfs merge=lfs -text
+spawn filter=lfs diff=lfs merge=lfs -text
+*.fmu filter=lfs diff=lfs merge=lfs -text
