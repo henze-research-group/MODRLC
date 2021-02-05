@@ -1,5 +1,5 @@
 within ;
-model wrapped "Wrapped model"
+model wrapped "Som3 with controller cascade"
 model SOM3 "Spawn replica of the Reference Small Office Building"
 
   // User input //
@@ -8,7 +8,7 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
 
   //Parameters//
 
-  package Medium = Buildings.Media.Air "Moist Air"; // Moist air
+  package Medium = Buildings.Media.Air(T_default=288.75) "Moist Air"; // Moist air
 
   //Spawn//
 
@@ -20,7 +20,7 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
     usePrecompiledFMU=false,
     verbosity=Buildings.ThermalZones.EnergyPlus.Types.Verbosity.Verbose,
     showWeatherData=true,
-    computeWetBulbTemperature=true,
+      computeWetBulbTemperature=false,
     printUnits=true,
     generatePortableFMU=true)
     annotation (Placement(transformation(extent={{-274,72},{-254,92}})));
@@ -51,48 +51,31 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
         //Parameters //
         //Schedule//
 
-        Boolean isOcc( start= false) "Schedule: occupied or non-occupied";
         Real day "Day of the week (1: Mon, 7:Sun)";
         Real hou "Hour of the day (24-hour format)";
-        parameter Real staOcc = 8 "Start of day (24-hour)";
-        parameter Real stoOcc = 18 "End of day (24-hour)";    // staOcc and stoOcc are currently fixed (the RefBldgSmallOffice case has a simple schedule)
-
+        parameter Real staOcc = 5 "Start of day (24-hour)";
+        parameter Real stoOcc = 21 "End of day (24-hour)";    // staOcc and stoOcc are currently fixed (the RefBldgSmallOffice case has a simple schedule)
+        parameter Real stoOccSat = 17 "End of day (24-hour)";
           //Setpoints//
 
         parameter Real heaOccSet = 273.15 + 21 "Heating setpoint for occupied mode";
         parameter Real heaNonOccSet = 273.15 + 15.6 "Heating setpoint for non occupied mode";
-        Real heaSet( start= 273.15 + 15.6) "Current heating setpoint";
-        Real ploHeaSet(  start= 273.15 + 15.6) "plotting utility";
-        Boolean neeHea( start= false) "True if the zone needs heating";
         parameter Real maxRH = 0.5 "Relative Humidity setpoint";
         parameter Real minOACCOpeTemp = 273.15 "Minimum outside air temperature for cooling coil operation";
 
         parameter Real cooOccSet = 273.15 + 24 "Cooling setpoint for occupied mode";
         parameter Real cooNonOccSet = 273.15 + 26.7 "Cooling setpoint for non occupied mode";
-        Real cooSet( start= 273.15 + 26.7) "Current cooling setpoint";
-        Real ploCooSet(  start= 273.15 + 26.7) "plotting utility";
-        Boolean neeCoo( start= false);
-        Real setpoint( start= 273.15 + 21) "Current setpoint";
 
         parameter Real fanOccSet = 0.44 "Fan volumetric flow rate when operating (m3/s)";
         parameter Real fanMinVFR = 0.01 "Fan minimum volumetic flow rate (m3/s)";
-        Real fanSet( start= fanMinVFR) "Fan setpoint (m3/s)";
 
         parameter Real damSetOcc = 0.3 "Mixing box OA volumetric flow rate - occupied mode (m3/s)";
         parameter Real damSetNonOcc = 0.08 "Minimum OA volumetric flow rate (m3/s)";
         parameter Real minOA = 0.08 "Minimum OA fraction (m3/s)";
-        Real damSet( start= 0.08) "OA fraction Setpoint (m3/s)";
 
           //Controls//
 
-        parameter Real heaK = 0.5 "Proportional term for the heater command";
-        parameter Real heaTi = 200 "Derivative term for the heater command";
 
-        parameter Real fanK = 0.1 "Proportional term for the fan command";
-        parameter Real fanTi = 60 "Derivative term for the fan command";
-
-        parameter Real damK = 0.1 "Proportional term for the mixing box command";
-        parameter Real damTi = 100 "Derivative term for the mixing box command";
 
         //parameter Real timShoCyc = 600 "Time constant for short cycling control (seconds)";
         //Boolean timRes "timer reset";
@@ -100,194 +83,424 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
         // Inputs/Outputs//
 
         Modelica.Blocks.Interfaces.RealInput senTemRet annotation (Placement(
-              transformation(extent={{-442,-4},{-402,36}}), iconTransformation(
+              transformation(extent={{-660,268},{-620,308}}),
+                                                            iconTransformation(
               extent={{-20,-20},{20,20}},
               rotation=0,
-              origin={-128,28})));
+              origin={-628,78})));
         Modelica.Blocks.Interfaces.RealOutput outDamSet annotation (Placement(
-              transformation(extent={{154,34},{192,72}}), iconTransformation(
+              transformation(extent={{662,124},{700,162}}),
+                                                          iconTransformation(
               extent={{-19,-19},{19,19}},
               rotation=0,
-              origin={129,-69})));
+              origin={713,-41})));
         Modelica.Blocks.Interfaces.RealOutput outHeaSet annotation (Placement(
-              transformation(extent={{154,-2},{192,36}}), iconTransformation(
+              transformation(extent={{660,278},{698,316}}),
+                                                          iconTransformation(
               extent={{-19,-19},{19,19}},
               rotation=0,
-              origin={129,83})));
+              origin={713,111})));
 
         // Control components //
-
-        Buildings.Controls.Continuous.LimPID heaPID(
-          controllerType=Modelica.Blocks.Types.SimpleController.PI,
-          k=heaK,
-          Ti=heaTi,
-          yMin = 0,
-          yMax = 1)
-          "P, PI or PID control of the heater command. As per DOE Ref Small Office Building"
-          annotation (Placement(transformation(extent={{-378,248},{-358,268}})));
-
-        Buildings.Controls.Continuous.LimPID fanPID(
-          controllerType=Modelica.Blocks.Types.SimpleController.PI,
-          k=fanK,
-          Ti=fanTi,
-          reverseActing=true)
-          "P, PI or PID control of the fan command. Used to maintain constant V with a MFR-controlled fan model"
-          annotation (Placement(transformation(extent={{-302,262},{-282,282}})));
-
-        Buildings.Controls.Continuous.LimPID damPID(
-          controllerType=Modelica.Blocks.Types.SimpleController.PI,
-          k=damK,
-          Ti=damTi,
-          yMin = 0,
-          yMax = 1)
-          "P, PI or PID control of the mixing box command."
-          annotation (Placement(transformation(extent={{-360,174},{-340,194}})));
 
         //Buildings.Controls.OBC.CDL.Logical.TimerAccumulating timerShortCycling(t=timShoCyc)
         //  annotation (Placement(transformation(extent={{32,4},{52,24}})));
 
         Modelica.Blocks.Interfaces.RealOutput outCCSet annotation (Placement(
-              transformation(extent={{154,-42},{192,-4}}),iconTransformation(
-              extent={{-19,-19},{19,19}},
-              rotation=0,
-              origin={129,35})));
-        Modelica.Blocks.Interfaces.RealInput senFanVFR annotation (Placement(
-              transformation(extent={{-442,-40},{-402,0}}),   iconTransformation(
-              extent={{-20,-20},{20,20}},
-              rotation=0,
-              origin={-128,-28})));
-        Modelica.Blocks.Interfaces.RealOutput outFanSet
-                                                       annotation (Placement(
-              transformation(extent={{154,-78},{192,-40}}),
+              transformation(extent={{660,174},{698,212}}),
                                                           iconTransformation(
               extent={{-19,-19},{19,19}},
               rotation=0,
-              origin={129,-13})));
+              origin={713,63})));
+        Modelica.Blocks.Interfaces.RealInput senFanVFR annotation (Placement(
+              transformation(extent={{-652,-260},{-612,-220}}),
+                                                              iconTransformation(
+              extent={{-20,-20},{20,20}},
+              rotation=0,
+              origin={-630,-46})));
+        Modelica.Blocks.Interfaces.RealOutput outFanSet
+                                                       annotation (Placement(
+              transformation(extent={{660,232},{698,270}}),
+                                                          iconTransformation(
+              extent={{-19,-19},{19,19}},
+              rotation=0,
+              origin={713,15})));
         Modelica.Blocks.Interfaces.RealInput senDamVFR annotation (Placement(
-              transformation(extent={{-440,-72},{-400,-32}}),  iconTransformation(
+              transformation(extent={{-836,36},{-796,76}}),    iconTransformation(
               extent={{-20,-20},{20,20}},
               rotation=0,
-              origin={-128,-78})));
+              origin={-628,-166})));
         Modelica.Blocks.Interfaces.RealInput senTemOut annotation (Placement(
-              transformation(extent={{-442,28},{-402,68}}), iconTransformation(
+              transformation(extent={{-662,302},{-622,342}}),
+                                                            iconTransformation(
               extent={{-20,-20},{20,20}},
               rotation=0,
-              origin={-128,80})));
+              origin={-634,306})));
 
-        Modelica.Blocks.Sources.RealExpression rea1(y=heaSet)
-          annotation (Placement(transformation(extent={{-418,248},{-398,268}})));
-        Modelica.Blocks.Sources.RealExpression rea2(y=senTemRet)
-          annotation (Placement(transformation(extent={{-406,228},{-386,248}})));
-        Modelica.Blocks.Sources.RealExpression rea3(y=fanSet)
-          annotation (Placement(transformation(extent={{-334,262},{-314,282}})));
-        Modelica.Blocks.Sources.RealExpression rea4(y=senFanVFR)
-          annotation (Placement(transformation(extent={{-314,236},{-294,256}})));
-        Modelica.Blocks.Sources.RealExpression rea5(y=damSet)
-          annotation (Placement(transformation(extent={{-390,174},{-370,194}})));
-        Modelica.Blocks.Sources.RealExpression rea6(y=senDamVFR)
-          annotation (Placement(transformation(extent={{-372,152},{-352,172}})));
         //Modelica.Blocks.Sources.BooleanExpression boo1(y=timRes)
         //  annotation (Placement(transformation(extent={{-80,4},{-60,24}})));
 
         Modelica.Blocks.Interfaces.RealInput senHRRet annotation (Placement(
-              transformation(extent={{-440,-104},{-400,-64}}),
+              transformation(extent={{-836,4},{-796,44}}),
               iconTransformation(
               extent={{-20,-20},{20,20}},
               rotation=0,
-              origin={-128,-128})));
+              origin={-630,-274})));
+        Modelica.Blocks.Interfaces.RealInput senTemSup "\"Supply air temperature\""
+          annotation (Placement(transformation(extent={{-840,138},{-800,178}}),
+              iconTransformation(
+              extent={{-20,-20},{20,20}},
+              rotation=0,
+              origin={-628,196})));
+        Modelica.Blocks.Sources.RealExpression houIn(y=hou) "hour" annotation (
+            Placement(transformation(extent={{-582,256},{-562,276}})));
+        Modelica.Blocks.Sources.RealExpression dayIn(y=day) "day" annotation (
+            Placement(transformation(extent={{-582,242},{-562,262}})));
+        Modelica.Blocks.Sources.RealExpression coolingSetpointOccupied(y=
+              cooOccSet) annotation (Placement(transformation(extent={{-282,200},{-262,
+                  220}})));
+        Modelica.Blocks.Sources.RealExpression coolingSetpointNonOccupied(y=
+              cooNonOccSet) annotation (Placement(transformation(extent={{-282,184},{-262,
+                  204}})));
+        Modelica.Blocks.Sources.RealExpression fanSetpointOccupied(y=fanOccSet)
+          annotation (Placement(transformation(extent={{-282,162},{-262,182}})));
+        Modelica.Blocks.Sources.RealExpression fanSetpointNonOccupied(y=
+              fanMinVFR) annotation (Placement(transformation(extent={{-282,146},{-262,
+                  166}})));
+        Modelica.Blocks.Sources.RealExpression occStart(y=staOcc) annotation (
+            Placement(transformation(extent={{-582,220},{-562,240}})));
+        Modelica.Blocks.Sources.RealExpression occStop(y=stoOcc) annotation (
+            Placement(transformation(extent={{-582,192},{-562,212}})));
+        Modelica.Blocks.Sources.RealExpression occStopSat(y=stoOccSat)
+          annotation (Placement(transformation(extent={{-582,162},{-562,182}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater staOccGre annotation (
+            Placement(transformation(extent={{-492,228},{-472,248}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater stoOccGre annotation (
+            Placement(transformation(extent={{-518,200},{-498,220}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater stoOccSatGre annotation (
+            Placement(transformation(extent={{-518,170},{-498,190}})));
+        Buildings.Controls.OBC.CDL.Logical.Not not1
+          annotation (Placement(transformation(extent={{-490,200},{-470,220}})));
+        Buildings.Controls.OBC.CDL.Logical.Not not2
+          annotation (Placement(transformation(extent={{-490,170},{-470,190}})));
+        Buildings.Controls.OBC.CDL.Logical.And houOccWeekdays annotation (
+            Placement(transformation(extent={{-452,228},{-432,248}})));
+        Buildings.Controls.OBC.CDL.Logical.And houOccSaturday annotation (
+            Placement(transformation(extent={{-454,200},{-434,220}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater weekend annotation (
+            Placement(transformation(extent={{-518,140},{-498,160}})));
+        Modelica.Blocks.Sources.RealExpression fri(y=5) annotation (Placement(
+              transformation(extent={{-582,132},{-562,152}})));
+        Modelica.Blocks.Sources.RealExpression sat(y=6) annotation (Placement(
+              transformation(extent={{-582,104},{-562,124}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater sunday annotation (
+            Placement(transformation(extent={{-518,112},{-498,132}})));
+        Buildings.Controls.OBC.CDL.Logical.And saturday annotation (Placement(
+              transformation(extent={{-460,140},{-440,160}})));
+        Buildings.Controls.OBC.CDL.Logical.Not not3
+          annotation (Placement(transformation(extent={{-490,112},{-470,132}})));
+        Buildings.Controls.OBC.CDL.Logical.Not not4
+          annotation (Placement(transformation(extent={{-426,140},{-406,160}})));
+        Buildings.Controls.OBC.CDL.Logical.And weekdays annotation (Placement(
+              transformation(extent={{-400,120},{-380,140}})));
+        Buildings.Controls.OBC.CDL.Logical.Switch cooSetpoint annotation (
+            Placement(transformation(extent={{-250,192},{-230,212}})));
+        Buildings.Controls.OBC.CDL.Logical.Switch fanSetpoint annotation (
+            Placement(transformation(extent={{-250,154},{-230,174}})));
+        Buildings.Controls.OBC.CDL.Logical.And occSaturday annotation (
+            Placement(transformation(extent={{-370,200},{-350,220}})));
+        Buildings.Controls.OBC.CDL.Logical.And occWeekday annotation (Placement(
+              transformation(extent={{-370,228},{-350,248}})));
+        Buildings.Controls.OBC.CDL.Logical.Or or2
+          annotation (Placement(transformation(extent={{-340,208},{-320,228}})));
+        Buildings.Controls.SetPoints.Table heaSetTab(table=[heaOccSet - 3,1;
+              heaOccSet + 0.5,0])
+          annotation (Placement(transformation(extent={{14,278},{34,298}})));
+        Buildings.Controls.SetPoints.Table heaSetTabNonOcc(table=[heaNonOccSet
+               - 1.5,1; heaNonOccSet + 1.5,0])
+          annotation (Placement(transformation(extent={{14,246},{34,266}})));
+        Buildings.Controls.OBC.CDL.Logical.Switch heaSetLinear
+                                                              annotation (
+            Placement(transformation(extent={{56,262},{76,282}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater neeCool(h=3)
+          annotation (Placement(transformation(extent={{8,132},{28,152}})));
+        Buildings.Controls.OBC.CDL.Logical.Timer tim(t=1800)
+          annotation (Placement(transformation(extent={{84,80},{104,100}})));
+        Buildings.Controls.OBC.CDL.Logical.Latch lat
+          annotation (Placement(transformation(extent={{118,72},{138,92}})));
+        Buildings.Controls.OBC.CDL.Logical.Not ccTurnedOff
+          annotation (Placement(transformation(extent={{60,42},{80,62}})));
+        Buildings.Controls.OBC.CDL.Logical.And and2
+          annotation (Placement(transformation(extent={{152,132},{172,152}})));
+        Buildings.Controls.OBC.CDL.Logical.Edge risEdgCC
+          annotation (Placement(transformation(extent={{90,42},{110,62}})));
+        Buildings.Controls.OBC.CDL.Logical.Not ccTurnedOff1 annotation (Placement(
+              transformation(
+              extent={{-10,-10},{10,10}},
+              rotation=180,
+              origin={162,118})));
+        Buildings.Controls.OBC.CDL.Logical.Switch damSetLinear
+          annotation (Placement(transformation(extent={{130,-74},{150,-54}})));
+        Buildings.Controls.SetPoints.Table damSetTabHea(table=[heaOccSet,1; cooOccSet,
+              0])
+          annotation (Placement(transformation(extent={{90,-58},{110,-38}})));
+        Buildings.Controls.SetPoints.Table damSetTabHeaNonOcc(table=[heaNonOccSet,1;
+              cooNonOccSet,0])
+          annotation (Placement(transformation(extent={{90,-90},{110,-70}})));
+        Buildings.Controls.OBC.CDL.Logical.Switch damSetLinear1
+          annotation (Placement(transformation(extent={{162,-112},{182,-92}})));
+        Buildings.Controls.OBC.CDL.Logical.Switch damSetLinear2
+          annotation (Placement(transformation(extent={{130,-154},{150,-134}})));
+        Buildings.Controls.SetPoints.Table damSetTabCoo(table=[heaOccSet,0; cooOccSet,
+              1])
+          annotation (Placement(transformation(extent={{92,-136},{112,-116}})));
+        Buildings.Controls.SetPoints.Table damSetTabCooNonOcc(table=[heaNonOccSet,0;
+              cooNonOccSet,1])
+          annotation (Placement(transformation(extent={{92,-168},{112,-148}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater ecoHea(h=0.5)
+          annotation (Placement(transformation(extent={{16,-112},{36,-92}})));
+        Buildings.Controls.OBC.CDL.Logical.Not ecoHea2
+          annotation (Placement(transformation(extent={{54,-112},{74,-92}})));
+        Buildings.Controls.OBC.CDL.Logical.Or or1
+          annotation (Placement(transformation(extent={{324,152},{344,172}})));
+        Buildings.Controls.OBC.CDL.Logical.Switch fanSetLinear
+          annotation (Placement(transformation(extent={{394,108},{414,128}})));
+        Modelica.Blocks.Sources.RealExpression fanSetpointOccupied1(y=fanOccSet)
+          annotation (Placement(transformation(extent={{362,116},{382,136}})));
+        Buildings.Controls.OBC.CDL.Conversions.BooleanToReal booToRea
+          annotation (Placement(transformation(extent={{184,-6},{204,14}})));
+        Buildings.Controls.OBC.CDL.Continuous.Feedback feedback
+          annotation (Placement(transformation(extent={{440,108},{460,128}})));
+        Buildings.Controls.OBC.CDL.Continuous.Gain gai(k=100)
+          annotation (Placement(transformation(extent={{478,108},{498,128}})));
+        Buildings.Controls.OBC.CDL.Continuous.Add add2
+          annotation (Placement(transformation(extent={{516,114},{536,134}})));
+        Buildings.Controls.OBC.CDL.Logical.Pre pre
+          annotation (Placement(transformation(extent={{-10,-10},{10,10}},
+              rotation=180,
+              origin={122,118})));
+        Buildings.Controls.OBC.CDL.Continuous.GreaterThreshold greThr(t=0.01, h=
+             0.01)
+          annotation (Placement(transformation(extent={{282,164},{302,184}})));
+        Buildings.Controls.OBC.CDL.Logical.And and1
+          annotation (Placement(transformation(extent={{54,132},{74,152}})));
+        Buildings.Controls.OBC.CDL.Continuous.Greater cooOAChk(h=3)
+          annotation (Placement(transformation(extent={{26,102},{46,122}})));
+        Modelica.Blocks.Sources.RealExpression cooMinOATem(y=276.15)
+        annotation (Placement(transformation(extent={{0,88},{20,108}})));
       equation
 
         //Setpoints - General//
 
-        isOcc =  if (abs(day-7.0)>0.1 and hou>=staOcc and hou<stoOcc) then true else false; //if the day is not Sunday and the current hour is between staOcc and stoOcc, then the building is considered occupied
-        heaSet = if isOcc then heaOccSet else heaNonOccSet;
-        ploHeaSet = heaSet - 273.15;
-        cooSet = if isOcc then cooOccSet else cooNonOccSet;
-        ploCooSet = cooSet - 273.15;
-        setpoint = (heaSet + cooSet) / 2.0;
 
-        // Fan control: Constant volume, always on (??) (TODO: CHECK)
-
-        if (neeHea or neeCoo or isOcc) then fanSet = fanOccSet; else fanSet = fanMinVFR; end if;
-        outFanSet = fanPID.y;
-
-        // Heating: modulating control (this is strange, but that is how the E+ model responds)
-        if (senTemRet <= (heaSet-0.5)) then
-          neeHea = true;
-        elseif (senTemRet >= (heaSet+0.5)) then
-          neeHea = false;
-        else
-          neeHea=true;
-        end if;
-        if (neeHea and senFanVFR >= fanSet*0.1) then outHeaSet = heaPID.y; else outHeaSet = 0; end if;// this is the BOPTEST override for the HC. Reads the PI control if inactive, otherwise overwrites the PI control with the external python controller
-
-        // Cooling: On/Off operation with short cycling protection
-        if ((senTemRet >= (cooSet + 0.5) or senHRRet >= maxRH) and senTemOut >= minOACCOpeTemp) then
-          outCCSet = 1.0;
-          neeCoo = true;
-        elseif (senTemRet <= (cooSet - 0.5) or senTemOut < minOACCOpeTemp) then
-          outCCSet = 0.0;
-          neeCoo = false;
-        else
-          neeCoo = true;
-          outCCSet = 1.0;
-        end if;
-
-        //if (neeCoo and pre(timerShortCycling.passed)) then 1.0 else 0.0; // SignalExchange blocks read Reals, not bools
-        //timRes =  if (outCCSet+1.0 <= 1.0) then true else false;
-        //timerShortCycling.reset = pre(timerShortCycling.passed);
-
-        // Damper control: On/Off (strange too, but the RefBldgSmallOffice is done this way)
-        if (senTemOut <= heaSet or senTemOut >= cooSet) then damSet = minOA; else damSet = setpoint; end if;
-        outDamSet = damPID.y;
-
-      connect(rea5.y, damPID.u_s)
-        annotation (Line(points={{-369,184},{-362,184}},
-                                                       color={0,0,127}));
-      connect(rea6.y, damPID.u_m) annotation (Line(points={{-351,162},{-350,162},
-                {-350,172}},        color={0,0,127}));
-      connect(rea1.y, heaPID.u_s)
-        annotation (Line(points={{-397,258},{-380,258}},
-                                                     color={0,0,127}));
-      connect(rea2.y, heaPID.u_m) annotation (Line(points={{-385,238},{-372,238},
-                {-372,246},{-368,246}},
-                                 color={0,0,127}));
-      connect(rea3.y, fanPID.u_s)
-        annotation (Line(points={{-313,272},{-304,272}},
-                                                  color={0,0,127}));
-      connect(rea4.y, fanPID.u_m) annotation (Line(points={{-293,246},{-293,253},
-                {-292,253},{-292,260}},
-                            color={0,0,127}));
         //connect(boo1.y, timerShortCycling.u)
         //  annotation (Line(points={{-59,14},{30,14}}, color={255,0,255}));
-        annotation (Icon(graphics={Rectangle(extent={{-100,100},{100,-100}},
+        connect(occStop.y, stoOccGre.u2)
+          annotation (Line(points={{-561,202},{-520,202}},   color={0,0,127}));
+        connect(occStopSat.y, stoOccSatGre.u2)
+          annotation (Line(points={{-561,172},{-520,172}},   color={0,0,127}));
+        connect(stoOccGre.y, not1.u) annotation (Line(points={{-496,210},{-492,210}},
+                        color={255,0,255}));
+        connect(stoOccSatGre.y, not2.u) annotation (Line(points={{-496,180},{-492,180}},
+                             color={255,0,255}));
+        connect(staOccGre.y, houOccWeekdays.u1) annotation (Line(points={{-470,238},{-454,
+                238}},              color={255,0,255}));
+        connect(not1.y, houOccWeekdays.u2) annotation (Line(points={{-468,210},{-466,210},
+                {-466,230},{-454,230}},               color={255,0,255}));
+        connect(stoOccGre.u1, houIn.y) annotation (Line(points={{-520,210},{-532,210},
+                {-532,266},{-561,266}},              color={0,0,127}));
+        connect(stoOccSatGre.u1, houIn.y) annotation (Line(points={{-520,180},{-532,180},
+                {-532,266},{-561,266}},               color={0,0,127}));
+        connect(occStart.y, staOccGre.u2)
+          annotation (Line(points={{-561,230},{-494,230}},   color={0,0,127}));
+        connect(staOccGre.u1, houIn.y) annotation (Line(points={{-494,238},{-532,238},
+                {-532,266},{-561,266}},              color={0,0,127}));
+        connect(houOccSaturday.u1, houOccWeekdays.u1) annotation (Line(points={{-456,210},
+                {-460,210},{-460,238},{-454,238}},                color={255,0,
+                255}));
+        connect(not2.y, houOccSaturday.u2) annotation (Line(points={{-468,180},{-464,180},
+                {-464,202},{-456,202}},               color={255,0,255}));
+        connect(weekend.u1, dayIn.y) annotation (Line(points={{-520,150},{-542,150},{-542,
+                252},{-561,252}},               color={0,0,127}));
+        connect(sunday.u1, dayIn.y) annotation (Line(points={{-520,122},{-542,122},{-542,
+                252},{-561,252}},               color={0,0,127}));
+        connect(weekend.u2, fri.y)
+          annotation (Line(points={{-520,142},{-561,142}},   color={0,0,127}));
+        connect(sunday.u2, sat.y)
+          annotation (Line(points={{-520,114},{-561,114}},   color={0,0,127}));
+        connect(weekend.y, saturday.u1) annotation (Line(points={{-496,150},{-462,150}},
+                             color={255,0,255}));
+        connect(sunday.y, not3.u) annotation (Line(points={{-496,122},{-492,122}},
+                        color={255,0,255}));
+        connect(not3.y, saturday.u2) annotation (Line(points={{-468,122},{-464,122},{-464,
+                142},{-462,142}},               color={255,0,255}));
+        connect(saturday.y, not4.u) annotation (Line(points={{-438,150},{-428,150}},
+                        color={255,0,255}));
+        connect(not4.y, weekdays.u1) annotation (Line(points={{-404,150},{-404,130},{-402,
+                130}},              color={255,0,255}));
+        connect(weekdays.u2, saturday.u2) annotation (Line(points={{-402,122},{-464,122},
+                {-464,142},{-462,142}},               color={255,0,255}));
+        connect(houOccSaturday.y, occSaturday.u1) annotation (Line(points={{-432,210},
+                {-372,210}},             color={255,0,255}));
+        connect(houOccWeekdays.y, occWeekday.u1) annotation (Line(points={{-430,238},{
+                -372,238}},         color={255,0,255}));
+        connect(occWeekday.u2, weekdays.y) annotation (Line(points={{-372,230},{-376,230},
+                {-376,130},{-378,130}},               color={255,0,255}));
+        connect(occSaturday.u2, not4.u) annotation (Line(points={{-372,202},{-432,202},
+                {-432,150},{-428,150}},              color={255,0,255}));
+        connect(occWeekday.y, or2.u1) annotation (Line(points={{-348,238},{-346,238},{
+                -346,218},{-342,218}},               color={255,0,255}));
+        connect(occSaturday.y, or2.u2) annotation (Line(points={{-348,210},{-342,210}},
+                             color={255,0,255}));
+        connect(or2.y, cooSetpoint.u2) annotation (Line(points={{-318,218},{-286,218},
+                {-286,202},{-252,202}},              color={255,0,255}));
+        connect(or2.y, fanSetpoint.u2) annotation (Line(points={{-318,218},{-308,218},
+                {-308,164},{-252,164}},              color={255,0,255}));
+        connect(cooSetpoint.u1, coolingSetpointOccupied.y)
+          annotation (Line(points={{-252,210},{-261,210}},   color={0,0,127}));
+        connect(cooSetpoint.u3, coolingSetpointNonOccupied.y)
+          annotation (Line(points={{-252,194},{-261,194}},   color={0,0,127}));
+        connect(fanSetpoint.u1, fanSetpointOccupied.y)
+          annotation (Line(points={{-252,172},{-261,172}},   color={0,0,127}));
+        connect(fanSetpoint.u3, fanSetpointNonOccupied.y)
+          annotation (Line(points={{-252,156},{-261,156}},   color={0,0,127}));
+        connect(heaSetTab.y, heaSetLinear.u1) annotation (Line(points={{35,288},{46,288},
+                {46,280},{54,280}},             color={0,0,127}));
+        connect(heaSetTabNonOcc.y, heaSetLinear.u3) annotation (Line(points={{35,256},
+                {46,256},{46,264},{54,264}},          color={0,0,127}));
+        connect(heaSetLinear.u2, fanSetpoint.u2) annotation (Line(points={{54,272},{-308,
+                272},{-308,164},{-252,164}},          color={255,0,255}));
+        connect(heaSetTab.u, senTemRet)
+          annotation (Line(points={{12,288},{-640,288}},     color={0,0,127}));
+        connect(neeCool.u2, cooSetpoint.y) annotation (Line(points={{6,134},{-160,
+              134},{-160,202},{-228,202}},      color={0,0,127}));
+        connect(neeCool.u1, senTemRet) annotation (Line(points={{6,142},{-20,142},
+              {-20,288},{-640,288}},      color={0,0,127}));
+        connect(risEdgCC.y, lat.clr) annotation (Line(points={{112,52},{112,76},
+              {116,76}},           color={255,0,255}));
+        connect(lat.y, and2.u2) annotation (Line(points={{140,82},{144,82},{144,134},{
+                150,134}},   color={255,0,255}));
+        connect(and2.y, ccTurnedOff1.u) annotation (Line(points={{174,142},{178,142},{
+                178,118},{174,118}},
+                                 color={255,0,255}));
+        connect(ccTurnedOff.y, risEdgCC.u)
+          annotation (Line(points={{82,52},{88,52}},        color={255,0,255}));
+        connect(tim.passed, lat.u)
+          annotation (Line(points={{106,82},{116,82}},     color={255,0,255}));
+        connect(heaSetTabNonOcc.u, senTemRet) annotation (Line(points={{12,256},
+              {-20,256},{-20,288},{-640,288}},  color={0,0,127}));
+        connect(damSetTabHea.u, senTemRet) annotation (Line(points={{88,-48},{-20,
+              -48},{-20,288},{-640,288}}, color={0,0,127}));
+        connect(damSetTabHeaNonOcc.u, senTemRet) annotation (Line(points={{88,-80},
+              {-20,-80},{-20,288},{-640,288}},       color={0,0,127}));
+        connect(damSetTabHea.y, damSetLinear.u1) annotation (Line(points={{111,-48},{120,
+                -48},{120,-56},{128,-56}},        color={0,0,127}));
+        connect(damSetTabHeaNonOcc.y, damSetLinear.u3) annotation (Line(points={{111,-80},
+                {119.5,-80},{119.5,-72},{128,-72}},    color={0,0,127}));
+        connect(damSetTabCoo.y, damSetLinear2.u1) annotation (Line(points={{113,-126},
+                {122,-126},{122,-136},{128,-136}}, color={0,0,127}));
+        connect(damSetTabCooNonOcc.y, damSetLinear2.u3) annotation (Line(points={{113,
+                -158},{121.5,-158},{121.5,-152},{128,-152}}, color={0,0,127}));
+        connect(damSetTabCoo.u, senTemRet) annotation (Line(points={{90,-126},{-20,
+              -126},{-20,288},{-640,288}},color={0,0,127}));
+        connect(damSetTabCooNonOcc.u, senTemRet) annotation (Line(points={{90,-158},
+              {-20,-158},{-20,288},{-640,288}},      color={0,0,127}));
+        connect(damSetLinear.u2, fanSetpoint.u2) annotation (Line(points={{128,-64},{-308,
+                -64},{-308,164},{-252,164}},         color={255,0,255}));
+        connect(damSetLinear2.u2, fanSetpoint.u2) annotation (Line(points={{128,-144},
+                {-308,-144},{-308,164},{-252,164}},   color={255,0,255}));
+        connect(ecoHea.u1, senTemRet) annotation (Line(points={{14,-102},{-20,-102},
+              {-20,288},{-640,288}},      color={0,0,127}));
+        connect(ecoHea.u2, senTemOut)
+          annotation (Line(points={{14,-110},{-60,-110},{-60,322},{-642,322}},
+                                                             color={0,0,127}));
+        connect(ecoHea.y, ecoHea2.u)
+          annotation (Line(points={{38,-102},{52,-102}},     color={255,0,255}));
+        connect(damSetLinear.y, damSetLinear1.u1) annotation (Line(points={{152,-64},{
+                154,-64},{154,-94},{160,-94}},     color={0,0,127}));
+        connect(damSetLinear2.y, damSetLinear1.u3) annotation (Line(points={{152,-144},
+                {156,-144},{156,-110},{160,-110}}, color={0,0,127}));
+        connect(damSetLinear1.u2, ecoHea2.y)
+          annotation (Line(points={{160,-102},{76,-102}},  color={255,0,255}));
+        connect(or1.u2, and2.y) annotation (Line(points={{322,154},{240,154},{240,142},
+                {174,142}},color={255,0,255}));
+        connect(or1.y, fanSetLinear.u2) annotation (Line(points={{346,162},{354,162},{
+                354,118},{392,118}},    color={255,0,255}));
+        connect(fanSetpoint.y, fanSetLinear.u3) annotation (Line(points={{-228,164},{-220,
+                164},{-220,-24},{234,-24},{234,110},{392,110}},         color={0,0,127}));
+        connect(fanSetpointOccupied1.y, fanSetLinear.u1) annotation (Line(points={{383,126},
+                {392,126}},                                  color={0,0,127}));
+        connect(booToRea.u, and2.y) annotation (Line(points={{182,4},{174,4},{174,90},
+                {190,90},{190,142},{174,142}}, color={255,0,255}));
+        connect(booToRea.y, outCCSet) annotation (Line(points={{206,4},{592,4},{592,193},
+                {679,193}},        color={0,0,127}));
+        connect(damSetLinear1.y, outDamSet) annotation (Line(points={{184,-102},{612,-102},
+                {612,143},{681,143}},   color={0,0,127}));
+        connect(fanSetLinear.y, feedback.u1)
+          annotation (Line(points={{416,118},{438,118}},   color={0,0,127}));
+        connect(feedback.y, gai.u)
+          annotation (Line(points={{462,118},{476,118}},   color={0,0,127}));
+        connect(gai.y, add2.u2)
+          annotation (Line(points={{500,118},{514,118}},   color={0,0,127}));
+        connect(add2.u1, feedback.u1) annotation (Line(points={{514,130},{500,130},{500,
+                144},{430,144},{430,118},{438,118}},         color={0,0,127}));
+        connect(add2.y, outFanSet) annotation (Line(points={{538,124},{578,124},{578,251},
+                {679,251}},        color={0,0,127}));
+        connect(feedback.u2, senFanVFR) annotation (Line(points={{450,106},{450,-240},
+                {-632,-240}}, color={0,0,127}));
+        connect(ccTurnedOff1.y, pre.u)
+          annotation (Line(points={{150,118},{134,118}}, color={255,0,255}));
+        connect(pre.y, tim.u) annotation (Line(points={{110,118},{72,118},{72,
+                90},{82,90}}, color={255,0,255}));
+        connect(or1.u1, greThr.y) annotation (Line(points={{322,162},{314,162},
+                {314,174},{304,174}}, color={255,0,255}));
+        connect(greThr.u, heaSetLinear.y) annotation (Line(points={{280,174},{
+                232,174},{232,272},{78,272}}, color={0,0,127}));
+        connect(outHeaSet, heaSetLinear.y) annotation (Line(points={{679,297},{
+                232,297},{232,272},{78,272}}, color={0,0,127}));
+      connect(neeCool.y, and1.u1)
+        annotation (Line(points={{30,142},{52,142}}, color={255,0,255}));
+      connect(and1.y, and2.u1)
+        annotation (Line(points={{76,142},{150,142}}, color={255,0,255}));
+      connect(ccTurnedOff.u, and2.u1) annotation (Line(points={{58,52},{56,52},{
+              56,82},{68,82},{68,130},{80,130},{80,142},{150,142}}, color={255,0,
+              255}));
+      connect(cooMinOATem.y, cooOAChk.u2) annotation (Line(points={{21,98},{22,98},
+              {22,104},{24,104}}, color={0,0,127}));
+      connect(cooOAChk.u1, senTemOut) annotation (Line(points={{24,112},{-60,112},
+              {-60,322},{-642,322}}, color={0,0,127}));
+      connect(cooOAChk.y, and1.u2) annotation (Line(points={{48,112},{52,112},{52,
+              134},{52,134}}, color={255,0,255}));
+        annotation (Icon(coordinateSystem(extent={{-600,-300},{640,360}}),
+                         graphics={Rectangle(extent={{-600,364},{642,-300}},
                   lineColor={28,108,200})}),Inline=true,GenerateEvents=true,
-          Diagram(graphics={
-              Rectangle(extent={{-172,-142},{218,-386}}, lineColor={28,108,200}),
+          Diagram(coordinateSystem(extent={{-600,-300},{640,360}}),
+                  graphics={
+              Rectangle(extent={{2,316},{212,182}},      lineColor={28,108,200}),
               Text(
-                extent={{116,-346},{216,-392}},
+                extent={{12,230},{112,184}},
                 lineColor={28,108,200},
                 textString="Heating"),
               Text(
-                extent={{118,-618},{218,-664}},
+                extent={{18,36},{118,-10}},
                 lineColor={28,108,200},
                 textString="Cooling"),
-              Rectangle(extent={{-170,-414},{220,-658}}, lineColor={28,108,200}),
+              Rectangle(extent={{2,170},{212,-16}},      lineColor={28,108,200}),
               Text(
-                extent={{592,-478},{692,-524}},
+                extent={{286,98},{386,52}},
                 lineColor={28,108,200},
                 textString="CV Fan controls"),
-              Rectangle(extent={{304,-274},{694,-518}}, lineColor={28,108,200}),
+              Rectangle(extent={{274,194},{566,44}},    lineColor={28,108,200}),
               Text(
-                extent={{-370,-618},{-270,-664}},
+                extent={{-214,126},{-110,98}},
                 lineColor={28,108,200},
                 textString="Schedule"),
-              Rectangle(extent={{-658,-414},{-268,-658}}, lineColor={28,108,200}),
+              Rectangle(extent={{-590,276},{-108,96}},    lineColor={28,108,200}),
               Text(
-                extent={{120,-902},{220,-948}},
+                extent={{8,-200},{108,-246}},
                 lineColor={28,108,200},
                 textString="Economizer"),
-              Rectangle(extent={{-168,-698},{222,-942}}, lineColor={28,108,200})}));
+              Rectangle(extent={{4,-30},{212,-236}},     lineColor={28,108,200})}));
       end System3RBControls;
 
       //HVAC Components//
@@ -296,7 +509,7 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
       use_inputFilter=false,
       redeclare final package Medium = Medium,
       from_dp=true,
-      allowFlowReversal=true,
+        allowFlowReversal=true,
       mOut_flow_nominal=mass_flow_nominal,
       mRec_flow_nominal=mass_flow_nominal,
       mExh_flow_nominal=mass_flow_nominal,
@@ -307,37 +520,42 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
 
       Buildings.Fluid.HeatExchangers.DXCoils.AirCooled.SingleSpeed sinSpeDX(
         redeclare final package Medium = Medium,
-        dxCoo(wetCoi(TADP(start=280.0, nominal = 280.0, min = 1.0), appDewPt(TADP(start=280.0, min=0.0)))),
+        dxCoo(wetCoi(TADP(
+              start=285.0,
+              nominal=290.0,
+              min=1.0), appDewPt(TADP(start=285.0, min=1.0)))),
         datCoi(
           nSta=1,
           minSpeRat=0.2,
           sta={
               Buildings.Fluid.HeatExchangers.DXCoils.AirCooled.Data.Generic.BaseClasses.Stage(
-              spe=1800/60,
-              nomVal=
+                  spe=1800/60,
+                  nomVal=
                 Buildings.Fluid.HeatExchangers.DXCoils.AirCooled.Data.Generic.BaseClasses.NominalValues(
-                Q_flow_nominal=CCNomPow,
-                COP_nominal=3.67,
-                SHR_nominal=0.79,
-                m_flow_nominal=0.53,
-                TEvaIn_nominal=273.15 + 17.74,
-                TConIn_nominal=308.15,
-                phiIn_nominal=0.48,
-                tWet=1200),
-              perCur=
+                    Q_flow_nominal=CCNomPow,
+                    COP_nominal=3.07,
+                    SHR_nominal=0.79,
+                    m_flow_nominal=0.55,
+                    TEvaIn_nominal=273.15 + 23.9,
+                    TConIn_nominal=273.15 + 26.7,
+                    phiIn_nominal=0.75,
+                    tWet=720,
+                    gamma=1.5),
+                  perCur=
                 Buildings.Fluid.HeatExchangers.DXCoils.AirCooled.Data.Generic.BaseClasses.PerformanceCurve(
-                capFunT={0.9712123,-0.015275502,0.0014434524,-0.00039321,-0.0000068364,
+                    capFunT={0.9712123,-0.015275502,0.0014434524,-0.00039321,-0.0000068364,
                   -0.0002905956},
-                capFunFF={1,0,0},
-                EIRFunT={0.28687133,0.023902164,-0.000810648,0.013458546,0.0003389364,
-                  -0.0004870044},
-                EIRFunFF={1,0,0},
-                TConInMin=291.15,
-                TConInMax=319.26111,
-                TEvaInMin=285.92778,
-                TEvaInMax=297.03889,
-                ffMin=0.5,
-                ffMax=1.5))}),
+                    capFunFF={0.90949556,0.09864773,-0.00819488},
+                    EIRFunT={0.28687133,0.023902164,-0.000810648,0.013458546,
+                  0.0003389364,-0.0004870044},
+                    EIRFunFF={1,0,0},
+                    TConInMin=291.15,
+                    TConInMax=319.26111,
+                    TEvaInMin=285.92778,
+                    TEvaInMax=297.03889,
+                    ffMin=0.5,
+                    ffMax=1.5))},
+          m_flow_small=0.01),
         allowFlowReversal=true,
         m_flow_small=1E-3,
         from_dp=false,
@@ -363,9 +581,11 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
         m_flow_nominal=mass_flow_nominal,
         redeclare parameter Buildings.Fluid.Movers.Data.Generic per(
           pressure(V_flow={0.439,0.44}, dp={623,622}),
-          use_powerCharacteristic=false,
+          use_powerCharacteristic=true,
           hydraulicEfficiency(V_flow={0.44}, eta={0.65}),
-          motorEfficiency(V_flow={0.44}, eta={0.825})),
+          motorEfficiency(V_flow={0.44}, eta={0.825}),
+          power(V_flow={0.44}, P={914})),
+        nominalValuesDefineDefaultPressureCurve=false,
         dp_nominal=622)
         annotation (Placement(transformation(extent={{240,-106},{282,-64}})));
 
@@ -414,17 +634,21 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
 
       Buildings.Fluid.Sensors.VolumeFlowRate volSenSup(
         redeclare final package Medium = Medium,
+        allowFlowReversal=true,
         m_flow_nominal=0.5,
         T_start=288.65) "Volumetric flow rate sensor, supply side"
         annotation (Placement(transformation(extent={{346,-94},{366,-74}})));
 
       Buildings.Fluid.Sensors.VolumeFlowRate volSenOA(
         redeclare final package Medium = Medium,
+        allowFlowReversal=true,
         m_flow_nominal=0.5,
         T_start=288.65) "Volumetric flow rate sensor, outside air"
         annotation (Placement(transformation(extent={{-316,-210},{-296,-190}})));
 
-      System3RBControls controls(day=day, hou=hour)   "CAV controller"
+      System3RBControls controls(day=day, hou=hour,
+        minOACCOpeTemp=280,
+        minOA=0.2)                                    "CAV controller"
       annotation (Placement(transformation(extent={{-308,34},{-288,54}})));
 
       //Output //
@@ -497,10 +721,6 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
             extent={{-20,-20},{20,20}},
             rotation=180,
             origin={578,358})));
-      Modelica.Blocks.Logical.Switch switch1
-        annotation (Placement(transformation(extent={{-296,-74},{-276,-54}})));
-      Modelica.Blocks.Sources.RealExpression realExpression(y=280)
-        annotation (Placement(transformation(extent={{-348,-106},{-328,-86}})));
       Buildings.Fluid.Sensors.RelativeHumidityTwoPort senRelHum(redeclare
           final package Medium =                                                               Medium,
         allowFlowReversal=true,
@@ -529,6 +749,22 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
             extent={{-10,-10},{10,10}},
             rotation=180,
             origin={-274,-156})));
+    Buildings.Utilities.IO.SignalExchange.Read senTemSup(
+        y(min=275.0,
+          max=340.0,
+          unit="K"),
+        description="Supply air temperature",
+        KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.None)
+        "\"Supply air temperature\"" annotation (Placement(transformation(
+            extent={{-10,-10},{10,10}},
+            rotation=0,
+            origin={-392,78})));
+      Buildings.Fluid.Sensors.TemperatureTwoPort senTSup(
+        redeclare package Medium = Medium,
+        allowFlowReversal=true,
+        m_flow_nominal=0.5,
+        T_start=288.75) "\"Supply air temperature\""
+        annotation (Placement(transformation(extent={{398,-170},{418,-150}})));
     equation
 
     connect(mixDam.port_Sup, sinSpeDX.port_a) annotation (Line(points={{-212,-200.4},
@@ -550,20 +786,22 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
               {-37.1,-58.9}},         color={0,0,127}));
       connect(fan.port_b, volSenSup.port_a) annotation (Line(points={{282,-85},{346,
               -85},{346,-84}}, color={0,127,255}));
-      connect(volSenSup.port_b, zonSupPort) annotation (Line(points={{366,-84},{406,
-              -84},{406,-158},{446,-158}}, color={0,127,255}));
       connect(OAInlPor, volSenOA.port_a)
         annotation (Line(points={{-400,-200},{-316,-200}}, color={0,127,255}));
       connect(volSenOA.port_b, mixDam.port_Out) annotation (Line(points={{-296,-200},
               {-290,-200},{-290,-200.4},{-274,-200.4}}, color={0,127,255}));
-      connect(controls.outHeaSet, oveHCSet.u) annotation (Line(points={{-285.1,52.3},
-              {-240,52.3},{-240,52},{-228,52}}, color={0,0,127}));
-      connect(controls.outCCSet, oveCCSet.u) annotation (Line(points={{-285.1,47.5},
-              {-244,47.5},{-244,20},{-228,20}}, color={0,0,127}));
-      connect(controls.outFanSet, oveFanSet.u) annotation (Line(points={{-285.1,42.7},
-              {-250,42.7},{-250,-16},{-228,-16}}, color={0,0,127}));
-      connect(controls.outDamSet, oveDamSet.u) annotation (Line(points={{-285.1,37.1},
-              {-256,37.1},{-256,-52},{-228,-52}}, color={0,0,127}));
+      connect(controls.outHeaSet, oveHCSet.u) annotation (Line(points={{
+              -286.823,46.4545},{-240,46.4545},{-240,52},{-228,52}},
+                                                color={0,0,127}));
+      connect(controls.outCCSet, oveCCSet.u) annotation (Line(points={{-286.823,
+              45},{-244,45},{-244,20},{-228,20}},
+                                                color={0,0,127}));
+      connect(controls.outFanSet, oveFanSet.u) annotation (Line(points={{
+              -286.823,43.5455},{-250,43.5455},{-250,-16},{-228,-16}},
+                                                  color={0,0,127}));
+      connect(controls.outDamSet, oveDamSet.u) annotation (Line(points={{
+              -286.823,41.8485},{-256,41.8485},{-256,-52},{-228,-52}},
+                                                  color={0,0,127}));
       connect(oveHCSet.y, hea.u) annotation (Line(points={{-205,52},{48,52},{48,-72.4},
               {76.2,-72.4}}, color={0,0,127}));
       connect(oveFanSet.y, fan.m_flow_in) annotation (Line(points={{-205,-16},{261,-16},
@@ -574,27 +812,20 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
         annotation (Line(points={{-205,20},{-188,20}}, color={0,0,127}));
       connect(reaToBooCC.y, sinSpeDX.on) annotation (Line(points={{-165,20},{-132,20},
               {-132,-61.8},{-100.9,-61.8}}, color={255,0,255}));
-    connect(senTemRoo.y, controls.senTemRet) annotation (Line(points={{-395,6},{
-              -378,6},{-378,46.8},{-310.8,46.8}}, color={0,0,127}));
-      connect(controls.senTemOut, senTemOA) annotation (Line(points={{-310.8,52},
-              {-382,52},{-382,-78},{-414,-78}},
+    connect(senTemRoo.y, controls.senTemRet) annotation (Line(points={{-395,6},
+              {-378,6},{-378,45.4545},{-308.452,45.4545}},
+                                                  color={0,0,127}));
+      connect(controls.senTemOut, senTemOA) annotation (Line(points={{-308.548,
+              52.3636},{-382,52.3636},{-382,-78},{-414,-78}},
                                           color={0,0,127}));
       connect(temSenRet, senTemRoo.u) annotation (Line(points={{-414,-118},{-418,
               -118},{-418,6},{-418,6}}, color={0,0,127}));
-      connect(switch1.u1, senTemOA) annotation (Line(points={{-298,-56},{-346,
-              -56},{-346,-78},{-414,-78}}, color={0,0,127}));
-      connect(switch1.u2, sinSpeDX.on) annotation (Line(points={{-298,-64},{
-              -310,-64},{-310,2},{-152,2},{-152,20},{-132,20},{-132,-61.8},{
-              -100.9,-61.8}}, color={255,0,255}));
-      connect(switch1.y, sinSpeDX.TConIn) annotation (Line(points={{-275,-64},{
-              -188,-64},{-188,-76.3},{-100.9,-76.3}}, color={0,0,127}));
-      connect(realExpression.y, switch1.u3) annotation (Line(points={{-327,-96},
-              {-312,-96},{-312,-72},{-298,-72}}, color={0,0,127}));
       connect(senRelHum.phi, senRelHumOut.u) annotation (Line(points={{89.9,
               -249},{70.05,-249},{70.05,-198},{50,-198}},
                                                     color={0,0,127}));
       connect(senRelHumOut.y, controls.senHRRet) annotation (Line(points={{27,-198},
-              {-162,-198},{-162,-130},{-352,-130},{-352,31.2},{-310.8,31.2}},
+              {-162,-198},{-162,-130},{-352,-130},{-352,34.7879},{-308.484,
+              34.7879}},
             color={0,0,127}));
       connect(senRelHum.port_b, mixDam.port_Ret) annotation (Line(points={{80,
               -238},{-66,-238},{-66,-237.6},{-212,-237.6}}, color={0,127,255}));
@@ -602,13 +833,26 @@ model SOM3 "Spawn replica of the Reference Small Office Building"
               {276,-238},{276,-238},{452,-238}}, color={0,127,255}));
       connect(volSenOA.V_flow, senVolOA.u) annotation (Line(points={{-306,-189},
               {-306,-174},{-324,-174}}, color={0,0,127}));
-      connect(senVolOA.y, controls.senDamVFR) annotation (Line(points={{-347,-174},
-              {-370,-174},{-370,36.2},{-310.8,36.2}}, color={0,0,127}));
+      connect(senVolOA.y, controls.senDamVFR) annotation (Line(points={{-347,
+              -174},{-370,-174},{-370,38.0606},{-308.452,38.0606}},
+                                                      color={0,0,127}));
       connect(volSenSup.V_flow, senVolSup.u) annotation (Line(points={{356,-73},
               {356,-64},{312,-64},{312,-156},{-262,-156}}, color={0,0,127}));
-      connect(senVolSup.y, controls.senFanVFR) annotation (Line(points={{-285,-156},
-              {-290,-156},{-290,-154},{-360,-154},{-360,41.2},{-310.8,41.2}},
+      connect(senVolSup.y, controls.senFanVFR) annotation (Line(points={{-285,
+              -156},{-290,-156},{-290,-154},{-360,-154},{-360,41.697},{-308.484,
+              41.697}},
             color={0,0,127}));
+      connect(volSenSup.port_b, senTSup.port_a) annotation (Line(points={{366,-84},
+              {366,-160},{398,-160}}, color={0,127,255}));
+      connect(senTSup.port_b, zonSupPort) annotation (Line(points={{418,-160},{446,
+              -160},{446,-158}}, color={0,127,255}));
+      connect(senTSup.T, senTemSup.u) annotation (Line(points={{408,-149},{408,-292},
+              {-452,-292},{-452,78},{-404,78}}, color={0,0,127}));
+      connect(senTemSup.y, controls.senTemSup) annotation (Line(points={{-381,78},
+              {-350,78},{-350,49.0303},{-308.452,49.0303}},
+                                                    color={0,0,127}));
+      connect(sinSpeDX.TConIn, senTemOA) annotation (Line(points={{-100.9,-76.3},
+              {-384,-78},{-414,-78}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-420,-260},
                 {440,220}}),     graphics={
           Rectangle(
@@ -685,11 +929,6 @@ Buildings.Utilities.IO.SignalExchange.Read senHeaPow(u(min=0.0, max=15000.0, uni
     annotation (Placement(transformation(extent={{-98,-272},{-42,-242}})));
   ASHRAESystem3 HVAC4(heaNomPow = 9691.66, CCNomPow = -6779.76)   "Core zone HVAC system"
     annotation (Placement(transformation(extent={{-96,-350},{-40,-320}})));
-  Buildings.ThermalZones.EnergyPlus.ThermalZone attZon(
-      zoneName="Attic",
-      redeclare final package Medium = Medium,
-      nPorts=2) "\"Attic\""
-      annotation (Placement(transformation(extent={{54,126},{94,166}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon1(
       zoneName="Perimeter_ZN_1",
       redeclare final package Medium = Medium,
@@ -904,13 +1143,15 @@ equation
             162},{-130,-11.125},{-96.4372,-11.125}},    color={0,0,127}));
   connect(HVAC.day, integerToReal1.y) annotation (Line(points={{-96.4372,-6.5},{
             -134,-6.5},{-134,140},{-185,140}},color={0,0,127}));
-  connect(HVAC.zonSupPort, corZon.ports[1]) annotation (Line(points={{-30.9302,20.375},
-            {72.5349,20.375},{72.5349,64.9},{72,64.9}},       color={0,127,255}));
+  connect(HVAC.zonSupPort, corZon.ports[1]) annotation (Line(points={{-30.9302,
+            20.375},{72.5349,20.375},{72.5349,64.9},{72,64.9}},
+                                                              color={0,127,255}));
   connect(HVAC.zonRetPor, corZon.ports[2]) annotation (Line(points={{-30.8,4.125},
             {76.6,4.125},{76.6,64.9},{76,64.9}},
                                                color={0,127,255}));
-  connect(HVAC.OAInlPor, Outside.ports[1]) annotation (Line(points={{-97.3488,20.375},
-            {-144,20.375},{-144,11.6},{-184,11.6}},     color={0,127,255}));
+  connect(HVAC.OAInlPor, Outside.ports[1]) annotation (Line(points={{-97.3488,
+            20.375},{-144,20.375},{-144,11.6},{-184,11.6}},
+                                                        color={0,127,255}));
   connect(HVAC.OAOutPor, Outside.ports[2]) annotation (Line(points={{-97.3488,4},
             {-140,4},{-140,10.8},{-184,10.8}},
                                            color={0,127,255}));
@@ -946,8 +1187,9 @@ equation
       index=-1,
       extent={{-6,3},{-6,3}},
       horizontalAlignment=TextAlignment.Right));
-    connect(corZon.TAir, HVAC.temSenRet) annotation (Line(points={{95,97.8},{31.5,
-            97.8},{31.5,24.625},{-33.014,24.625}}, color={0,0,127}));
+    connect(corZon.TAir, HVAC.temSenRet) annotation (Line(points={{95,97.8},{
+            31.5,97.8},{31.5,24.625},{-33.014,24.625}},
+                                                   color={0,0,127}));
     connect(perZon1.qGai_flow, mul.y) annotation (Line(points={{52,-64},{52,-62},
             {46,-62},{46,94},{-9,94}}, color={0,0,127}));
     connect(perZon2.qGai_flow, mul.y) annotation (Line(points={{52,-154},{36,
@@ -956,53 +1198,53 @@ equation
             -244},{22,94},{-9,94}}, color={0,0,127}));
     connect(perZon4.qGai_flow, mul.y) annotation (Line(points={{50,-322},{12,
             -322},{12,94},{-9,94}}, color={0,0,127}));
-    connect(HVAC1.OAInlPor, Outside.ports[3]) annotation (Line(points={{-95.3488,
-            -59.625},{-132,-59.625},{-132,-60},{-144,-60},{-144,8},{-184,8},{-184,
-            10}},               color={0,127,255}));
-    connect(HVAC1.OAOutPor, Outside.ports[4]) annotation (Line(points={{-95.3488,
-            -76},{-100,-76},{-100,-74},{-146,-74},{-146,6},{-180,6},{-180,9.2},{
-            -184,9.2}},            color={0,127,255}));
-    connect(HVAC2.OAInlPor, Outside.ports[5]) annotation (Line(points={{-95.3488,
-            -149.625},{-95.3488,-150},{-150,-150},{-150,8.4},{-184,8.4}},
+    connect(HVAC1.OAInlPor, Outside.ports[3]) annotation (Line(points={{
+            -95.3488,-59.625},{-132,-59.625},{-132,-60},{-144,-60},{-144,8},{
+            -184,8},{-184,10}}, color={0,127,255}));
+    connect(HVAC1.OAOutPor, Outside.ports[4]) annotation (Line(points={{
+            -95.3488,-76},{-100,-76},{-100,-74},{-146,-74},{-146,6},{-180,6},{
+            -180,9.2},{-184,9.2}}, color={0,127,255}));
+    connect(HVAC2.OAInlPor, Outside.ports[5]) annotation (Line(points={{
+            -95.3488,-149.625},{-95.3488,-150},{-150,-150},{-150,8.4},{-184,8.4}},
           color={0,127,255}));
-    connect(HVAC2.OAOutPor, Outside.ports[6]) annotation (Line(points={{-95.3488,
-            -166},{-154,-166},{-154,7.6},{-184,7.6}},          color={0,127,255}));
-    connect(HVAC3.OAInlPor, Outside.ports[7]) annotation (Line(points={{-97.3488,
-            -237.625},{-160,-237.625},{-160,6.8},{-184,6.8}},          color={0,
+    connect(HVAC2.OAOutPor, Outside.ports[6]) annotation (Line(points={{
+            -95.3488,-166},{-154,-166},{-154,7.6},{-184,7.6}}, color={0,127,255}));
+    connect(HVAC3.OAInlPor, Outside.ports[7]) annotation (Line(points={{
+            -97.3488,-237.625},{-160,-237.625},{-160,6.8},{-184,6.8}}, color={0,
             127,255}));
-    connect(HVAC3.OAOutPor, Outside.ports[8]) annotation (Line(points={{-97.3488,
-            -254},{-164,-254},{-164,6},{-184,6}},          color={0,127,255}));
-    connect(HVAC4.OAInlPor, Outside.ports[9]) annotation (Line(points={{-95.3488,
-            -315.625},{-168,-315.625},{-168,5.2},{-184,5.2}},          color={0,
+    connect(HVAC3.OAOutPor, Outside.ports[8]) annotation (Line(points={{
+            -97.3488,-254},{-164,-254},{-164,6},{-184,6}}, color={0,127,255}));
+    connect(HVAC4.OAInlPor, Outside.ports[9]) annotation (Line(points={{
+            -95.3488,-315.625},{-168,-315.625},{-168,5.2},{-184,5.2}}, color={0,
             127,255}));
-    connect(HVAC4.OAOutPor, Outside.ports[10]) annotation (Line(points={{-95.3488,
-            -332},{-172,-332},{-172,4.4},{-184,4.4}},          color={0,127,255}));
-    connect(HVAC4.zonSupPort, perZon4.ports[1]) annotation (Line(points={{-28.9302,
-            -315.625},{10,-315.625},{10,-360},{70,-360},{70,-351.1}},
+    connect(HVAC4.OAOutPor, Outside.ports[10]) annotation (Line(points={{
+            -95.3488,-332},{-172,-332},{-172,4.4},{-184,4.4}}, color={0,127,255}));
+    connect(HVAC4.zonSupPort, perZon4.ports[1]) annotation (Line(points={{
+            -28.9302,-315.625},{10,-315.625},{10,-360},{70,-360},{70,-351.1}},
           color={0,127,255}));
     connect(HVAC4.zonRetPor, perZon4.ports[2]) annotation (Line(points={{-28.8,
             -331.875},{0,-331.875},{0,-366},{74,-366},{74,-351.1}}, color={0,
             127,255}));
-    connect(HVAC3.zonSupPort, perZon3.ports[1]) annotation (Line(points={{-30.9302,
-            -237.625},{8,-237.625},{8,-278},{70,-278},{70,-273.1}},
+    connect(HVAC3.zonSupPort, perZon3.ports[1]) annotation (Line(points={{
+            -30.9302,-237.625},{8,-237.625},{8,-278},{70,-278},{70,-273.1}},
           color={0,127,255}));
     connect(HVAC3.zonRetPor, perZon3.ports[2]) annotation (Line(points={{-30.8,-253.875},
             {-30.8,-254},{2,-254},{2,-282},{74,-282},{74,-273.1}},
           color={0,127,255}));
-    connect(HVAC2.zonSupPort, perZon2.ports[1]) annotation (Line(points={{-28.9302,
-            -149.625},{2,-149.625},{2,-190},{72,-190},{72,-183.1}},
+    connect(HVAC2.zonSupPort, perZon2.ports[1]) annotation (Line(points={{
+            -28.9302,-149.625},{2,-149.625},{2,-190},{72,-190},{72,-183.1}},
           color={0,127,255}));
     connect(HVAC2.zonRetPor, perZon2.ports[2]) annotation (Line(points={{-28.8,-165.875},
             {-2,-165.875},{-2,-198},{76,-198},{76,-183.1}},           color={0,
             127,255}));
-    connect(HVAC1.zonSupPort, perZon1.ports[1]) annotation (Line(points={{-28.9302,
-            -59.625},{6,-59.625},{6,-98},{72,-98},{72,-93.1}},          color={
+    connect(HVAC1.zonSupPort, perZon1.ports[1]) annotation (Line(points={{
+            -28.9302,-59.625},{6,-59.625},{6,-98},{72,-98},{72,-93.1}}, color={
             0,127,255}));
     connect(HVAC1.zonRetPor, perZon1.ports[2]) annotation (Line(points={{-28.8,-75.875},
             {0,-75.875},{0,-106},{76,-106},{76,-93.1}},          color={0,127,
             255}));
-    connect(perZon1.TAir, HVAC1.temSenRet) annotation (Line(points={{95,-60.2},{
-            100,-60.2},{100,-52},{-31.014,-52},{-31.014,-55.375}},  color={0,0,
+    connect(perZon1.TAir, HVAC1.temSenRet) annotation (Line(points={{95,-60.2},
+            {100,-60.2},{100,-52},{-31.014,-52},{-31.014,-55.375}}, color={0,0,
             127}));
     connect(perZon2.TAir, HVAC2.temSenRet) annotation (Line(points={{95,-150.2},
             {102,-150.2},{102,-140},{-12,-140},{-12,-145.375},{-31.014,-145.375}},
@@ -1013,16 +1255,14 @@ equation
     connect(perZon4.TAir, HVAC4.temSenRet) annotation (Line(points={{93,-318.2},
             {102,-318.2},{102,-304},{2,-304},{2,-311.375},{-31.014,-311.375}},
           color={0,0,127}));
-    connect(attZon.qGai_flow, mul.y) annotation (Line(points={{52,156},{4,156},
-            {4,94},{-9,94}}, color={0,0,127}));
-    connect(HVAC1.senTemOA, HVAC.senTemOA) annotation (Line(points={{-94.5674,-81},
-            {-140,-81},{-140,-1},{-96.5674,-1}},      color={0,0,127}));
-    connect(HVAC2.senTemOA, HVAC.senTemOA) annotation (Line(points={{-94.5674,-171},
-            {-140,-171},{-140,-1},{-96.5674,-1}},       color={0,0,127}));
-    connect(HVAC3.senTemOA, HVAC.senTemOA) annotation (Line(points={{-96.5674,-259},
-            {-140,-259},{-140,-1},{-96.5674,-1}},       color={0,0,127}));
-    connect(HVAC4.senTemOA, HVAC.senTemOA) annotation (Line(points={{-94.5674,-337},
-            {-118,-337},{-118,-338},{-140,-338},{-140,-1},{-96.5674,-1}},
+    connect(HVAC1.senTemOA, HVAC.senTemOA) annotation (Line(points={{-94.5674,
+            -81},{-140,-81},{-140,-1},{-96.5674,-1}}, color={0,0,127}));
+    connect(HVAC2.senTemOA, HVAC.senTemOA) annotation (Line(points={{-94.5674,
+            -171},{-140,-171},{-140,-1},{-96.5674,-1}}, color={0,0,127}));
+    connect(HVAC3.senTemOA, HVAC.senTemOA) annotation (Line(points={{-96.5674,
+            -259},{-140,-259},{-140,-1},{-96.5674,-1}}, color={0,0,127}));
+    connect(HVAC4.senTemOA, HVAC.senTemOA) annotation (Line(points={{-94.5674,
+            -337},{-118,-337},{-118,-338},{-140,-338},{-140,-1},{-96.5674,-1}},
           color={0,0,127}));
     connect(HVAC1.day, integerToReal1.y) annotation (Line(points={{-94.4372,-86.5},
             {-134,-86.5},{-134,140},{-185,140}},        color={0,0,127}));
@@ -1045,44 +1285,50 @@ equation
             {-130,-11.125},{-96.4372,-11.125}},       color={0,0,127}));
     connect(senDay.u, integerToReal1.y) annotation (Line(points={{134,-476},{
             -134,-476},{-134,140},{-185,140}}, color={0,0,127}));
-    connect(senHeaPow3.u, HVAC3.heaPowDem) annotation (Line(points={{152,-274},{
-            142,-274},{142,-290},{-49.0326,-290},{-49.0326,-273.5}},  color={0,
+    connect(senHeaPow3.u, HVAC3.heaPowDem) annotation (Line(points={{152,-274},
+            {142,-274},{142,-290},{-49.0326,-290},{-49.0326,-273.5}}, color={0,
             0,127}));
-    connect(senFanPow3.u, HVAC3.fanPowDem) annotation (Line(points={{152,-304},{
-            142,-304},{142,-294},{-55.2837,-294},{-55.2837,-273.5}}, color={0,0,
+    connect(senFanPow3.u, HVAC3.fanPowDem) annotation (Line(points={{152,-304},
+            {142,-304},{142,-294},{-55.2837,-294},{-55.2837,-273.5}},color={0,0,
             127}));
-    connect(senCCPow3.u, HVAC3.cooPowDem) annotation (Line(points={{152,-244},{138,
-            -244},{138,-284},{-42.1302,-284},{-42.1302,-273.5}}, color={0,0,127}));
-    connect(senHeaPow4.u, HVAC4.heaPowDem) annotation (Line(points={{120,-376},{
-            110,-376},{110,-386},{-47.0326,-386},{-47.0326,-351.5}},  color={0,
+    connect(senCCPow3.u, HVAC3.cooPowDem) annotation (Line(points={{152,-244},{
+            138,-244},{138,-284},{-42.1302,-284},{-42.1302,-273.5}},
+                                                                 color={0,0,127}));
+    connect(senHeaPow4.u, HVAC4.heaPowDem) annotation (Line(points={{120,-376},
+            {110,-376},{110,-386},{-47.0326,-386},{-47.0326,-351.5}}, color={0,
             0,127}));
-    connect(senCCPow4.u, HVAC4.cooPowDem) annotation (Line(points={{120,-346},{106,
-            -346},{106,-380},{-40.1302,-380},{-40.1302,-351.5}}, color={0,0,127}));
-    connect(senFanPow4.u, HVAC4.fanPowDem) annotation (Line(points={{120,-406},{
-            116,-406},{116,-390},{-53.2837,-390},{-53.2837,-351.5}}, color={0,0,
+    connect(senCCPow4.u, HVAC4.cooPowDem) annotation (Line(points={{120,-346},{
+            106,-346},{106,-380},{-40.1302,-380},{-40.1302,-351.5}},
+                                                                 color={0,0,127}));
+    connect(senFanPow4.u, HVAC4.fanPowDem) annotation (Line(points={{120,-406},
+            {116,-406},{116,-390},{-53.2837,-390},{-53.2837,-351.5}},color={0,0,
             127}));
-    connect(senCCPow2.u, HVAC2.cooPowDem) annotation (Line(points={{124,-154},{100,
-            -154},{100,-204},{-40.1302,-204},{-40.1302,-185.5}}, color={0,0,127}));
-    connect(senHeaPow2.u, HVAC2.heaPowDem) annotation (Line(points={{124,-182},{
-            104,-182},{104,-208},{-47.0326,-208},{-47.0326,-185.5}},  color={0,
+    connect(senCCPow2.u, HVAC2.cooPowDem) annotation (Line(points={{124,-154},{
+            100,-154},{100,-204},{-40.1302,-204},{-40.1302,-185.5}},
+                                                                 color={0,0,127}));
+    connect(senHeaPow2.u, HVAC2.heaPowDem) annotation (Line(points={{124,-182},
+            {104,-182},{104,-208},{-47.0326,-208},{-47.0326,-185.5}}, color={0,
             0,127}));
-    connect(senFanPow2.u, HVAC2.fanPowDem) annotation (Line(points={{124,-214},{
-            -53.2837,-214},{-53.2837,-185.5}}, color={0,0,127}));
-    connect(senCCPow1.u, HVAC1.cooPowDem) annotation (Line(points={{154,-60},{106,
-            -60},{106,-112},{-40.1302,-112},{-40.1302,-95.5}}, color={0,0,127}));
-    connect(senHeaPow1.u, HVAC1.heaPowDem) annotation (Line(points={{154,-88},{114,
-            -88},{114,-118},{-47.0326,-118},{-47.0326,-95.5}},     color={0,0,
+    connect(senFanPow2.u, HVAC2.fanPowDem) annotation (Line(points={{124,-214},
+            {-53.2837,-214},{-53.2837,-185.5}},color={0,0,127}));
+    connect(senCCPow1.u, HVAC1.cooPowDem) annotation (Line(points={{154,-60},{
+            106,-60},{106,-112},{-40.1302,-112},{-40.1302,-95.5}},
+                                                               color={0,0,127}));
+    connect(senHeaPow1.u, HVAC1.heaPowDem) annotation (Line(points={{154,-88},{
+            114,-88},{114,-118},{-47.0326,-118},{-47.0326,-95.5}}, color={0,0,
             127}));
-    connect(senFanPow1.u, HVAC1.fanPowDem) annotation (Line(points={{154,-120},{
-            122,-120},{122,-124},{-53.2837,-124},{-53.2837,-95.5}}, color={0,0,127}));
+    connect(senFanPow1.u, HVAC1.fanPowDem) annotation (Line(points={{154,-120},
+            {122,-120},{122,-124},{-53.2837,-124},{-53.2837,-95.5}},color={0,0,127}));
     connect(senHeaPow.u, HVAC.heaPowDem) annotation (Line(points={{108,-10},{98,
             -10},{98,-24},{-49.0326,-24},{-49.0326,-15.5}},    color={0,0,127}));
-    connect(senCCPow.u, HVAC.cooPowDem) annotation (Line(points={{110,20},{94,20},
-            {94,-20},{-42.1302,-20},{-42.1302,-15.5}}, color={0,0,127}));
-    connect(senFanPow.u, HVAC.fanPowDem) annotation (Line(points={{110,-40},{100,
-            -40},{100,-28},{-55.2837,-28},{-55.2837,-15.5}}, color={0,0,127}));
-  connect(senTemOA.u, HVAC.senTemOA) annotation (Line(points={{136,-508},{-140,-508},
-            {-140,-1},{-96.5674,-1}},
+    connect(senCCPow.u, HVAC.cooPowDem) annotation (Line(points={{110,20},{94,
+            20},{94,-20},{-42.1302,-20},{-42.1302,-15.5}},
+                                                       color={0,0,127}));
+    connect(senFanPow.u, HVAC.fanPowDem) annotation (Line(points={{110,-40},{
+            100,-40},{100,-28},{-55.2837,-28},{-55.2837,-15.5}},
+                                                             color={0,0,127}));
+  connect(senTemOA.u, HVAC.senTemOA) annotation (Line(points={{136,-508},{-140,
+            -508},{-140,-1},{-96.5674,-1}},
                                     color={0,0,127}));
     connect(calTim.weekDay, integerToReal1.u) annotation (Line(points={{-234.4,145.6},
             {-221.2,145.6},{-221.2,140},{-208,140}}, color={255,127,0}));
@@ -1304,6 +1550,8 @@ end SOM3;
 
   Modelica.Blocks.Interfaces.RealOutput senTRoom_y(unit="K", min = 270, max = 310) = mod.HVAC.senTemRoo.y
     "Core Room Temperature";
+  Modelica.Blocks.Interfaces.RealOutput senTemSup_y(unit="K", min = 270, max = 310) = mod.HVAC.senTemSup.y
+    "Core Supply Temperature";
   Modelica.Blocks.Interfaces.RealOutput senRH_y(unit="1", min = 0, max = 0.99) = mod.HVAC.senRelHumOut.y
     "Core Room HR";
   Modelica.Blocks.Interfaces.RealOutput senHeaPow_y(unit="W", min = 0, max = mod.HVAC.heaNomPow) = mod.senHeaPow.y
@@ -1321,6 +1569,8 @@ end SOM3;
 
   Modelica.Blocks.Interfaces.RealOutput senTRoom1_y(unit="K", min = 270, max = 310) = mod.HVAC1.senTemRoo.y
     "Perimeter zone 1 Temperature";
+  Modelica.Blocks.Interfaces.RealOutput senTemSup1_y(unit="K", min = 270, max = 310) = mod.HVAC1.senTemSup.y
+    "Perimeter zone 1 Supply Temperature";
   Modelica.Blocks.Interfaces.RealOutput senRH1_y(unit="1", min = 0, max = 0.99) = mod.HVAC1.senRelHumOut.y
     "Perimeter zone 1 HR";
   Modelica.Blocks.Interfaces.RealOutput senHeaPow1_y(unit="1", min = 0, max = mod.HVAC1.heaNomPow) = mod.senHeaPow1.y
@@ -1338,6 +1588,8 @@ end SOM3;
 
   Modelica.Blocks.Interfaces.RealOutput senTRoom2_y(unit="K", min = 270, max = 310) = mod.HVAC2.senTemRoo.y
     "Perimeter zone 2 Temperature";
+  Modelica.Blocks.Interfaces.RealOutput senTemSup2_y(unit="K", min = 270, max = 310) = mod.HVAC2.senTemSup.y
+    "Perimeter zone 2 Supply Temperature";
   Modelica.Blocks.Interfaces.RealOutput senRH2_y(unit="1", min = 0, max = 0.99) = mod.HVAC2.senRelHumOut.y
     "Perimeter zone 2 HR";
   Modelica.Blocks.Interfaces.RealOutput senHeaPow2_y(unit="1", min = 0, max = mod.HVAC2.heaNomPow) = mod.senHeaPow2.y
@@ -1355,6 +1607,8 @@ end SOM3;
 
   Modelica.Blocks.Interfaces.RealOutput senTRoom3_y(unit="K", min = 270, max = 310) = mod.HVAC3.senTemRoo.y
     "Perimeter zone 3 Temperature";
+  Modelica.Blocks.Interfaces.RealOutput senTemSup3_y(unit="K", min = 270, max = 310) = mod.HVAC3.senTemSup.y
+    "Perimeter zone 3 Supply Temperature";
   Modelica.Blocks.Interfaces.RealOutput senRH3_y(unit="1", min = 0, max = 0.99) = mod.HVAC3.senRelHumOut.y
     "Perimeter zone 3 HR";
   Modelica.Blocks.Interfaces.RealOutput senHeaPow3_y(unit="1", min = 0, max = mod.HVAC3.heaNomPow) = mod.senHeaPow3.y
@@ -1372,6 +1626,8 @@ end SOM3;
 
   Modelica.Blocks.Interfaces.RealOutput senTRoom4_y(unit="K", min = 270, max = 310) = mod.HVAC4.senTemRoo.y
     "Perimeter zone 4 Temperature";
+  Modelica.Blocks.Interfaces.RealOutput senTemSup4_y(unit="K", min = 270, max = 310) = mod.HVAC4.senTemSup.y
+    "Perimeter zone 4 Supply Temperature";
   Modelica.Blocks.Interfaces.RealOutput senRH4_y(unit="1", min = 0, max = 0.99) = mod.HVAC4.senRelHumOut.y
     "Perimeter zone 4 HR";
   Modelica.Blocks.Interfaces.RealOutput senHeaPow4_y(unit="1", min = 0, max = mod.HVAC4.heaNomPow) = mod.senHeaPow4.y
@@ -1426,7 +1682,7 @@ end SOM3;
 
   annotation (uses(Modelica(version="3.2.3"), Buildings(version="8.0.0")),
       experiment(
-      StopTime=31557600,
-      Interval=600,
+      StopTime=604800,
+      Interval=60,
       __Dymola_Algorithm="Dassl"));
 end wrapped;
