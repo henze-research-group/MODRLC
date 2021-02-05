@@ -4,6 +4,7 @@ USER root
 
 RUN apt-get update && \
     apt-get install -y git && \
+    apt-get install -y git-lfs && \
     apt-get install -y sudo
 
 USER developer
@@ -14,9 +15,10 @@ WORKDIR $HOME
 
 RUN mkdir $HOME/MODELICAPATH && mkdir git && \
     cd git && \
+    git lfs install && \
     git clone https://github.com/ibpsa/modelica-ibpsa.git && \
     git clone https://github.com/open-ideas/IDEAS.git && \
-    git clone https://github.com/lbl-srg/modelica-buildings.git && \
+    git clone https://github.com/henze-research-group/modelica-buildings.git && \
     ln -s $HOME/git/IDEAS/IDEAS $HOME/MODELICAPATH/IDEAS && \
     ln -s $HOME/git/modelica-buildings/Buildings $HOME/MODELICAPATH/Buildings && \
     ln -s $HOME/git/modelica-ibpsa/IBPSA $HOME/MODELICAPATH/IBPSA && \
