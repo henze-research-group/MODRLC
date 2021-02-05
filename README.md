@@ -19,13 +19,14 @@ that is being developed as part of the IBPSA Project 1 (https://ibpsa.github.io/
 - ``/docs`` contains design requirements and guide documentation.
 
 ## Quick-Start to Run Test Cases
-1) Install [Docker](https://docs.docker.com/get-docker/)
+1) Install [Docker](https://docs.docker.com/get-docker/).
 2) Build the test case by ``$ make build TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory located in ``/testcases``.
 3) Deploy the test case by ``$ make run TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory located in ``/testcases``.
 4) In a separate process, use the test case API defined below to interact with the test case using your test controller.  Alternatively, view and run an example test controller as described in the next step.
-5) Run an example test controller: 
+5) Run an example test controller:
 
 * For Python-based example controllers:
+  * Add the root directory of the BOPTEST repository to the PYTHONPATH environment variable.
   * Build and deploy ``testcase1``.  Then, in a separate terminal, use ``$ cd examples/python/ && python testcase1.py`` to test a simple proportional feedback controller on this test case over a two-day period.
   * Build and deploy ``testcase2``.  Then, in a separate terminal, use ``$ cd examples/python/ && python testcase2.py`` to test a simple supervisory controller on this test case over a two-day period.
 
@@ -59,7 +60,17 @@ Example RESTful interaction:
 | Receive test case name                                                |  GET ``name``                                             |
 | Receive boundary condition forecast from current communication step   |  GET ``forecast``                                         |
 | Receive boundary condition forecast parameters in seconds             |  GET ``forecast_parameters``                              |
-| Set boundary condition forecast parameters in seconds  		        |  PUT ``forecast_parameters`` with arguments ``horizon=<value>``, ``interval=<value>``|
+| Set boundary condition forecast parameters in seconds                 |  PUT ``forecast_parameters`` with arguments ``horizon=<value>``, ``interval=<value>``|
+| Receive current test scenario                                         |  GET ``scenario``                                   |
+| Set test scenario  		                                             |  PUT ``scenario`` with arguments ``electricity_price=<'constant' or 'dynamic' or 'highly_dynamic'>``|
+
+## Development
+
+This repository uses pre-commit to ensure that the files meet standard formatting conventions (such as line spacing, layout, etc).
+Presently only a handful of checks are enabled and will expanded in the near future. To run pre-commit first install
+pre-commit into your Python version using pip `pip install pre-commit`. Pre-commit can either be manually by calling
+`pre-commit run --all-files` from within the BOPTEST checkout directory, or you can install pre-commit to be run automatically
+as a hook on all commits by calling `pre-commit install` in the root directory of the BOPTEST GitHub checkout.
 
 ## More Information
 See the [wiki](https://github.com/ibpsa/project1-boptest/wiki) for use cases and development requirements.

@@ -56,4 +56,3 @@ COPY data data/
 COPY forecast forecast/
 COPY kpis kpis/
 ENV PYTHONPATH $PYTHONPATH:$HOME
-
