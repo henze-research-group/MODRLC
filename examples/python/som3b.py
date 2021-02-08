@@ -11,14 +11,13 @@ imported from a different module.
 # ----------------------
 import requests
 import numpy as np
-import json,collections
-
-# ----------------------
 
 # TEST CONTROLLER IMPORT
 # ----------------------
-from controllers import pidsom3b as pid
-# ----------------------
+from controllers.pidsom3b import compute_control, initialize
+
+from simple_pid import PID
+pid = PID(0.00005, 100, 300, setpoint=294.15, output_limits=(0,1), sample_time=0.01)
 
 def run(plot=True, customized_kpi_config=None):
     '''Run test case.
@@ -92,7 +91,7 @@ def run(plot=True, customized_kpi_config=None):
     res = requests.put('{0}/step'.format(url), data={'step':step})
     print('\nRunning test case...')
     # Initialize u
-    u = pid.initialize()
+    u = initialize()
     print(u)
     # Simulation Loop
     for i in range(int(length/step)):
@@ -100,7 +99,7 @@ def run(plot=True, customized_kpi_config=None):
         y = requests.post('{0}/advance'.format(url), data=u).json()
         print(y)
         # Compute next control signal
-        u, action = pid.compute_control(y)
+        u, action = compute_control(y, pid)
         actions.append(action)
         print(u)
         # Compute customized KPIs if any

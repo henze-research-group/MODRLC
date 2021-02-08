@@ -12,11 +12,9 @@ from boptest_client import BoptestClient
 
 # GENERAL PACKAGE IMPORT
 # ----------------------
-import requests
 import numpy as np
 import pandas as pd
 
-import shutil
 # TEST CONTROLLER IMPORT
 # ----------------------
 from controllers.pidsom3b import compute_control, initialize
