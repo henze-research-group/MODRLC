@@ -7,8 +7,6 @@ examples/python/som3_mpc1/*
 *.mat
 *.log
 *.err
-.python-version
-.idea
 dymosim
 dsmodel.c
 examples/julia/*.csv
