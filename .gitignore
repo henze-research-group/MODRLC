@@ -4,6 +4,7 @@ examples/python/som3_mpc1/*
 *.pyc
 *.txt
 !worker/requirements/*.txt
+!examples/python/requirements.txt
 *.mat
 *.log
 *.err
