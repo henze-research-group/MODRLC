@@ -22,12 +22,28 @@ from pathlib import Path
 alfalfa_url = 'http://localhost'
 client = AlfalfaClient(url=alfalfa_url)
 
-print(client)
-
 model_path = Path(__file__).parent.absolute().parent.parent / 'testcases' / 'som3' / 'models' / 'wrapped.fmu'
 print(model_path)
 site = client.submit(model_path)
 
 print('Starting simulation')
-client.start(site) #, external_clock='false')
+# eventually we will want to remove this external_clock. Not sure though since setting to timescale=5 does
+# not work. And timescale has to be 1,2,...,15
+length = 24 * 3600  # 48 hours
+step = 300  # 5 minutes
 
+# initial u
+u = {'oveHCSet_u': 0,
+     'oveHCSet_activate': 0,
+     'oveVFRSet_u': 0,
+     'oveVFRSet_activate': 0}
+
+# Start and advance
+client.start(site, external_clock=True)
+for i in range(int(length / step)):
+    client.setInputs(site, u)
+    client.advance([site])
+    model_outputs = client.outputs(site)
+    print(model_outputs)
+
+client.stop(site)
