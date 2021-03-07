@@ -61,9 +61,9 @@ def run(plot=True, customized_kpi_config=None):
 
     # SETUP TEST CASE
     # ---------------
-    url = 'http://0.0.0.0:5000'
+    url = 'http://localhost:5000'
 
-    client = BoptestClient(url='http://0.0.0.0:5000')
+    client = BoptestClient(url=url)
     print('\nTEST CASE INFORMATION\n---------------------')
     print(f'Name:\t\t\t\t{client.name()}')
     print(f'Control Inputs:\t\t\t{json.dumps(client.inputs(), indent=2)}')

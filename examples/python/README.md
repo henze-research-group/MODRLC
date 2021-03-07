@@ -13,3 +13,9 @@ poetry install
 ## SOM3_MPC_PSO
 
 This Python project is a stub to run the SOM3 model on Alfalfa. They are a work in progress.
+
+Start the SOM3 testcase using:
+
+```bash
+make run TESTCASE=som3
+```
