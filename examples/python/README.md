@@ -6,7 +6,6 @@ This project uses poetry to manage dependencies since Alfalfa-client is setup to
 ```bash
 pip install poetry
 poetry install
-
 ```
 
 # Examples
