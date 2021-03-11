@@ -1,40 +1,18 @@
-#
-#   This file is part of do-mpc
-#
-#   do-mpc: An environment for the easy, modular and efficient implementation of
-#        robust nonlinear model predictive control
-#
-#   Copyright (c) 2014-2019 Sergio Lucia, Alexandru Tatulea-Codrean
-#                        TU Dortmund. All rights reserved
-#
-#   do-mpc is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as
-#   published by the Free Software Foundation, either version 3
-#   of the License, or (at your option) any later version.
-#
-#   do-mpc is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with do-mpc.  If not, see <http://www.gnu.org/licenses/>.
-
+# Simulation of the model
 import sys
 
 sys.path.append('../')
-import do_mpc
+# import do_mpc
+from boptest_simulator.boptest_simulator import BoptestSimulator
 
 
 def template_simulator(model):
-    """
-    --------------------------------------------------------------------------
-    template_optimizer: tuning parameters
-    --------------------------------------------------------------------------
-    """
-    simulator = do_mpc.simulator.Simulator(model)
+    # Currently the simulator is using the same state space model as the planning model.
+    simulator = BoptestSimulator(model)
 
-    simulator.set_param(t_step=0.5)
+    # simulator.set_param(t_step=0.5)
+    # We are running the MPC model at t=300 seconds (5 min).
+    simulator.set_param(t_step=300)
 
     simulator.setup()
 
