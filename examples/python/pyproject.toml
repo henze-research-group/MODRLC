@@ -10,6 +10,7 @@ requests = "^2.25.1"
 importlib-metadata = "^3.4.0"
 alfalfa-client = {git = "https://git@github.com/nrel/alfalfa-client.git", rev = "develop"}
 do-mpc = "^4.1.1"
+jupyter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
