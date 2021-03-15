@@ -7,7 +7,7 @@ Created on Tue Feb 16 18:25:17 2021
 """
 from __future__ import division
 
-#Import all the metrics to evaluate the accuracy of the N4SID Algorithm with the selected order 
+#Import all the metrics to evaluate the accuracy of the N4SID Algorithm with the selected order
 
 from sklearn.metrics import r2_score
 from sklearn.metrics import median_absolute_error
@@ -53,10 +53,10 @@ Time_months1=Time1/24/3600/30;
 #Defining the vectors inputs (u) and outputs (y)#
 
 
-        
+
 U1 = [df1['mod.building.weaBus.HDifHor'].values.tolist(), df1['mod.building.weaBus.HDirNor'].values.tolist(),df1['mod.building.weaBus.HGloHor'].values.tolist(), df1['mod.building.weaBus.HHorIR'].values.tolist(),df1['mod.building.weaBus.TBlaSky'].values.tolist(), df1['mod.building.weaBus.TDryBul'].values.tolist(), df1['mod.building.weaBus.TWetBul'].values.tolist(), df1['mod.building.weaBus.winSpe'].values.tolist(), df1['mod.building.weaBus.winDir'].values.tolist(),df1['mod.building.weaBus.relHum'].values.tolist(),df1['mod.corZon.fmuZon.QCon_flow'].values.tolist(),df1['mod.HVAC.hea.Q_flow'].values.tolist(),df1['mod.HVAC.fan.P'].values.tolist(),df1['mod.HVAC.volSenSup.V_flow'].values.tolist(),df1['mod.HVAC.volSenOA.V_flow'].values.tolist(),df1['mod.HVAC.senRelHum.phi'].values.tolist(),df1['mod.HVAC.senTSup.T'].values.tolist()]
 
-      
+
 U_1=np.array(U1)
 
 
@@ -69,10 +69,10 @@ y_tot1=np.array(y_tot1)
 method = 'N4SID'
 sys_id1 = system_identification(y_tot1, U_1, method, SS_fixed_order=9,IC='AICc')
 print(sys_id1)
-xid1, yid1 = fsetSIM.SS_lsim_process_form(sys_id1.A, sys_id1.B, sys_id1.C, sys_id1.D, U_1,sys_id1.x0)
+xid1, yid1 = fsetSIM.SS_lsim_process_form(sys_id1.A, sys_id1.B, sys_id1.C, sys_id1.D, U_1, sys_id1.x0)
 print(xid1,yid1)
 
-#Calculate the metrics 
+#Calculate the metrics
 
 #corr_coeff_1=r2_score(y_tot1[0],yid1[0]);
 mae_1=median_absolute_error(y_tot1[0],yid1[0]);
@@ -126,10 +126,10 @@ print(df2)
 Time2 = np.array([df2['Time'].values.tolist()])
 Time_months2=Time2/24/3600/30;
 
-       
+
 U2 = [df2['mod.building.weaBus.HDifHor'].values.tolist(), df2['mod.building.weaBus.HDirNor'].values.tolist(),df2['mod.building.weaBus.HGloHor'].values.tolist(), df2['mod.building.weaBus.HHorIR'].values.tolist(),df2['mod.building.weaBus.TBlaSky'].values.tolist(), df2['mod.building.weaBus.TDryBul'].values.tolist(), df2['mod.building.weaBus.TWetBul'].values.tolist(), df2['mod.building.weaBus.winSpe'].values.tolist(), df2['mod.building.weaBus.winDir'].values.tolist(),df2['mod.building.weaBus.relHum'].values.tolist(),df2['mod.corZon.fmuZon.QCon_flow'].values.tolist(),df2['mod.HVAC.hea.Q_flow'].values.tolist(),df2['mod.HVAC.fan.P'].values.tolist(),df2['mod.HVAC.volSenSup.V_flow'].values.tolist(),df2['mod.HVAC.volSenOA.V_flow'].values.tolist(),df2['mod.HVAC.senRelHum.phi'].values.tolist(),df2['mod.HVAC.senTSup.T'].values.tolist()]
 
-      
+
 U_2=np.array(U2)
 
 
@@ -147,7 +147,7 @@ print(xid2,yid2)
 
 
 
-#Calculate the metrics 
+#Calculate the metrics
 
 #corr_coeff_2=r2_score(y_tot2[0],yid2[0]);
 mae_2=median_absolute_error(y_tot2[0],yid2[0]);

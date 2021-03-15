@@ -27,13 +27,32 @@ class ModelParameters:
         print(self.b.shape)
 
         # TODO: list what these state variables are
+        # X[1] =
+        # X[2] =
+
         self.max_x = np.array([
             [4.0], [10.0], [4.0], [10.0], [4.0], [10.0], [4.0], [10.0]
         ])
         self.min_x = - self.max_x
 
-        # state space max u values
-        # TODO: list the control variables here
+        # state space u values
+        # u[0]  = 'mod.building.weaBus.HDifHor'
+        # u[1]  = 'mod.building.weaBus.HDirNor'
+        # u[2]  = 'mod.building.weaBus.HGloHor'
+        # u[3]  = 'mod.building.weaBus.HHorIR'
+        # u[4]  = 'mod.building.weaBus.TBlaSky'
+        # u[5]  = 'mod.building.weaBus.TDryBul'
+        # u[6]  = 'mod.building.weaBus.TWetBul'
+        # u[7]  = 'mod.building.weaBus.winSpe'
+        # u[8]  = 'mod.building.weaBus.winDir'
+        # u[9]  = 'mod.building.weaBus.relHum'
+        # u[10] = 'mod.corZon.fmuZon.QCon_flow'
+        # u[11] = 'mod.HVAC.hea.Q_flow'
+        # u[12] = 'mod.HVAC.fan.P'
+        # u[13] = 'mod.HVAC.volSenSup.V_flow'
+        # u[14] = 'mod.HVAC.volSenOA.V_flow'
+        # u[15] = 'mod.HVAC.senRelHum.phi'
+        # u[16] = 'mod.HVAC.senTSup.T'
         self.max_u = np.array([
             [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0]
         ])
