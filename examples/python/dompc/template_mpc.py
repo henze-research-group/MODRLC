@@ -24,19 +24,30 @@ def template_mpc(model):
 
     mpc.set_param(**setup_mpc)
 
-    mterm = model.aux['cost']
-    lterm = model.aux['cost']  # terminal cost
+    # this is the cost over the planning horizon.
+    mterm = model.aux['cost']  # terminal cost
+    lterm = model.aux['cost']  # stage cost
 
     mpc.set_objective(mterm=mterm, lterm=lterm)
-    mpc.set_rterm(u=1e-4)
+
+    tvp_template = mpc.get_tvp_template()
+    def tvp_fun(t_now):
+        # print(t_now)
+        # print(tvp_template)
+        return tvp_template
+
+    mpc.set_tvp_fun(tvp_fun)
+
+
+    # mpc.set_rterm(u=1e-4)
 
     # need to determine the ranges for the state space model.
     mpc.bounds['lower', '_x', 'x'] = mp.min_x
     mpc.bounds['upper', '_x', 'x'] = mp.max_x
 
     # u for the example is dim(1,1). Need to determine the ranges.
-    mpc.bounds['lower', '_u', 'u'] = mp.min_u
-    mpc.bounds['upper', '_u', 'u'] = mp.max_u
+    # mpc.bounds['lower', '_u', 'u'] = mp.min_u
+    # mpc.bounds['upper', '_u', 'u'] = mp.max_u
 
     mpc.setup()
 
