@@ -24,11 +24,11 @@ Get configured do-mpc modules:
 model = template_model()
 mpc = template_mpc(model)
 simulator = template_simulator(model)
-mhe = template_mhe(model)
+# mhe = template_mhe(model)
 
 # Use the StateFeedback estimator for testing, but it
 # is very basic.
-# estimator = do_mpc.estimator.StateFeedback(model)
+estimator = do_mpc.estimator.StateFeedback(model)
 
 
 """
@@ -40,12 +40,12 @@ e = np.ones([model.n_x, 1])
 x0 = np.random.uniform(-3 * e, 3 * e)  # Values between +3 and +3 for all states
 mpc.x0 = x0
 simulator.x0 = x0
-mhe.x0 = x0
+# mhe.x0 = x0
 # estimator.x0 = x0
 
 # Use initial state to set the initial guess.
 mpc.set_initial_guess()
-mhe.set_initial_guess()
+# mhe.set_initial_guess()
 
 """
 Setup graphic:
@@ -59,7 +59,7 @@ color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 fig, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(10, 9))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
-mhe_plot = do_mpc.graphics.Graphics(mhe.data)
+# mhe_plot = do_mpc.graphics.Graphics(mhe.data)
 # sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
 # Setup the plots based on the ModelParameter variables
@@ -76,13 +76,17 @@ for var in mp.variables:
 ax[0].set_title('Inputs:')
 mpc_plot.add_line('_u', 'T_supply', ax[0])
 mpc_plot.add_line('_u', 'Q_flow', ax[0])
+mpc_plot.add_line('_u', 'fanP', ax[0])
+mpc_plot.add_line('_u', 'volSenSupV_flow', ax[0])
+mpc_plot.add_line('_u', 'volSenOAV_flow', ax[0])
+mpc_plot.add_line('_u', 'room_relHum', ax[0])
 
 ax[1].set_title('OA Temperatures TVPs:')
 
 ax[2].set_title('Irradiance TVPs:')
 
 ax[3].set_title('Indoor Air Temperature')
-# mhe_plot.add_line('_tvp', 'indoor_temp', ax[3])
+mpc_plot.add_line('_x', 'indoor_temperature', ax[3])
 
 # ax[4].set_title('Estimated parameters:')
 # # sim_plot.add_line('_y', 'y', ax[4])
@@ -101,11 +105,8 @@ Run MPC main loop:
 for k in range(200):
     u0 = mpc.make_step(x0)
     y_next = simulator.make_step(u0)
-    x0 = mhe.make_step(y_next)
-    # x0 = estimator.make_step(y_next)
-
-
-    # raise SystemExit()
+    # x0 = mhe.make_step(y_next)
+    x0 = estimator.make_step(y_next)
 
     if show_animation:
         # graphics.plot_results(t_ind=k)
@@ -127,4 +128,4 @@ input('Press any key to exit.')
 
 # Store results:
 if store_results:
-    do_mpc.data.save_results([mpc, simulator], 'oscillating_masses')
+    do_mpc.data.save_results([mpc, simulator], 'som3')

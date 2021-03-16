@@ -35,8 +35,7 @@ def template_model():
     t_supply = model.set_variable(var_type='_u', var_name='T_supply', shape=(1, 1))
 
     # store the temperature
-    # indoor_temperature = model.set_variable('_x', var_name='indoor_temperature', shape=(1,1))
-    # model.set_variable('_z', 'temperature', shape=(1, 1))
+    indoor_temperature = model.set_variable(var_type='_x', var_name='indoor_temperature', shape=(1, 1))
 
     # Time-varying parameter for the MHE: Weighting of the measurements (tvp):
     # P_v = model.set_variable(var_type='_tvp', var_name='P_v', shape=(5, 5))
@@ -51,7 +50,8 @@ def template_model():
     #    where are the constraints -- on y.
 
     # assume fixed t setpoint of 22
-    model.set_expression(expr_name='cost', expr=sum1(_x ** 2))
+    cost_function = indoor_temperature
+    model.set_expression(expr_name='cost', expr=cost_function)
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
@@ -77,9 +77,10 @@ def template_model():
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
 
-    y_exp = mp.c @ _x + mp.d @ u_array
-    # model.set_rhs('y_meas', y_exp)
-    model.set_meas('y_meas', y_exp)
+    # y_exp = mp.c @ _x + mp.d @ u_array
+    # model.set_meas('y_meas', y_exp)
+
+    model.set_rhs('indoor_temperature', mp.c @ _x + mp.d @ u_array)
 
     model.setup()
 
