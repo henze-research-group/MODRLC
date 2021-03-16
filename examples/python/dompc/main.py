@@ -16,7 +16,7 @@ from template_mhe import template_mhe
 
 """ User settings: """
 show_animation = True
-store_results = False
+store_results = True
 
 """
 Get configured do-mpc modules:
@@ -41,7 +41,7 @@ x0 = np.random.uniform(-3 * e, 3 * e)  # Values between +3 and +3 for all states
 mpc.x0 = x0
 simulator.x0 = x0
 # mhe.x0 = x0
-# estimator.x0 = x0
+estimator.x0 = x0
 
 # Use initial state to set the initial guess.
 mpc.set_initial_guess()
@@ -56,7 +56,7 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(10, 9))
+fig, ax = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(10, 9))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 # mhe_plot = do_mpc.graphics.Graphics(mhe.data)
@@ -73,7 +73,7 @@ for var in mp.variables:
             #     mpc_plot.result_lines['_x', 'phi_2']+mpc_plot.result_lines['_tvp', 'phi_2_set']+mpc_plot.pred_lines['_x', 'phi_2'],
             #     ['Recorded', 'Setpoint', 'Predicted'], title='Disc 2')
 
-ax[0].set_title('Inputs:')
+ax[0].set_title('Inputs')
 mpc_plot.add_line('_u', 'T_supply', ax[0])
 mpc_plot.add_line('_u', 'Q_flow', ax[0])
 mpc_plot.add_line('_u', 'fanP', ax[0])
@@ -81,16 +81,19 @@ mpc_plot.add_line('_u', 'volSenSupV_flow', ax[0])
 mpc_plot.add_line('_u', 'volSenOAV_flow', ax[0])
 mpc_plot.add_line('_u', 'room_relHum', ax[0])
 
-ax[1].set_title('OA Temperatures TVPs:')
+ax[1].set_title('OA Temperatures TVPs')
 
-ax[2].set_title('Irradiance TVPs:')
+ax[2].set_title('Irradiance TVPs')
 
 ax[3].set_title('Indoor Air Temperature')
 mpc_plot.add_line('_x', 'indoor_temperature', ax[3])
 
+ax[4].set_title('Setpoints TVP')
+
+
 # ax[4].set_title('Estimated parameters:')
-# # sim_plot.add_line('_y', 'y', ax[4])
-# # mhe_plot.add_line('_y', 'y', ax[4])
+# sim_plot.add_line('_y', 'y', ax[4])
+# mhe_plot.add_line('_y', 'y', ax[4])
 
 for ax_i in ax:
     ax_i.axvline(1.0)
@@ -102,7 +105,8 @@ plt.ion()
 Run MPC main loop:
 """
 
-for k in range(200):
+# 288 5-minute intervals per day
+for k in range(288):
     u0 = mpc.make_step(x0)
     y_next = simulator.make_step(u0)
     # x0 = mhe.make_step(y_next)
@@ -124,8 +128,9 @@ for k in range(200):
         plt.pause(0.01)
 
 
+print(f"Finished. Store results is set to {store_results}")
 input('Press any key to exit.')
 
 # Store results:
 if store_results:
-    do_mpc.data.save_results([mpc, simulator], 'som3')
+    do_mpc.data.save_results([mpc], 'som3')

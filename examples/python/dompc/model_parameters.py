@@ -25,10 +25,16 @@ class ModelParameters:
 
             data = pd.read_csv(p_data)
             df = pd.DataFrame(data)
-            # print(df['Time'])
             # only save the samples of 300 seconds
             df = df.loc[df['Time'] % 300.0 == 0]
             self.tvp_data = df.drop_duplicates(subset=['Time'])
+
+            p_data = Path('.').resolve() / 'setpoint_tvp.xlsx'
+            if not p_data.exists():
+                raise Exception(f"There is not time varying setpoint parameter file, make sure it exists {p_data}")
+
+            data = pd.read_excel(p_data)
+            self.tvp_setpoint_data = pd.DataFrame(data)
 
             # print(self.tvp_data['mod.building.weaBus.TDryBul'].values[0:30])
             # raise SystemExit()
@@ -137,6 +143,23 @@ class ModelParameters:
             "plot_axis": None,
             "local_var_name": "oa_rel_hum",
         })
+        # tvp_setpoint_data
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvp_setpoint_data",
+            "var_name": "TSetpoint_Lower",
+            "data_column_name": "tsetpoint_lower",
+            "plot_axis": 4,
+            "local_var_name": "tsetpoint_lower",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvp_setpoint_data",
+            "var_name": "TSetpoint_Upper",
+            "data_column_name": "tsetpoint_upper",
+            "plot_axis": 4,
+            "local_var_name": "tsetpoint_upper",
+        })
 
         # TODO: determine the correct u max/min
         self.max_u = np.array([
@@ -183,9 +206,17 @@ class ModelParameters:
 
         # populate all of the time varying parameters
         for var in self.variables:
+            # determine which datafile to use
+            data_source = None
+            if "data_source" in var:
+                if var["data_source"] == "tvp_setpoint_data":
+                    data_source = self.tvp_setpoint_data
+            else:
+                data_source = self.tvp_data
+
             # The data need to be passed as a list of array elements (so list of np.array([d]))
             # The length is n_horizon + 1.
-            loaded_data = self.tvp_data[var["data_column_name"]].values[ind:ind + self.n_horizon + 1]
+            loaded_data = data_source[var["data_column_name"]].values[ind:ind + self.n_horizon + 1]
             self.tvp_template["_tvp", :, var["var_name"]] = [np.array([d]) for d in loaded_data]
 
         return self.tvp_template

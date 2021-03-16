@@ -19,8 +19,8 @@ def template_model():
     # u's shape is B's num of columns x 1
     for var in mp.variables:
         if var["type"] == "tvp":
-            # The vars() allows a local variable to be created using the string.
             print(f"Creating variable for tvp of {var['local_var_name']}")
+            # The vars() allows a local variable to be created using the string.
             globals()[var["local_var_name"]] = model.set_variable(
                 var_type='_tvp', var_name=var["var_name"], shape=(1, 1)
             )
@@ -50,7 +50,7 @@ def template_model():
     #    where are the constraints -- on y.
 
     # assume fixed t setpoint of 22
-    cost_function = indoor_temperature
+    cost_function = (indoor_temperature - 293) ** 2
     model.set_expression(expr_name='cost', expr=cost_function)
 
     # In some editors, the variables will not show as being known, this is because of the
@@ -77,10 +77,10 @@ def template_model():
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
 
-    # y_exp = mp.c @ _x + mp.d @ u_array
+    y_exp = mp.c @ _x + mp.d @ u_array
     # model.set_meas('y_meas', y_exp)
 
-    model.set_rhs('indoor_temperature', mp.c @ _x + mp.d @ u_array)
+    model.set_rhs('indoor_temperature', y_exp)
 
     model.setup()
 

@@ -32,7 +32,7 @@ def template_mhe(model):
     P_x = 1e-4 * np.eye(mp.a.shape[1] + 1)
     # P_p = model.p['P_p']
 
-    # no error in the measurement
+    # no error weighting in the measurement
     P_v = 0 * np.eye(1)
 
     # Set the default MHE objective by passing the weighting matrices:
