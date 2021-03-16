@@ -160,6 +160,14 @@ class ModelParameters:
             "plot_axis": 4,
             "local_var_name": "tsetpoint_upper",
         })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvp_setpoint_data",
+            "var_name": "ElecCost",
+            "data_column_name": "elec_cost",
+            "plot_axis": 5,
+            "local_var_name": "elec_cost",
+        })
 
         # TODO: determine the correct u max/min
         self.max_u = np.array([

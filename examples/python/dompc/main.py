@@ -56,7 +56,7 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(10, 9))
+fig, ax = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(10, 9))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 # mhe_plot = do_mpc.graphics.Graphics(mhe.data)
@@ -90,6 +90,7 @@ mpc_plot.add_line('_x', 'indoor_temperature', ax[3])
 
 ax[4].set_title('Setpoints TVP')
 
+ax[5].set_title('Elec Cost')
 
 # ax[4].set_title('Estimated parameters:')
 # sim_plot.add_line('_y', 'y', ax[4])
