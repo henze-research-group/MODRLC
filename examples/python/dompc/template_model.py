@@ -73,8 +73,8 @@ def template_model():
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
 
-    # y_exp = mp.c @ _x + mp.d @ u_array
-    # model.set_meas('y_meas', y_exp)
+    y_exp = mp.c @ _x + mp.d @ u_array
+    model.set_meas('y_meas', y_exp)
 
     model.setup()
 

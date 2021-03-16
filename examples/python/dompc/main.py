@@ -24,11 +24,11 @@ Get configured do-mpc modules:
 model = template_model()
 mpc = template_mpc(model)
 simulator = template_simulator(model)
-# mhe = template_mhe(model)
+mhe = template_mhe(model)
 
 # Use the StateFeedback estimator for testing, but it
 # is very basic.
-estimator = do_mpc.estimator.StateFeedback(model)
+# estimator = do_mpc.estimator.StateFeedback(model)
 
 
 """
@@ -39,12 +39,13 @@ np.random.seed(99)
 e = np.ones([model.n_x, 1])
 x0 = np.random.uniform(-3 * e, 3 * e)  # Values between +3 and +3 for all states
 mpc.x0 = x0
-# simulator.x0 = x0
-estimator.x0 = x0
+simulator.x0 = x0
+mhe.x0 = x0
+# estimator.x0 = x0
 
 # Use initial state to set the initial guess.
 mpc.set_initial_guess()
-# mhe.set_initial_guess()
+mhe.set_initial_guess()
 
 """
 Setup graphic:
@@ -96,8 +97,8 @@ Run MPC main loop:
 for k in range(200):
     u0 = mpc.make_step(x0)
     y_next = simulator.make_step(u0)
-    # x0 = mhe.make_step(y_next)
-    x0 = estimator.make_step(y_next)
+    x0 = mhe.make_step(y_next)
+    # x0 = estimator.make_step(y_next)
 
 
     # raise SystemExit()

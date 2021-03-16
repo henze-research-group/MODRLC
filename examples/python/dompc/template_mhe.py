@@ -1,9 +1,9 @@
 # This is just a stub. Need to decide how to use this or kalman filters.
 
 from casadi.tools import *
-from template_model import ModelParameters
-sys.path.append('../../')
+
 import do_mpc
+from model_parameters import ModelParameters
 
 
 def template_mhe(model):
@@ -62,10 +62,8 @@ def template_mhe(model):
     #
     # mhe.set_p_fun(p_fun_mhe)
 
-
     # Measurement function:
     y_template = mhe.get_y_template()
-
     def y_fun(t_now):
         n_steps = min(mhe.data._y.shape[0], mhe.n_horizon)
         for k in range(-n_steps, 0):
@@ -75,13 +73,8 @@ def template_mhe(model):
 
     mhe.set_y_fun(y_fun)
 
-    tvp_template = mhe.get_tvp_template()
-    def tvp_fun(t_now):
-        print(t_now)
-        print(tvp_template)
-        return tvp_template
-
-    mhe.set_tvp_fun(tvp_fun)
+    mp.tvp_template = mhe.get_tvp_template()
+    mhe.set_tvp_fun(mp.tvp_fun)
 
     # mhe.bounds['lower', '_u', 'phi_m_set'] = -5
     # mhe.bounds['upper', '_u', 'phi_m_set'] = 5

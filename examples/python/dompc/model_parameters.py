@@ -66,7 +66,6 @@ class ModelParameters:
         # u[15] = 'mod.HVAC.senRelHum.phi'
         # u[16] = 'mod.HVAC.senTSup.T'
         # These are the variables that are needed to define the u matrix.
-        # The order is
         self.variables = []
         self.variables.append({
             "type": "tvp",
@@ -138,6 +137,8 @@ class ModelParameters:
             "plot_axis": None,
             "local_var_name": "oa_rel_hum",
         })
+
+        # TODO: determine the correct u max/min
         self.max_u = np.array([
             [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0], [4.0],
             [4.0], [4.0]
