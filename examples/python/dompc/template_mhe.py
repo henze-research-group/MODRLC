@@ -12,7 +12,7 @@ def template_mhe(model):
     template_mhe: tuning parameters
     --------------------------------------------------------------------------
     """
-    mhe = do_mpc.estimator.MHE(model, [])
+    mhe = do_mpc.estimator.MHE(model, ['y_meas'])
     mp = ModelParameters()
 
     setup_mhe = {
@@ -42,12 +42,12 @@ def template_mhe(model):
     # We therefore do the following:
     # tvp_template = mhe.get_tvp_template()
     # tvp_template['_tvp', :, 'P_v'] = np.diag(np.array([1, 1, 1, 20, 20]))
-    #
-    # # Typically, the values would be reset at each call of tvp_fun.
-    # # Here we just return the fixed values:
+
+    # Typically, the values would be reset at each call of tvp_fun.
+    # Here we just return the fixed values:
     # def tvp_fun(t_now):
     #     return tvp_template
-    #
+
     # mhe.set_tvp_fun(tvp_fun)
 
     # Only the non estimated parameters must be passed:

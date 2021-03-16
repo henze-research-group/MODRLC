@@ -56,10 +56,10 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=3, ncols=1, sharex=True, figsize=(10, 9))
+fig, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(10, 9))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
-# mhe_plot = do_mpc.graphics.Graphics(mhe.data)
+mhe_plot = do_mpc.graphics.Graphics(mhe.data)
 # sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
 # Setup the plots based on the ModelParameter variables
@@ -75,10 +75,14 @@ for var in mp.variables:
 
 ax[0].set_title('Inputs:')
 mpc_plot.add_line('_u', 'T_supply', ax[0])
+mpc_plot.add_line('_u', 'Q_flow', ax[0])
 
 ax[1].set_title('OA Temperatures TVPs:')
 
 ax[2].set_title('Irradiance TVPs:')
+
+ax[3].set_title('Indoor Air Temperature')
+# mhe_plot.add_line('_tvp', 'indoor_temp', ax[3])
 
 # ax[4].set_title('Estimated parameters:')
 # # sim_plot.add_line('_y', 'y', ax[4])

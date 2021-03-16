@@ -34,6 +34,10 @@ def template_model():
     room_rel_hum = model.set_variable(var_type='_u', var_name='room_relHum', shape=(1, 1))
     t_supply = model.set_variable(var_type='_u', var_name='T_supply', shape=(1, 1))
 
+    # store the temperature
+    # indoor_temperature = model.set_variable('_x', var_name='indoor_temperature', shape=(1,1))
+    # model.set_variable('_z', 'temperature', shape=(1, 1))
+
     # Time-varying parameter for the MHE: Weighting of the measurements (tvp):
     # P_v = model.set_variable(var_type='_tvp', var_name='P_v', shape=(5, 5))
 
@@ -74,6 +78,7 @@ def template_model():
     model.set_rhs('x', x_next)
 
     y_exp = mp.c @ _x + mp.d @ u_array
+    # model.set_rhs('y_meas', y_exp)
     model.set_meas('y_meas', y_exp)
 
     model.setup()
