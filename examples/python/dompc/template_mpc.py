@@ -1,6 +1,8 @@
 # MPC configuration for SOM3 model using N4SID system model (planning model)
 from casadi.tools import *
+from functools import partial
 from template_model import ModelParameters
+
 sys.path.append('../')
 import do_mpc
 
@@ -30,14 +32,9 @@ def template_mpc(model):
 
     mpc.set_objective(mterm=mterm, lterm=lterm)
 
-    tvp_template = mpc.get_tvp_template()
-    def tvp_fun(t_now):
-        # print(t_now)
-        # print(tvp_template)
-        return tvp_template
-
-    mpc.set_tvp_fun(tvp_fun)
-
+    # Set the tvp_template in the mp class, then assign the tvp_function.
+    mp.tvp_template = mpc.get_tvp_template()
+    mpc.set_tvp_fun(mp.tvp_fun)
 
     # mpc.set_rterm(u=1e-4)
 
@@ -46,8 +43,8 @@ def template_mpc(model):
     mpc.bounds['upper', '_x', 'x'] = mp.max_x
 
     # u for the example is dim(1,1). Need to determine the ranges.
-    # mpc.bounds['lower', '_u', 'u'] = mp.min_u
-    # mpc.bounds['upper', '_u', 'u'] = mp.max_u
+    # mpc.bounds['lower', '_u', 'Var1'] = 200
+    # mpc.bounds['upper', '_u', 'Var1'] = 300
 
     mpc.setup()
 

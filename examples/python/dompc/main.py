@@ -2,7 +2,9 @@
 
 import matplotlib.pyplot as plt
 from casadi.tools import *
+import pandas as pd
 
+from model_parameters import ModelParameters
 sys.path.append('../')
 import do_mpc
 
@@ -10,6 +12,7 @@ from template_model import template_model
 from template_mpc import template_mpc
 from template_simulator import template_simulator
 from template_mhe import template_mhe
+
 
 """ User settings: """
 show_animation = True
@@ -47,30 +50,44 @@ mpc.set_initial_guess()
 Setup graphic:
 """
 
-fig, ax, graphics = do_mpc.graphics.default_plot(mpc.data, figsize=(10, 17))
-plt.ion()
+# fig, ax, graphics = do_mpc.graphics.default_plot(mpc.data, figsize=(10, 17))
+# plt.ion()
+#
+color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-# color = plt.rcParams['axes.prop_cycle'].by_key()['color']
-#
-# fig, ax = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(10, 9))
-#
-# mpc_plot = do_mpc.graphics.Graphics(mpc.data)
+fig, ax = plt.subplots(nrows=3, ncols=1, sharex=True, figsize=(10, 9))
+
+mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 # mhe_plot = do_mpc.graphics.Graphics(mhe.data)
 # sim_plot = do_mpc.graphics.Graphics(simulator.data)
-#
-# ax[2].set_title('Inputs:')
-# mpc_plot.add_line('_u', 'HDifHor', ax[2])
-# mpc_plot.add_line('_u', 'HDifHor_2', ax[2])
-#
+
+# Setup the plots based on the ModelParameter variables
+mp = ModelParameters()
+for var in mp.variables:
+    # find all of the tvp
+    if var["type"] == "tvp":
+        if var["plot_axis"] is not None:
+            mpc_plot.add_line("_tvp", var["var_name"], ax[var["plot_axis"]])
+            # ax[1].legend(
+            #     mpc_plot.result_lines['_x', 'phi_2']+mpc_plot.result_lines['_tvp', 'phi_2_set']+mpc_plot.pred_lines['_x', 'phi_2'],
+            #     ['Recorded', 'Setpoint', 'Predicted'], title='Disc 2')
+
+ax[0].set_title('Inputs:')
+mpc_plot.add_line('_u', 'T_supply', ax[0])
+
+ax[1].set_title('OA Temperatures TVPs:')
+
+ax[2].set_title('Irradiance TVPs:')
+
 # ax[4].set_title('Estimated parameters:')
 # # sim_plot.add_line('_y', 'y', ax[4])
 # # mhe_plot.add_line('_y', 'y', ax[4])
-#
-# for ax_i in ax:
-#     ax_i.axvline(1.0)
-#
-# fig.tight_layout()
-# plt.ion()
+
+for ax_i in ax:
+    ax_i.axvline(1.0)
+
+fig.tight_layout()
+plt.ion()
 
 """
 Run MPC main loop:
@@ -86,14 +103,14 @@ for k in range(200):
     # raise SystemExit()
 
     if show_animation:
-        graphics.plot_results(t_ind=k)
-        graphics.plot_predictions(t_ind=k)
-        graphics.reset_axes()
-        # mpc_plot.plot_results(t_ind=k)
-        # mpc_plot.plot_predictions(t_ind=k)
+        # graphics.plot_results(t_ind=k)
+        # graphics.plot_predictions(t_ind=k)
+        # graphics.reset_axes()
+        mpc_plot.plot_results(t_ind=k)
+        mpc_plot.plot_predictions(t_ind=k)
+        mpc_plot.reset_axes()
         # mhe_plot.plot_results()
         # sim_plot.plot_results()
-        # mpc_plot.reset_axes()
         # mhe_plot.reset_axes()
         # sim_plot.reset_axes()
 
