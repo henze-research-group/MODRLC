@@ -29,6 +29,11 @@ class ModelParameters:
             df = df.loc[df['Time'] % 300.0 == 0]
             self.tvp_data = df.drop_duplicates(subset=['Time'])
 
+            # just temporary -- save off the first 3 months of data to a file to make
+            # it easier to inspect
+            self.tvp_data = self.tvp_data.head(int(7000000 / 300))
+            self.tvp_data.to_csv('exogenous_data.csv')
+
             p_data = Path('.').resolve() / 'setpoint_tvp.xlsx'
             if not p_data.exists():
                 raise Exception(f"There is not time varying setpoint parameter file, make sure it exists {p_data}")

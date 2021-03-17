@@ -26,32 +26,34 @@ def template_model():
             )
 
     # all the other variables.
-    q_con_flow = model.set_variable(var_type='_u', var_name='QCon_flow', shape=(1, 1))
-    q_flow = model.set_variable(var_type='_u', var_name='Q_flow', shape=(1, 1))
-    fan_p = model.set_variable(var_type='_u', var_name='fanP', shape=(1, 1))
-    v_flow_supply = model.set_variable(var_type='_u', var_name='volSenSupV_flow', shape=(1, 1))
-    v_flow_oa = model.set_variable(var_type='_u', var_name='volSenOAV_flow', shape=(1, 1))
-    room_rel_hum = model.set_variable(var_type='_u', var_name='room_relHum', shape=(1, 1))
-    t_supply = model.set_variable(var_type='_u', var_name='T_supply', shape=(1, 1))
+    q_con_flow = model.set_variable(var_type='_p', var_name='QCon_flow', shape=(1, 1))  # convective gains
+    q_flow = model.set_variable(var_type='_u', var_name='Q_flow', shape=(1, 1))  # heating delivered to space
+    fan_p = model.set_variable(var_type='_p', var_name='fanP', shape=(1, 1))  #
+    v_flow_supply = model.set_variable(var_type='_p', var_name='volSenSupV_flow', shape=(1, 1))
+    v_flow_oa = model.set_variable(var_type='_p', var_name='volSenOAV_flow', shape=(1, 1))
+    room_rel_hum = model.set_variable(var_type='_p', var_name='room_relHum', shape=(1, 1))
+    t_supply = model.set_variable(var_type='_p', var_name='T_supply', shape=(1, 1))
 
-    # store the temperature
-    indoor_temperature = model.set_variable(var_type='_x', var_name='indoor_temperature', shape=(1, 1))
+    # additional state for indoor temperature
+    t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
+    t_indoor_prev = model.set_variable(var_type='_x', var_name='t_indoor_prev', shape=(1, 1))
+
+    # weighting parameters
+    # k_comfort_penalty = model.set_variable(var_type='_p', var_name='k_comfort_penalty', shape=(1, 1))
+    # w_t = model.set_variable(var_type='_tvp', var_name='w_t', shape=(3, 1))
 
     # Time-varying parameter for the MHE: Weighting of the measurements (tvp):
     # P_v = model.set_variable(var_type='_tvp', var_name='P_v', shape=(5, 5))
 
-    # Set expression. These can be used in the cost function, as non-linear constraints
-    # or just to monitor another output.
-
+    # Power!
     # how do we make the cost function be a LASSO regression (or any other function?)
     # something like: model.set_expression(expr_name='cost', expr=sum1(_x[1] ** 2))
     # need knowledge of the process variables:
     #    secondary variables on power consumption / demand.
     #    where are the constraints -- on y.
-
-    # assume fixed t setpoint of 22
-    cost_function = (indoor_temperature - 293) ** 2
-    model.set_expression(expr_name='cost', expr=cost_function)
+    # Simple polynomial fix between Q_flow to represent power and Tdb of OA.
+    total_power = model.set_expression('total_power', 0.9871 * t_dry_bulb ** 2 - 576.53 * t_dry_bulb + 84202)
+    # total_power = model.set_expression('total_power', t_dry_bulb * 10)
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
@@ -77,10 +79,33 @@ def template_model():
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
 
+    # when moving the MHE, then I think we need to set the indoor_temperatue as a measured reading
     y_exp = mp.c @ _x + mp.d @ u_array
-    # model.set_meas('y_meas', y_exp)
 
-    model.set_rhs('indoor_temperature', y_exp)
+    # model.set_meas('y_meas', y_exp)
+    model.set_rhs("t_indoor", y_exp)
+
+    model.set_rhs("t_indoor_prev", t_indoor)
+    # indoor_temperature = model.set_expression("indoor_temperature", y_exp)
+
+
+    # Economic MPC
+    # Each term is multiplier * max(value - threshold, 0) ** order
+    #       multiplier is weighting factor (kappa, etc)
+    #       order can be 1, 2, ...
+    #       value is temperature, energy, PMV
+    # penalty = m_discomfort * max(temp - temp_bound, 0) ^ discomfort_order + -- make people happy
+    #           m_energy * max(energy - energy_budget, 0) ^ energy_order +   -- don't use more than kWh than baseline
+    #           m_energy_cost * max(energy_cost - cost_budget, 0) ^ energy_cost_order + -- don't exceed your budget
+    #           m_demand * max(peak_demand - target_demand_limit, 0) ^ demand_order -- don't exceed demand limit
+    # cost_function = power * r_t + penalty
+    discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
+    energy_consumption = 0
+    energy_cost = total_power * 0.08
+    demand = 0
+    cost_function = discomfort + energy_cost
+    model.set_expression(expr_name='cost', expr=cost_function)
+
 
     model.setup()
 
