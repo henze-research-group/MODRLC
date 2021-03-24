@@ -89,8 +89,8 @@ ax[1].set_title('OA Temperatures TVPs')
 ax[2].set_title('Irradiance TVPs')
 
 ax[3].set_title('Indoor Air Temperature')
-mpc_plot.add_line('_x', 't_indoor', ax[3])
-mpc_plot.add_line('_x', 't_indoor_prev', ax[3])
+mpc_plot.add_line('_x', 't_indoor', ax[3], color='blue')
+mpc_plot.add_line('_x', 't_indoor_prev', ax[3], color='red')
 
 ax[4].set_title('Setpoints TVP')
 

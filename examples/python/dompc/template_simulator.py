@@ -9,7 +9,7 @@ from template_model import ModelParameters
 
 def template_simulator(model):
     # Currently the simulator is using the same state space model as the planning model.
-    simulator = BoptestSimulator(model)
+    simulator = BoptestSimulator(model)#, 'http://localhost:3000')
     mp = ModelParameters()
 
     # simulator.set_param(t_step=0.5)

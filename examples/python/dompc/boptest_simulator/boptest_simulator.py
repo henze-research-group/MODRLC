@@ -1,6 +1,6 @@
 # This file is copied here from MPC as a template on what needs to be
 # implemented to replace this with BOPTEST.
-
+# Author: Nicholas Long <nllong>
 
 #
 #   This file is part of do-mpc
@@ -23,14 +23,16 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with do-mpc.  If not, see <http://www.gnu.org/licenses/>.
+from pathlib import Path
+import sys
 
-import numpy as np
-from casadi import *
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'boptest_client'))
+from boptest_client import BoptestClient
+
 from casadi.tools import *
-import pdb
-import warnings
 from do_mpc.data import Data
 import do_mpc.model
+
 
 class BoptestSimulator(do_mpc.model.IteratedVariables):
     """A class for simulating systems. Discrete-time and continuous systems can be considered.
@@ -57,7 +59,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
     Optionally, pass (sampled) random variables for the process ``w`` and measurement noise ``v`` (if they were defined in :py:class`do_mpc.model.Model`)
 
     """
-    def __init__(self, model):
+
+    def __init__(self, model, url=None):
         """ Initialize the simulator class. The model gives the basic model description and is used to build the simulator. If the model is discrete-time, the simulator is a function, if the model is continuous, the simulator is an integrator.
 
         :param model: Simulation model
@@ -69,7 +72,13 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         self.model = model
         do_mpc.model.IteratedVariables.__init__(self)
 
-        assert model.flags['setup'] == True, 'Model for simulator was not setup. After the complete model creation call model.setup_model().'
+        if url is not None:
+            self.client = BoptestClient(url=url)
+        else:
+            self.client = None
+
+        assert model.flags[
+                   'setup'] == True, 'Model for simulator was not setup. After the complete model creation call model.setup_model().'
 
         self.data = Data(model)
 
@@ -78,7 +87,6 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         ]
 
         if self.model.model_type == 'continuous':
-
             # expand possible data fields
             self.data_fields.extend([
                 'abstol',
@@ -97,7 +105,6 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             'setup': False,
         }
 
-
     def reset_history(self):
         """Reset the history of the simulator.
         """
@@ -107,24 +114,29 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
     def _check_validity(self):
         # tvp_fun must be set, if tvp are defined in model.
         if self.flags['set_tvp_fun'] == False and self.model._tvp.size > 0:
-            raise Exception('You have not supplied a function to obtain the time-varying parameters defined in model. Use .set_tvp_fun() prior to setup.')
+            raise Exception(
+                'You have not supplied a function to obtain the time-varying parameters defined in model. Use .set_tvp_fun() prior to setup.')
         # p_fun must be set, if p are defined in model.
         if self.flags['set_p_fun'] == False and self.model._p.size > 0:
-            raise Exception('You have not supplied a function to obtain the parameters defined in model. Use .set_p_fun() (low-level API) or .set_uncertainty_values() (high-level API) prior to setup.')
+            raise Exception(
+                'You have not supplied a function to obtain the parameters defined in model. Use .set_p_fun() (low-level API) or .set_uncertainty_values() (high-level API) prior to setup.')
 
         # Set dummy functions for tvp and p in case these parameters are unused.
         if not self.flags['set_tvp_fun']:
             _tvp = self.get_tvp_template()
+
             def tvp_fun(t): return _tvp
+
             self.set_tvp_fun(tvp_fun)
 
         if not self.flags['set_p_fun']:
             _p = self.get_p_template()
+
             def p_fun(t): return _p
+
             self.set_p_fun(p_fun)
 
         assert self.t_step, 't_step is required in order to setup the simulator. Please set the simulation time step via set_param(**kwargs)'
-
 
     def setup(self):
         """Sets up the simulator and finalizes the simulator configuration.
@@ -138,10 +150,10 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
         self._check_validity()
 
-        self.sim_x = sim_x =  struct_symSX([
+        self.sim_x = sim_x = struct_symSX([
             entry('_x', struct=self.model._x)
         ])
-        self.sim_z = sim_z =  struct_symSX([
+        self.sim_z = sim_z = struct_symSX([
             entry('_z', struct=self.model._z)
         ])
 
@@ -161,22 +173,22 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         if self.model.model_type == 'discrete':
 
             # Build the rhs expression with the newly created variables
-            alg = self.model._alg_fun(sim_x['_x'],sim_p['_u'],sim_z['_z'],sim_p['_tvp'],sim_p['_p'], sim_p['_w'])
-            x_next = self.model._rhs_fun(sim_x['_x'],sim_p['_u'],sim_z['_z'],sim_p['_tvp'],sim_p['_p'], sim_p['_w'])
+            alg = self.model._alg_fun(sim_x['_x'], sim_p['_u'], sim_z['_z'], sim_p['_tvp'], sim_p['_p'], sim_p['_w'])
+            x_next = self.model._rhs_fun(sim_x['_x'], sim_p['_u'], sim_z['_z'], sim_p['_tvp'], sim_p['_p'], sim_p['_w'])
 
             # Build the DAE function
             nlp = {'x': sim_z['_z'], 'p': vertcat(sim_x['_x'], sim_p), 'f': DM(0), 'g': alg}
             self.discrete_dae_solver = nlpsol('dae_roots', 'ipopt', nlp)
 
             # Build the simulator function:
-            self.simulator = Function('simulator',[sim_x['_x'], sim_z['_z'], sim_p],[x_next])
+            self.simulator = Function('simulator', [sim_x['_x'], sim_z['_z'], sim_p], [x_next])
 
 
         elif self.model.model_type == 'continuous':
 
             # Define the ODE
-            xdot = self.model._rhs_fun(sim_x['_x'],sim_p['_u'],sim_z['_z'],sim_p['_tvp'],sim_p['_p'], sim_p['_w'])
-            alg = self.model._alg_fun(sim_x['_x'],sim_p['_u'],sim_z['_z'],sim_p['_tvp'],sim_p['_p'], sim_p['_w'])
+            xdot = self.model._rhs_fun(sim_x['_x'], sim_p['_u'], sim_z['_z'], sim_p['_tvp'], sim_p['_p'], sim_p['_w'])
+            alg = self.model._alg_fun(sim_x['_x'], sim_p['_u'], sim_z['_z'], sim_p['_tvp'], sim_p['_p'], sim_p['_w'])
 
             dae = {
                 'x': sim_x,
@@ -194,14 +206,13 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             }
 
             # Build the simulator
-            self.simulator = integrator('simulator', self.integration_tool, dae,  opts)
+            self.simulator = integrator('simulator', self.integration_tool, dae, opts)
 
-        sim_aux = self.model._aux_expression_fun(sim_x['_x'],sim_p['_u'],sim_z['_z'],sim_p['_tvp'],sim_p['_p'])
+        sim_aux = self.model._aux_expression_fun(sim_x['_x'], sim_p['_u'], sim_z['_z'], sim_p['_tvp'], sim_p['_p'])
         # Create function to caculate all auxiliary expressions:
         self.sim_aux_expression_fun = Function('sim_aux_expression_fun', [sim_x, sim_z, sim_p], [sim_aux])
 
         self.flags['setup'] = True
-
 
     def set_param(self, **kwargs):
         """Set the parameters for the simulator. Setting the simulation time step t_step is necessary for setting up the simulator via setup_simulator.
@@ -225,7 +236,6 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
                 print('Warning: Key {} does not exist for {} model.'.format(key, self.model.model_type))
             setattr(self, key, value)
 
-
     def get_tvp_template(self):
         """Obtain the output template for :py:func:`set_tvp_fun`.
         Use this method in conjunction with :py:func:`set_tvp_fun`
@@ -236,8 +246,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         """
         return self.model._tvp(0)
 
-
-    def set_tvp_fun(self,tvp_fun):
+    def set_tvp_fun(self, tvp_fun):
         """Method to set the function which returns the values of the time-varying parameters.
         This function must return a CasADi structure which can be obtained with :py:func:`get_tvp_template`.
 
@@ -288,11 +297,11 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         :rtype: None
         """
         assert isinstance(tvp_fun(0), structure3.DMStruct), 'tvp_fun has incorrect return type.'
-        assert self.get_tvp_template().labels() == tvp_fun(0).labels(), 'Incorrect output of tvp_fun. Use get_tvp_template to obtain the required structure.'
+        assert self.get_tvp_template().labels() == tvp_fun(
+            0).labels(), 'Incorrect output of tvp_fun. Use get_tvp_template to obtain the required structure.'
         self.tvp_fun = tvp_fun
 
         self.flags['set_tvp_fun'] = True
-
 
     def get_p_template(self):
         """Obtain output template for :py:func:`set_p_fun`.
@@ -306,8 +315,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         """
         return self.model._p(0)
 
-
-    def set_p_fun(self,p_fun):
+    def set_p_fun(self, p_fun):
         """Method to set the function which gives the values of the parameters.
         This function must return a CasADi structure which can be obtained with :py:func:`get_p_template`.
 
@@ -372,7 +380,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         :rtype: None
         """
         assert isinstance(p_fun(0), structure3.DMStruct), 'p_fun has incorrect return type.'
-        assert self.get_p_template().labels() == p_fun(0).labels(), 'Incorrect output of p_fun. Use get_p_template to obtain the required structure.'
+        assert self.get_p_template().labels() == p_fun(
+            0).labels(), 'Incorrect output of p_fun. Use get_p_template to obtain the required structure.'
         self.p_fun = p_fun
         self.flags['set_p_fun'] = True
 
@@ -425,13 +434,15 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         sim_z_num = self.sim_z_num
         sim_p_num = self.sim_p_num
 
+        # Let's run this using BOPTEST!
+
         if self.model.model_type == 'discrete':
-            if self.model.n_z > 0: # Solve DAE only when it exists ...
-                r = self.discrete_dae_solver(x0 = sim_z_num, ubg = 0, lbg = 0, p=vertcat(sim_x_num,sim_p_num))
+            if self.model.n_z > 0:  # Solve DAE only when it exists ...
+                r = self.discrete_dae_solver(x0=sim_z_num, ubg=0, lbg=0, p=vertcat(sim_x_num, sim_p_num))
                 sim_z_num.master = r['x']
             x_new = self.simulator(sim_x_num, sim_z_num, sim_p_num)
         elif self.model.model_type == 'continuous':
-            r = self.simulator(x0 = sim_x_num, z0 = sim_z_num, p = sim_p_num)
+            r = self.simulator(x0=sim_x_num, z0=sim_z_num, p=sim_p_num)
             x_new = r['xf']
             z_now = r['zf']
             sim_z_num.master = z_now
@@ -471,24 +482,34 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         :rtype: numpy.ndarray
         """
         assert self.flags['setup'] == True, 'Simulator is not setup. Call simulator.setup() first.'
-        assert isinstance(u0, (np.ndarray, casadi.DM, structure3.DMStruct)), 'u0 is wrong input type. You have: {}'.format(type(u0))
-        assert u0.shape == self.model._u.shape, 'u0 has incorrect shape. You have: {}, expected: {}'.format(u0.shape, self.model._u.shape)
-        assert isinstance(u0, (np.ndarray, casadi.DM, structure3.DMStruct)), 'u0 is wrong input type. You have: {}'.format(type(u0))
-        assert u0.shape == self.model._u.shape, 'u0 has incorrect shape. You have: {}, expected: {}'.format(u0.shape, self.model._u.shape)
+        assert isinstance(u0,
+                          (np.ndarray, casadi.DM, structure3.DMStruct)), 'u0 is wrong input type. You have: {}'.format(
+            type(u0))
+        assert u0.shape == self.model._u.shape, 'u0 has incorrect shape. You have: {}, expected: {}'.format(u0.shape,
+                                                                                                            self.model._u.shape)
+        assert isinstance(u0,
+                          (np.ndarray, casadi.DM, structure3.DMStruct)), 'u0 is wrong input type. You have: {}'.format(
+            type(u0))
+        assert u0.shape == self.model._u.shape, 'u0 has incorrect shape. You have: {}, expected: {}'.format(u0.shape,
+                                                                                                            self.model._u.shape)
 
         if w0 is None:
             w0 = self.model._w(0)
         else:
             input_types = (np.ndarray, casadi.DM, structure3.DMStruct)
-            assert isinstance(w0, input_types), 'w0 is wrong input type. You have: {}. Must be of type'.format(type(w0), input_types)
-            assert w0.shape == self.model._w.shape, 'w0 has incorrect shape. You have: {}, expected: {}'.format(w0.shape, self.model._w.shape)
+            assert isinstance(w0, input_types), 'w0 is wrong input type. You have: {}. Must be of type'.format(type(w0),
+                                                                                                               input_types)
+            assert w0.shape == self.model._w.shape, 'w0 has incorrect shape. You have: {}, expected: {}'.format(
+                w0.shape, self.model._w.shape)
 
         if v0 is None:
             v0 = self.model._v(0)
         else:
             input_types = (np.ndarray, casadi.DM, structure3.DMStruct)
-            assert isinstance(v0, input_types), 'v0 is wrong input type. You have: {}. Must be of type'.format(type(v0), input_types)
-            assert v0.shape == self.model._v.shape, 'v0 has incorrect shape. You have: {}, expected: {}'.format(v0.shape, self.model._v.shape)
+            assert isinstance(v0, input_types), 'v0 is wrong input type. You have: {}. Must be of type'.format(type(v0),
+                                                                                                               input_types)
+            assert v0.shape == self.model._v.shape, 'v0 has incorrect shape. You have: {}, expected: {}'.format(
+                v0.shape, self.model._v.shape)
 
         tvp0 = self.tvp_fun(self._t0)
         p0 = self.p_fun(self._t0)
@@ -500,21 +521,27 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         self.sim_p_num['_tvp'] = tvp0
         self.sim_p_num['_w'] = w0
 
-        x_next = self.simulate()
+        # This is the old x_next
+        # x_next = self.simulate()
+
+        # x_next from BopTest is the room temperatures for all zones
+        # remove some of the u elements such as weather data (exogenous inputs)
+        x_next = self.client.advance(self.sim_p_num['_u'])
 
         z0 = self.sim_z_num['_z']
         aux0 = self.sim_aux_num
 
         # Call measurement function
+        # TODO: Need to determine how to calculate y_next without an algebraic model.
         y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
 
-        self.data.update(_x = x0)
-        self.data.update(_u = u0)
-        self.data.update(_z = z0)
-        self.data.update(_tvp = tvp0)
-        self.data.update(_p = p0)
-        self.data.update(_aux = aux0)
-        self.data.update(_time = t0)
+        self.data.update(_x=x0)
+        self.data.update(_u=u0)
+        self.data.update(_z=z0)
+        self.data.update(_tvp=tvp0)
+        self.data.update(_p=p0)
+        self.data.update(_aux=aux0)
+        self.data.update(_time=t0)
 
         self._x0.master = x_next
         self._z0.master = z0

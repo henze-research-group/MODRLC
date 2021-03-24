@@ -53,7 +53,6 @@ def template_model():
     #    where are the constraints -- on y.
     # Simple polynomial fix between Q_flow to represent power and Tdb of OA.
     total_power = model.set_expression('total_power', 0.9871 * t_dry_bulb ** 2 - 576.53 * t_dry_bulb + 84202)
-    # total_power = model.set_expression('total_power', t_dry_bulb * 10)
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
@@ -79,25 +78,23 @@ def template_model():
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
 
-    # when moving the MHE, then I think we need to set the indoor_temperatue as a measured reading
+    # when moving the MHE, then I think we need to set the indoor_temperature as a measured reading
     y_exp = mp.c @ _x + mp.d @ u_array
-
-    # model.set_meas('y_meas', y_exp)
+    # model.set_meas("y_meas", y_exp)
     model.set_rhs("t_indoor", y_exp)
 
+    # Store the previous indoor temperature - this will be used when we add T(t-1) to the u vector.
     model.set_rhs("t_indoor_prev", t_indoor)
-    # indoor_temperature = model.set_expression("indoor_temperature", y_exp)
-
 
     # Economic MPC
     # Each term is multiplier * max(value - threshold, 0) ** order
     #       multiplier is weighting factor (kappa, etc)
     #       order can be 1, 2, ...
     #       value is temperature, energy, PMV
-    # penalty = m_discomfort * max(temp - temp_bound, 0) ^ discomfort_order + -- make people happy
-    #           m_energy * max(energy - energy_budget, 0) ^ energy_order +   -- don't use more than kWh than baseline
-    #           m_energy_cost * max(energy_cost - cost_budget, 0) ^ energy_cost_order + -- don't exceed your budget
-    #           m_demand * max(peak_demand - target_demand_limit, 0) ^ demand_order -- don't exceed demand limit
+    # penalty = m_discomfort * max(temp - temp_bound, 0) ^ discomfort_order +
+    #           m_energy * max(energy - energy_budget, 0) ^ energy_order +
+    #           m_energy_cost * max(energy_cost - cost_budget, 0) ^ energy_cost_order +
+    #           m_demand * max(peak_demand - target_demand_limit, 0) ^ demand_order
     # cost_function = power * r_t + penalty
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
     energy_consumption = 0
@@ -105,7 +102,6 @@ def template_model():
     demand = 0
     cost_function = discomfort + energy_cost
     model.set_expression(expr_name='cost', expr=cost_function)
-
 
     model.setup()
 
