@@ -2,7 +2,7 @@ FROM ubuntu:trusty
 
 RUN apt-get update && apt-get -y install ca-certificates curl python-software-properties build-essential git
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
-    && apt-get install -y ca-certificates nodejs
+    && apt-get install -y --force-yes ca-certificates nodejs
 
 RUN mkdir /root/server && mkdir /root/app
 
