@@ -522,11 +522,11 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         self.sim_p_num['_w'] = w0
 
         # This is the old x_next
-        # x_next = self.simulate()
+        x_next = self.simulate()
 
-        # x_next from BopTest is the room temperatures for all zones
+        # x_next from BOPTEST is the room temperatures for all zones
         # remove some of the u elements such as weather data (exogenous inputs)
-        x_next = self.client.advance(self.sim_p_num['_u'])
+        # x_next = self.client.advance(self.sim_p_num['_u'])
 
         z0 = self.sim_z_num['_z']
         aux0 = self.sim_aux_num
