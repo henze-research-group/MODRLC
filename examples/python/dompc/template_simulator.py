@@ -1,15 +1,39 @@
 # Simulation of the model
 import sys
+import requests
+import urllib3
 
 sys.path.append('../')
 # import do_mpc
+from pathlib import Path
 from boptest_simulator.boptest_simulator import BoptestSimulator
 from template_model import ModelParameters
 
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
+from boptest_client import BoptestClient
+
 
 def template_simulator(model):
-    # Currently the simulator is using the same state space model as the planning model.
-    simulator = BoptestSimulator(model)#, 'http://localhost:3000')
+    # Check if BOPTEST is up and running, if not, then default to just using the state-space
+    # equations.
+
+    try:
+        client = BoptestClient('http://localhost:5000')
+        if client.name() is not None:
+            print("BOPTEST is configured to act as simulator")
+        else:
+            print("Defaulting to simulator=model")
+            client = None
+    except (requests.exceptions.ConnectionError, urllib3.exceptions.NewConnectionError,):
+        print("BOPTEST is not running, if desired launch BOPTEST using `make run TESTCASE=som3`")
+        print("Will continue in simulator=model mode")
+        client = None
+
+    if client is not None:
+        simulator = BoptestSimulator(model, client)
+    else:
+        simulator = BoptestSimulator(model)
+
     mp = ModelParameters()
 
     # simulator.set_param(t_step=0.5)

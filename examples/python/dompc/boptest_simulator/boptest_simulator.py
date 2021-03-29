@@ -60,10 +60,13 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
     """
 
-    def __init__(self, model, url=None):
+    def __init__(self, model, client=None):
         """ Initialize the simulator class. The model gives the basic model description and is used to build the simulator. If the model is discrete-time, the simulator is a function, if the model is continuous, the simulator is an integrator.
 
         :param model: Simulation model
+        :type var_type: model class
+
+        :param client: Simulator API client (must implement specific APIs)
         :type var_type: model class
 
         :return: None
@@ -72,10 +75,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         self.model = model
         do_mpc.model.IteratedVariables.__init__(self)
 
-        if url is not None:
-            self.client = BoptestClient(url=url)
-        else:
-            self.client = None
+        # client can be None and is used throughout this class
+        self.client = client
 
         assert model.flags[
                    'setup'] == True, 'Model for simulator was not setup. After the complete model creation call model.setup_model().'
@@ -521,19 +522,26 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         self.sim_p_num['_tvp'] = tvp0
         self.sim_p_num['_w'] = w0
 
-        # This is the old x_next
-        x_next = self.simulate()
-
-        # x_next from BOPTEST is the room temperatures for all zones
-        # remove some of the u elements such as weather data (exogenous inputs)
-        # x_next = self.client.advance(self.sim_p_num['_u'])
+        # Different path if using BOPTEST
+        if self.client:
+            x_next = self.simulate()
+            # x_next from BOPTEST is the room temperatures for all zones
+            # remove some of the u elements such as weather data (exogenous inputs)
+            # x_next = self.client.advance(self.sim_p_num['_u'])
+            x_next_new = self.client.advance(self.sim_p_num['_u'])
+            print(x_next_new)
+        else:
+            x_next = self.simulate()
 
         z0 = self.sim_z_num['_z']
         aux0 = self.sim_aux_num
 
-        # Call measurement function
-        # TODO: Need to determine how to calculate y_next without an algebraic model.
-        y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
+        if self.client:
+            #determine what this looks like in BOPTEST-land
+            y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
+        else:
+            # Call measurement function
+            y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
 
         self.data.update(_x=x0)
         self.data.update(_u=u0)

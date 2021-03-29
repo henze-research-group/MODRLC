@@ -96,9 +96,12 @@ def template_model():
     #           m_energy_cost * max(energy_cost - cost_budget, 0) ^ energy_cost_order +
     #           m_demand * max(peak_demand - target_demand_limit, 0) ^ demand_order
     # cost_function = power * r_t + penalty
+    tsetpoint_upper = 25 + 273
+    tsetpoint_lower = 20 + 273
+    elec_unit_cost = 0.05
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
     energy_consumption = 0
-    energy_cost = total_power * 0.08
+    energy_cost = total_power * elec_unit_cost
     demand = 0
     cost_function = discomfort + energy_cost
     model.set_expression(expr_name='cost', expr=cost_function)
