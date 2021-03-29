@@ -25,6 +25,7 @@
 #   along with do-mpc.  If not, see <http://www.gnu.org/licenses/>.
 from pathlib import Path
 import sys
+import json
 
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'boptest_client'))
 from boptest_client import BoptestClient
@@ -111,6 +112,22 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         """
         self._t0 = np.array([0])
         self.data.init_storage()
+
+    def _calculate_u(self, boptest_u ):
+        """Take the _u vector from do-mpc and configure it to run with the BOPTEST
+        """
+        # do-mpc vector is
+        print(f"do-mpc vector is: {self.sim_p_num['_u']}")
+        # map do-mpc to u
+        u = {
+            "oveHCSet_u": 1.0,
+            "oveHCSet_activate": 1,
+            "oveVFRSet_u": 0.7,
+            "oveVFRSet_activate": 1,
+            "oveCC_u": 0.0,
+            "oveCC_activate": 1
+        }
+        return u
 
     def _check_validity(self):
         # tvp_fun must be set, if tvp are defined in model.
@@ -435,8 +452,6 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         sim_z_num = self.sim_z_num
         sim_p_num = self.sim_p_num
 
-        # Let's run this using BOPTEST!
-
         if self.model.model_type == 'discrete':
             if self.model.n_z > 0:  # Solve DAE only when it exists ...
                 r = self.discrete_dae_solver(x0=sim_z_num, ubg=0, lbg=0, p=vertcat(sim_x_num, sim_p_num))
@@ -524,12 +539,13 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
         # Different path if using BOPTEST
         if self.client:
+            # Can we just keep x_next as it is? Do we need to update this?
             x_next = self.simulate()
             # x_next from BOPTEST is the room temperatures for all zones
             # remove some of the u elements such as weather data (exogenous inputs)
             # x_next = self.client.advance(self.sim_p_num['_u'])
-            x_next_new = self.client.advance(self.sim_p_num['_u'])
-            print(x_next_new)
+            # x_next_new = self.client.advance(self._calculate_u(None))
+            # print(x_next_new)
         else:
             x_next = self.simulate()
 
@@ -537,8 +553,22 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         aux0 = self.sim_aux_num
 
         if self.client:
+            # previous y_next in order to match structures:
+            old_y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
+
             #determine what this looks like in BOPTEST-land
-            y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
+            y_next = self.client.advance(control_u=self._calculate_u(None))
+            t_room = y_next['senTRoom_y']
+            print(f"t_room is {t_room}")
+            # with MHE, old_y_next is a single value (for now)
+            # old_y_next[0] = t_room
+            # without MHE
+            old_y_next[9] = t_room
+            y_next = old_y_next
+            # print(f"y_next is: {json.dumps(y_next, indent=2)}")
+            # print(f"old_y_next is: {json.dumps(old_y_next, indent=2)}")
+            # need to merge the y_next with the do-mpc style structure
+            # y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
         else:
             # Call measurement function
             y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)

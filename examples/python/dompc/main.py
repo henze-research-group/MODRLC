@@ -11,6 +11,7 @@ import do_mpc
 from template_model import template_model
 from template_mpc import template_mpc
 from template_simulator import template_simulator
+from template_mhe import template_mhe
 
 """ User settings: """
 show_animation = True
@@ -22,7 +23,7 @@ Get configured do-mpc modules:
 model = template_model()
 mpc = template_mpc(model)
 simulator = template_simulator(model)
-# mhe = template_mhe(model)
+# estimator = template_mhe(model)
 
 # Use the StateFeedback estimator for testing, but it
 # is very basic.
@@ -43,7 +44,6 @@ x0 = np.array([[-0.91468989], [-0.15824672], [-3.70572322], [2.61228931],
 # x0 = np.random.uniform(-3 * e, 3 * e)  # Values between +3 and +3 for all states
 mpc.x0 = x0
 simulator.x0 = x0
-# mhe.x0 = x0
 estimator.x0 = x0
 
 # Use initial state to set the initial guess.
@@ -121,7 +121,6 @@ for k in range(288):
     # for k in range(10):
     u0 = mpc.make_step(x0)
     y_next = simulator.make_step(u0)
-    # x0 = mhe.make_step(y_next)
     x0 = estimator.make_step(y_next)
 
     if show_animation:

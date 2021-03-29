@@ -28,12 +28,12 @@ def template_mhe(model):
     # P_v = model.tvp['P_v']
 
     # P_x is the weighting matrix, which is the size of the X order
-    #   + 1 to handle the indoor temperature state
-    P_x = 1e-4 * np.eye(mp.a.shape[1] + 1)
+    #   + 2 to handle the indoor temperature state and prev indoor temperature state
+    P_x = 1e-4 * np.eye(mp.a.shape[1] + 2)
     # P_p = model.p['P_p']
 
     # no error weighting in the measurement
-    P_v = 0 * np.eye(1)
+    P_v = 0 * np.eye(0)
 
     # Set the default MHE objective by passing the weighting matrices:
     mhe.set_default_objective(P_x, P_v)
@@ -51,9 +51,17 @@ def template_mhe(model):
 
     # mhe.set_tvp_fun(tvp_fun)
 
-    # Only the non estimated parameters must be passed:
-    # p_template_mhe = mhe.get_p_template()
-    #
+    p_template_mhe = mhe.get_p_template()
+    def p_fun_mhe(t_now):
+        p_template_mhe['QCon_flow'] = 1500
+        p_template_mhe['fanP'] = 250
+        p_template_mhe['volSenSupV_flow'] = 0.40
+        p_template_mhe['volSenOAV_flow'] = 0.0009
+        p_template_mhe['room_relHum'] = 0.50
+        p_template_mhe['T_supply'] = 295
+        return p_template_mhe
+    mhe.set_p_fun(p_fun_mhe)
+
     # def p_fun_mhe(t_now):
     #     p_template_mhe['Theta_2'] = 2.25e-4
     #     p_template_mhe['Theta_3'] = 2.25e-4
@@ -80,22 +88,22 @@ def template_mhe(model):
     # need to determine the ranges for the state space model.
     mhe.bounds['lower', '_x', 'x'] = mp.min_x
     mhe.bounds['upper', '_x', 'x'] = mp.max_x
-    mhe.bounds['lower', '_x', 'indoor_temperature'] = 273
-    mhe.bounds['upper', '_x', 'indoor_temperature'] = 300
+    # mhe.bounds['lower', '_x', 'indoor_temperature'] = 273
+    # mhe.bounds['upper', '_x', 'indoor_temperature'] = 300
 
     # u for the example is dim(1,1). Need to determine the ranges.
-    mhe.bounds['lower', '_u', 'T_supply'] = 275
-    mhe.bounds['upper', '_u', 'T_supply'] = 315
-    mhe.bounds['lower', '_u', 'Q_flow'] = 0
-    mhe.bounds['upper', '_u', 'Q_flow'] = 15000
-    mhe.bounds['lower', '_u', 'fanP'] = 0
-    mhe.bounds['upper', '_u', 'fanP'] = 550
-    mhe.bounds['lower', '_u', 'volSenSupV_flow'] = 0
-    mhe.bounds['upper', '_u', 'volSenSupV_flow'] = 0.5
-    mhe.bounds['lower', '_u', 'volSenOAV_flow'] = 0
-    mhe.bounds['upper', '_u', 'volSenOAV_flow'] = 0.5
-    mhe.bounds['lower', '_u', 'room_relHum'] = 0
-    mhe.bounds['upper', '_u', 'room_relHum'] = 1
+    # mhe.bounds['lower', '_u', 'T_supply'] = 275
+    # mhe.bounds['upper', '_u', 'T_supply'] = 315
+    # mhe.bounds['lower', '_u', 'Q_flow'] = 0
+    # mhe.bounds['upper', '_u', 'Q_flow'] = 15000
+    # mhe.bounds['lower', '_u', 'fanP'] = 0
+    # mhe.bounds['upper', '_u', 'fanP'] = 550
+    # mhe.bounds['lower', '_u', 'volSenSupV_flow'] = 0
+    # mhe.bounds['upper', '_u', 'volSenSupV_flow'] = 0.5
+    # mhe.bounds['lower', '_u', 'volSenOAV_flow'] = 0
+    # mhe.bounds['upper', '_u', 'volSenOAV_flow'] = 0.5
+    # mhe.bounds['lower', '_u', 'room_relHum'] = 0
+    # mhe.bounds['upper', '_u', 'room_relHum'] = 1
 
     # The MHE also supports nonlinear constraints (here they are still linear however) ...
     # mhe.set_nl_cons('p_est_lb', -mhe._p_est['Theta_1'] + 1e-5, 0)

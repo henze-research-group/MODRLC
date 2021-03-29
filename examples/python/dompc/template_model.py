@@ -78,10 +78,13 @@ def template_model():
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
 
-    # when moving the MHE, then I think we need to set the indoor_temperature as a measured reading
-    y_exp = mp.c @ _x + mp.d @ u_array
-    # model.set_meas("y_meas", y_exp)
-    model.set_rhs("t_indoor", y_exp)
+    y_modeled = mp.c @ _x + mp.d @ u_array
+
+    # when moving to MHE, then need to set the y_meas function, even thought it will come
+    # from BOPTEST.
+    # model.set_meas("y_meas", y_modeled, meas_noise=False)
+
+    model.set_rhs("t_indoor", y_modeled)
 
     # Store the previous indoor temperature - this will be used when we add T(t-1) to the u vector.
     model.set_rhs("t_indoor_prev", t_indoor)

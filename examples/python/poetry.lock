@@ -956,6 +956,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "simple-pid"
+version = "1.0.0"
+description = "A simple, easy to use PID controller"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+docs = ["m2r", "sphinx-rtd-theme"]
+
+[[package]]
 name = "sippy"
 version = "0.1.1"
 description = "Systems Identification Package for Python"
@@ -1132,7 +1143,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "68c5606ee5ed3103f33a67cc8aa27dc0a021aab0c1af3c1f52314f4d94abf745"
+content-hash = "0c3f122898d64e380eb5197b2b21c45e1d347b55538e617b2ea87c070bc60747"
 
 [metadata.files]
 alfalfa-client = []
@@ -1771,6 +1782,10 @@ scipy = [
 send2trash = [
     {file = "Send2Trash-1.5.0-py3-none-any.whl", hash = "sha256:f1691922577b6fa12821234aeb57599d887c4900b9ca537948d2dac34aea888b"},
     {file = "Send2Trash-1.5.0.tar.gz", hash = "sha256:60001cc07d707fe247c94f74ca6ac0d3255aabcb930529690897ca2a39db28b2"},
+]
+simple-pid = [
+    {file = "simple-pid-1.0.0.tar.gz", hash = "sha256:f101661e3ae6596342f2fe6d8e56a0ec96525fae335f91c7b59cf1660f97a7ef"},
+    {file = "simple_pid-1.0.0-py2.py3-none-any.whl", hash = "sha256:ef9f1dd7357128f6cf870498fecdec9d9c9b3e420d78d406239adf516e348f59"},
 ]
 sippy = []
 six = [
