@@ -38,6 +38,9 @@ def template_model():
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
     t_indoor_prev = model.set_variable(var_type='_x', var_name='t_indoor_prev', shape=(1, 1))
 
+    # x_{n+1} = A % x + B % u
+    # y_{n} = C % x + D % u
+
     # weighting parameters
     # k_comfort_penalty = model.set_variable(var_type='_p', var_name='k_comfort_penalty', shape=(1, 1))
     # w_t = model.set_variable(var_type='_tvp', var_name='w_t', shape=(3, 1))
@@ -80,7 +83,7 @@ def template_model():
 
     y_modeled = mp.c @ _x + mp.d @ u_array
 
-    # when moving to MHE, then need to set the y_meas function, even thought it will come
+    # when moving to MHE, then need to set the y_meas function, even though it will come
     # from BOPTEST.
     # model.set_meas("y_meas", y_modeled, meas_noise=False)
 
@@ -99,9 +102,8 @@ def template_model():
     #           m_energy_cost * max(energy_cost - cost_budget, 0) ^ energy_cost_order +
     #           m_demand * max(peak_demand - target_demand_limit, 0) ^ demand_order
     # cost_function = power * r_t + penalty
-    tsetpoint_upper = 25 + 273
-    tsetpoint_lower = 20 + 273
     elec_unit_cost = 0.05
+    # tsetpoint_upper and tsetpoint_lower are defined in the model_parameters imports and vary with time
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
     energy_consumption = 0
     energy_cost = total_power * elec_unit_cost
