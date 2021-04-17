@@ -23,23 +23,27 @@ Get configured do-mpc modules:
 model = template_model()
 mpc = template_mpc(model)
 simulator = template_simulator(model)
-# estimator = template_mhe(model)
+
+# Choose one of these estimators
+estimator = template_mhe(model)
 
 # Use the StateFeedback estimator for testing, but it
 # is very basic.
-estimator = do_mpc.estimator.StateFeedback(model)
+# estimator = do_mpc.estimator.StateFeedback(model)
 
 """
-Set initial state
+Set initial states
 """
 np.random.seed(99)
 
 # e = np.ones([model.n_x, 1])
 # These default x0's are from a random interval in the simulation.
-x0 = np.array([[-0.91468989], [-0.15824672], [-3.70572322], [2.61228931],
-               [-0.09639031], [0.12383332], [0.56911312], [0.75327032],
-               [293], # indoor temp
-               [293], # prev indoor temp
+x0 = np.array([[-0.8227],
+               [-0.0350391],
+               [-0.0059108],
+               [293],  # indoor temp
+               [293],  # prev indoor temp
+               [293],  # prev prev indoor temp
                ])
 # x0 = np.random.uniform(-3 * e, 3 * e)  # Values between +3 and +3 for all states
 mpc.x0 = x0
@@ -48,7 +52,7 @@ estimator.x0 = x0
 
 # Use initial state to set the initial guess.
 mpc.set_initial_guess()
-# mhe.set_initial_guess()
+estimator.set_initial_guess()
 
 """
 Setup graphic:
@@ -76,31 +80,37 @@ for var in mp.variables:
             #     mpc_plot.result_lines['_x', 'phi_2']+mpc_plot.result_lines['_tvp', 'phi_2_set']+mpc_plot.pred_lines['_x', 'phi_2'],
             #     ['Recorded', 'Setpoint', 'Predicted'], title='Disc 2')
 
-ax[0].set_title('Inputs')
-# mpc_plot.add_line('_u', 'T_supply', ax[0])
-mpc_plot.add_line('_u', 'Q_flow', ax[0])
-# mpc_plot.add_line('_u', 'fanP', ax[0])
-# mpc_plot.add_line('_u', 'volSenSupV_flow', ax[0])
-# mpc_plot.add_line('_u', 'volSenOAV_flow', ax[0])
-# mpc_plot.add_line('_u', 'room_relHum', ax[0])
+axis = 0
+ax[axis].set_title('Heating/Cooling Power')
+mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
 
-ax[1].set_title('OA Temperatures TVPs')
+axis = 1
+ax[axis].set_title('Indoor setpoints')
+mpc_plot.add_line('_u', 't_heat_setpoint', ax[axis], color='red')
+mpc_plot.add_line('_u', 't_cool_setpoint', ax[axis], color='blue')
 
-ax[2].set_title('Irradiance TVPs')
+ax[2].set_title('OA Temperatures TVPs')
 
-ax[3].set_title('Indoor Air Temperature')
-mpc_plot.add_line('_x', 't_indoor', ax[3], color='blue')
-mpc_plot.add_line('_x', 't_indoor_prev', ax[3], color='red')
+ax[3].set_title('Irradiance TVPs')
 
-ax[4].set_title('Setpoints TVP')
+axis = 4
+ax[axis].set_title('Indoor Air Temperature')
+mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
+mpc_plot.add_line('_x', 't_indoor_1', ax[axis], color='green')
+mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
 
-ax[5].set_title('Elec Cost')
+ax[5].set_title('Setpoints TVP')
 
-ax[6].set_title('Power')
-mpc_plot.add_line('_aux', 'total_power', ax[6])
+ax[6].set_title('Elec Cost')
 
-ax[7].set_title('Cost Function')
-mpc_plot.add_line('_aux', 'cost', ax[7])
+axis = 7
+ax[axis].set_title('Power')
+mpc_plot.add_line('_aux', 'total_power', ax[axis])
+
+axis = 8
+ax[axis].set_title('Cost Function')
+mpc_plot.add_line('_aux', 'cost', ax[axis])
 
 # ax[4].set_title('Estimated parameters:')
 

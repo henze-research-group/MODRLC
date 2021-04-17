@@ -26,17 +26,22 @@ def template_model():
             )
 
     # all the other variables.
-    q_con_flow = model.set_variable(var_type='_p', var_name='QCon_flow', shape=(1, 1))  # convective gains
-    q_flow = model.set_variable(var_type='_u', var_name='Q_flow', shape=(1, 1))  # heating delivered to space
-    fan_p = model.set_variable(var_type='_p', var_name='fanP', shape=(1, 1))  #
-    v_flow_supply = model.set_variable(var_type='_p', var_name='volSenSupV_flow', shape=(1, 1))
-    v_flow_oa = model.set_variable(var_type='_p', var_name='volSenOAV_flow', shape=(1, 1))
-    room_rel_hum = model.set_variable(var_type='_p', var_name='room_relHum', shape=(1, 1))
-    t_supply = model.set_variable(var_type='_p', var_name='T_supply', shape=(1, 1))
+    # q_con_flow = model.set_variable(var_type='_p', var_name='QCon_flow', shape=(1, 1))  # convective gains
+    t_heat_setpoint = model.set_variable(var_type='_u', var_name='t_heat_setpoint', shape=(1, 1))  # heating setpoint for single space
+    t_cool_setpoint = model.set_variable(var_type='_u', var_name='t_cool_setpoint', shape=(1, 1))  # cooling setpoint for single space
+    heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
+    cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
+
+    # fan_p = model.set_variable(var_type='_p', var_name='fanP', shape=(1, 1))  #
+    # v_flow_supply = model.set_variable(var_type='_p', var_name='volSenSupV_flow', shape=(1, 1))
+    # v_flow_oa = model.set_variable(var_type='_p', var_name='volSenOAV_flow', shape=(1, 1))
+    # room_rel_hum = model.set_variable(var_type='_p', var_name='room_relHum', shape=(1, 1))
+    # t_supply = model.set_variable(var_type='_p', var_name='T_supply', shape=(1, 1))
 
     # additional state for indoor temperature
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
-    t_indoor_prev = model.set_variable(var_type='_x', var_name='t_indoor_prev', shape=(1, 1))
+    t_indoor_1 = model.set_variable(var_type='_x', var_name='t_indoor_1', shape=(1, 1))
+    t_indoor_2 = model.set_variable(var_type='_x', var_name='t_indoor_2', shape=(1, 1))
 
     # x_{n+1} = A % x + B % u
     # y_{n} = C % x + D % u
@@ -59,24 +64,29 @@ def template_model():
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
+    # _u = np.array([
+    #     [295],  # Toa
+    #     [1000], # GloHorRad
+    #     [1],    # Occupancy Ratio
+    #     [10],   # Theat_sp - Tzone(t-1)
+    #     [7],    # Tzone(t-1) - Tcool_sp
+    #     [25],   # Toa(t) - Tzone(t-1)
+    #     [3],    # Tzone(t-1) - Tzone(t-2)
+    #     [1],    # Tzone(t-1) - Tcool_sp
+    #     [25],   # Toa(t) - Tzone(t-1)
+    #     [3],    # Tzone(t-1) - Tzone(t-2)
+
     u_array = vertcat(
-        h_dif_hor,
-        h_dir_nor,
-        h_glo_hor,
-        h_hor_ir,
-        t_bla_sky,
         t_dry_bulb,
-        t_wet_bul,
-        win_speed,
-        win_dir,
-        oa_rel_hum,
-        q_con_flow,
-        q_flow,
-        fan_p,
-        v_flow_supply,
-        v_flow_oa,
-        room_rel_hum,
-        t_supply
+        h_glo_hor,
+        occupancy_ratio,
+        t_heat_setpoint - t_indoor_1,
+        t_indoor_1 - t_cool_setpoint,
+        t_dry_bulb - t_indoor_1,
+        heating_power,
+        cooling_power,
+        t_indoor_1,
+        t_indoor_1 - t_indoor_2,
     )
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
@@ -85,12 +95,12 @@ def template_model():
 
     # when moving to MHE, then need to set the y_meas function, even though it will come
     # from BOPTEST.
-    # model.set_meas("y_meas", y_modeled, meas_noise=False)
+    model.set_meas("t_indoor", y_modeled, meas_noise=False)
 
     model.set_rhs("t_indoor", y_modeled)
-
-    # Store the previous indoor temperature - this will be used when we add T(t-1) to the u vector.
-    model.set_rhs("t_indoor_prev", t_indoor)
+    # Store the previous indoor temperature - this will be used when we add T(t-1) to the x vector.
+    model.set_rhs("t_indoor_1", t_indoor)
+    model.set_rhs("t_indoor_2", t_indoor_1)
 
     # Economic MPC
     # Each term is multiplier * max(value - threshold, 0) ** order

@@ -46,16 +46,16 @@ def template_simulator(model):
     simulator.set_tvp_fun(tvp_fun)
 
     # Testing the parameter configuration
-    p_template_sim = simulator.get_p_template()
-    def p_fun_mpc(t_now):
-        p_template_sim["QCon_flow"] = 1500
-        p_template_sim["fanP"] = 250
-        p_template_sim["volSenSupV_flow"] = 0.40
-        p_template_sim["volSenOAV_flow"] = 0.0009
-        p_template_sim["room_relHum"] = 0.50
-        p_template_sim["T_supply"] = 295
-        return p_template_sim
-    simulator.set_p_fun(p_fun_mpc)
+    # p_template_sim = simulator.get_p_template()
+    # def p_fun_mpc(t_now):
+    #     p_template_sim["QCon_flow"] = 1500
+    #     p_template_sim["fanP"] = 250
+    #     p_template_sim["volSenSupV_flow"] = 0.40
+    #     p_template_sim["volSenOAV_flow"] = 0.0009
+    #     p_template_sim["room_relHum"] = 0.50
+    #     p_template_sim["T_supply"] = 295
+    #     return p_template_sim
+    # simulator.set_p_fun(p_fun_mpc)
 
     simulator.setup()
 

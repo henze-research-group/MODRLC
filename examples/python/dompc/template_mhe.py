@@ -28,8 +28,8 @@ def template_mhe(model):
     # P_v = model.tvp['P_v']
 
     # P_x is the weighting matrix, which is the size of the X order
-    #   + 2 to handle the indoor temperature state and prev indoor temperature state
-    P_x = 1e-4 * np.eye(mp.a.shape[1] + 2)
+    #   + 3 to handle the indoor temperature state, prev indoor temperature state, and prev prev
+    P_x = 1e-4 * np.eye(mp.a.shape[1] + 3)
     # P_p = model.p['P_p']
 
     # no error weighting in the measurement
@@ -51,16 +51,16 @@ def template_mhe(model):
 
     # mhe.set_tvp_fun(tvp_fun)
 
-    p_template_mhe = mhe.get_p_template()
-    def p_fun_mhe(t_now):
-        p_template_mhe['QCon_flow'] = 1500
-        p_template_mhe['fanP'] = 250
-        p_template_mhe['volSenSupV_flow'] = 0.40
-        p_template_mhe['volSenOAV_flow'] = 0.0009
-        p_template_mhe['room_relHum'] = 0.50
-        p_template_mhe['T_supply'] = 295
-        return p_template_mhe
-    mhe.set_p_fun(p_fun_mhe)
+    # p_template_mhe = mhe.get_p_template()
+    # def p_fun_mhe(t_now):
+    #     p_template_mhe['QCon_flow'] = 1500
+    #     p_template_mhe['fanP'] = 250
+    #     p_template_mhe['volSenSupV_flow'] = 0.40
+    #     p_template_mhe['volSenOAV_flow'] = 0.0009
+    #     p_template_mhe['room_relHum'] = 0.50
+    #     p_template_mhe['T_supply'] = 295
+    #     return p_template_mhe
+    # mhe.set_p_fun(p_fun_mhe)
 
     # def p_fun_mhe(t_now):
     #     p_template_mhe['Theta_2'] = 2.25e-4
@@ -88,6 +88,7 @@ def template_mhe(model):
     # need to determine the ranges for the state space model.
     mhe.bounds['lower', '_x', 'x'] = mp.min_x
     mhe.bounds['upper', '_x', 'x'] = mp.max_x
+
     # mhe.bounds['lower', '_x', 'indoor_temperature'] = 273
     # mhe.bounds['upper', '_x', 'indoor_temperature'] = 300
 
