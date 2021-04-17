@@ -60,6 +60,9 @@ class ModelParameters:
         self.min_indoor_t = np.array([250])
         self.max_indoor_t = np.array([310])
 
+        self.min_setpoint_t = np.array([293])
+        self.max_setpoint_t = np.array([298])
+
 
         # state space u values
         # u[0]  = 't_dry_bulb'
@@ -94,7 +97,7 @@ class ModelParameters:
             "data_source": "tvp_setpoint_data",
             "var_name": "occupancy_ratio",
             "data_column_name": "occupancy_ratio",
-            "plot_axis": None,
+            "plot_axis": 7,
             "local_var_name": "occupancy_ratio",
         })
         # tvp_setpoint_data

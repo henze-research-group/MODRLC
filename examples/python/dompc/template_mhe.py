@@ -88,23 +88,22 @@ def template_mhe(model):
     # need to determine the ranges for the state space model.
     mhe.bounds['lower', '_x', 'x'] = mp.min_x
     mhe.bounds['upper', '_x', 'x'] = mp.max_x
-
-    # mhe.bounds['lower', '_x', 'indoor_temperature'] = 273
-    # mhe.bounds['upper', '_x', 'indoor_temperature'] = 300
+    mhe.bounds['lower', '_x', 't_indoor'] = mp.min_indoor_t
+    mhe.bounds['lower', '_x', 't_indoor'] = mp.max_indoor_t
+    mhe.bounds['lower', '_x', 't_indoor_1'] = mp.min_indoor_t
+    mhe.bounds['lower', '_x', 't_indoor_1'] = mp.max_indoor_t
+    mhe.bounds['lower', '_x', 't_indoor_2'] = mp.min_indoor_t
+    mhe.bounds['lower', '_x', 't_indoor_2'] = mp.max_indoor_t
 
     # u for the example is dim(1,1). Need to determine the ranges.
-    # mhe.bounds['lower', '_u', 'T_supply'] = 275
-    # mhe.bounds['upper', '_u', 'T_supply'] = 315
-    # mhe.bounds['lower', '_u', 'Q_flow'] = 0
-    # mhe.bounds['upper', '_u', 'Q_flow'] = 15000
-    # mhe.bounds['lower', '_u', 'fanP'] = 0
-    # mhe.bounds['upper', '_u', 'fanP'] = 550
-    # mhe.bounds['lower', '_u', 'volSenSupV_flow'] = 0
-    # mhe.bounds['upper', '_u', 'volSenSupV_flow'] = 0.5
-    # mhe.bounds['lower', '_u', 'volSenOAV_flow'] = 0
-    # mhe.bounds['upper', '_u', 'volSenOAV_flow'] = 0.5
-    # mhe.bounds['lower', '_u', 'room_relHum'] = 0
-    # mhe.bounds['upper', '_u', 'room_relHum'] = 1
+    mhe.bounds['lower', '_u', 't_heat_setpoint'] = mp.min_indoor_t
+    mhe.bounds['upper', '_u', 't_heat_setpoint'] = mp.max_indoor_t
+    mhe.bounds['lower', '_u', 't_cool_setpoint'] = mp.min_indoor_t
+    mhe.bounds['upper', '_u', 't_cool_setpoint'] = mp.max_indoor_t
+    mhe.bounds['lower', '_u', 'heating_power'] = 0
+    mhe.bounds['upper', '_u', 'heating_power'] = 30000
+    mhe.bounds['lower', '_u', 'cooling_power'] = 0
+    mhe.bounds['upper', '_u', 'cooling_power'] = 30000
 
     # The MHE also supports nonlinear constraints (here they are still linear however) ...
     # mhe.set_nl_cons('p_est_lb', -mhe._p_est['Theta_1'] + 1e-5, 0)

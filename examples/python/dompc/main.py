@@ -25,11 +25,11 @@ mpc = template_mpc(model)
 simulator = template_simulator(model)
 
 # Choose one of these estimators
-estimator = template_mhe(model)
+# estimator = template_mhe(model)
 
 # Use the StateFeedback estimator for testing, but it
 # is very basic.
-# estimator = do_mpc.estimator.StateFeedback(model)
+estimator = do_mpc.estimator.StateFeedback(model)
 
 """
 Set initial states
@@ -52,7 +52,8 @@ estimator.x0 = x0
 
 # Use initial state to set the initial guess.
 mpc.set_initial_guess()
-estimator.set_initial_guess()
+if not isinstance(estimator, do_mpc.estimator.StateFeedback):
+    estimator.set_initial_guess()
 
 """
 Setup graphic:
@@ -99,6 +100,7 @@ ax[axis].set_title('Indoor Air Temperature')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
 mpc_plot.add_line('_x', 't_indoor_1', ax[axis], color='green')
 mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
+ax[axis].set_ylim(270, 305)
 
 ax[5].set_title('Setpoints TVP')
 
@@ -153,4 +155,9 @@ input('Press any key to exit.')
 
 # Store results:
 if store_results:
-    do_mpc.data.save_results([mpc], 'som3')
+    if not isinstance(estimator, do_mpc.estimator.StateFeedback):
+        filename = 'som3_mpc_mhe'
+    else:
+        filename = 'som3_mpc_stateestimator'
+
+    do_mpc.data.save_results([mpc], filename)

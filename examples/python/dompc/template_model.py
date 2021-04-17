@@ -32,12 +32,6 @@ def template_model():
     heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
     cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
 
-    # fan_p = model.set_variable(var_type='_p', var_name='fanP', shape=(1, 1))  #
-    # v_flow_supply = model.set_variable(var_type='_p', var_name='volSenSupV_flow', shape=(1, 1))
-    # v_flow_oa = model.set_variable(var_type='_p', var_name='volSenOAV_flow', shape=(1, 1))
-    # room_rel_hum = model.set_variable(var_type='_p', var_name='room_relHum', shape=(1, 1))
-    # t_supply = model.set_variable(var_type='_p', var_name='T_supply', shape=(1, 1))
-
     # additional state for indoor temperature
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
     t_indoor_1 = model.set_variable(var_type='_x', var_name='t_indoor_1', shape=(1, 1))
@@ -80,7 +74,7 @@ def template_model():
         t_dry_bulb,
         h_glo_hor,
         occupancy_ratio,
-        t_heat_setpoint - t_indoor_1,
+        t_heat_setpoint - t_indoor,
         t_indoor_1 - t_cool_setpoint,
         t_dry_bulb - t_indoor_1,
         heating_power,
@@ -94,8 +88,8 @@ def template_model():
     y_modeled = mp.c @ _x + mp.d @ u_array
 
     # when moving to MHE, then need to set the y_meas function, even though it will come
-    # from BOPTEST.
-    model.set_meas("t_indoor", y_modeled, meas_noise=False)
+    # from BOPTEST.(if using BOPTEST)
+    # model.set_meas("t_indoor", y_modeled, meas_noise=False)
 
     model.set_rhs("t_indoor", y_modeled)
     # Store the previous indoor temperature - this will be used when we add T(t-1) to the x vector.
