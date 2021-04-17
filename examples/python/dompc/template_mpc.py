@@ -67,10 +67,10 @@ def template_mpc(model):
     mpc.bounds['upper', '_u', 't_heat_setpoint'] = mp.max_setpoint_t
     mpc.bounds['lower', '_u', 't_cool_setpoint'] = mp.min_setpoint_t
     mpc.bounds['upper', '_u', 't_cool_setpoint'] = mp.max_setpoint_t
-    mpc.bounds['lower', '_u', 'heating_power'] = 0
-    mpc.bounds['upper', '_u', 'heating_power'] = 30000
-    mpc.bounds['lower', '_u', 'cooling_power'] = 0
-    mpc.bounds['upper', '_u', 'cooling_power'] = 30000
+    mpc.bounds['lower', '_u', 'heating_power'] = mp.min_heating
+    mpc.bounds['upper', '_u', 'heating_power'] = mp.max_heating
+    mpc.bounds['lower', '_u', 'cooling_power'] = mp.min_cooling
+    mpc.bounds['upper', '_u', 'cooling_power'] = mp.max_cooling
 
     mpc.setup()
 

@@ -58,29 +58,17 @@ def template_model():
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
-    # _u = np.array([
-    #     [295],  # Toa
-    #     [1000], # GloHorRad
-    #     [1],    # Occupancy Ratio
-    #     [10],   # Theat_sp - Tzone(t-1)
-    #     [7],    # Tzone(t-1) - Tcool_sp
-    #     [25],   # Toa(t) - Tzone(t-1)
-    #     [3],    # Tzone(t-1) - Tzone(t-2)
-    #     [1],    # Tzone(t-1) - Tcool_sp
-    #     [25],   # Toa(t) - Tzone(t-1)
-    #     [3],    # Tzone(t-1) - Tzone(t-2)
-
     u_array = vertcat(
         t_dry_bulb,
         h_glo_hor,
-        occupancy_ratio,
-        t_heat_setpoint - t_indoor,
-        t_indoor_1 - t_cool_setpoint,
-        t_dry_bulb - t_indoor_1,
+        t_indoor_1,
+        t_heat_setpoint - t_indoor_1,
         heating_power,
         cooling_power,
-        t_indoor_1,
+        t_indoor_1 - t_cool_setpoint,
+        occupancy_ratio,
         t_indoor_1 - t_indoor_2,
+        t_dry_bulb - t_indoor_1,
     )
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)

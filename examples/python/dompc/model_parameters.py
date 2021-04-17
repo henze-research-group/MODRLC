@@ -63,6 +63,10 @@ class ModelParameters:
         self.min_setpoint_t = np.array([293])
         self.max_setpoint_t = np.array([298])
 
+        self.min_heating = 0
+        self.min_cooling = 0
+        self.max_heating = 14000
+        self.max_cooling = 7000
 
         # state space u values
         # u[0]  = 't_dry_bulb'
