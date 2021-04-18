@@ -25,8 +25,7 @@ def template_model():
                 var_type='_tvp', var_name=var["var_name"], shape=(1, 1)
             )
 
-    # all the other variables.
-    # q_con_flow = model.set_variable(var_type='_p', var_name='QCon_flow', shape=(1, 1))  # convective gains
+    # the control variables.
     t_heat_setpoint = model.set_variable(var_type='_u', var_name='t_heat_setpoint', shape=(1, 1))  # heating setpoint for single space
     t_cool_setpoint = model.set_variable(var_type='_u', var_name='t_cool_setpoint', shape=(1, 1))  # cooling setpoint for single space
     heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
@@ -94,7 +93,12 @@ def template_model():
     #           m_energy_cost * max(energy_cost - cost_budget, 0) ^ energy_cost_order +
     #           m_demand * max(peak_demand - target_demand_limit, 0) ^ demand_order
     # cost_function = power * r_t + penalty
-    elec_unit_cost = 0.05
+    elec_unit_cost = 0.0589  # cost per kWh
+    elec_demand_cost = 7.89  # cost per kW
+    # DR Time
+    w = [0.7, 0.2, 0.1]
+    # non-DR time
+    w = [0.0, 0.5, 0.5]
     # tsetpoint_upper and tsetpoint_lower are defined in the model_parameters imports and vary with time
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
     energy_consumption = 0
