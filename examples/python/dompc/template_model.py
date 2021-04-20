@@ -25,26 +25,24 @@ def template_model():
                 var_type='_tvp', var_name=var["var_name"], shape=(1, 1)
             )
 
-    # the control variables.
+    # the control variables
     t_heat_setpoint = model.set_variable(var_type='_u', var_name='t_heat_setpoint', shape=(1, 1))  # heating setpoint for single space
     t_cool_setpoint = model.set_variable(var_type='_u', var_name='t_cool_setpoint', shape=(1, 1))  # cooling setpoint for single space
-    heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
-    cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
+    # heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
+    # cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
 
     # additional state for indoor temperature
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
     t_indoor_1 = model.set_variable(var_type='_x', var_name='t_indoor_1', shape=(1, 1))
-    t_indoor_2 = model.set_variable(var_type='_x', var_name='t_indoor_2', shape=(1, 1))
-
-    # x_{n+1} = A % x + B % u
-    # y_{n} = C % x + D % u
+    # t_indoor_2 = model.set_variable(var_type='_x', var_name='t_indoor_2', shape=(1, 1))
 
     # weighting parameters
     # k_comfort_penalty = model.set_variable(var_type='_p', var_name='k_comfort_penalty', shape=(1, 1))
     # w_t = model.set_variable(var_type='_tvp', var_name='w_t', shape=(3, 1))
-
-    # Time-varying parameter for the MHE: Weighting of the measurements (tvp):
-    # P_v = model.set_variable(var_type='_tvp', var_name='P_v', shape=(5, 5))
+    # DR Time
+    w_t = [0.7, 0.2, 0.1]
+    # non-DR time
+    w_t = [0.0, 0.5, 0.5]
 
     # Power!
     # how do we make the cost function be a LASSO regression (or any other function?)
@@ -52,26 +50,39 @@ def template_model():
     # need knowledge of the process variables:
     #    secondary variables on power consumption / demand.
     #    where are the constraints -- on y.
-    # Simple polynomial fix between Q_flow to represent power and Tdb of OA.
+    # Simple polynomial fix between Q_flow to represent power and Tdb of OA. Not that this
+    # formulation will not work with a peak demand shedding event since there is no time of day
+    # or other variable to reduce total_power other than t_dry_bulb.
     total_power = model.set_expression('total_power', 0.9871 * t_dry_bulb ** 2 - 576.53 * t_dry_bulb + 84202)
+    peak_demand = 0  # have to always initialize variable in this case before sending to Casadi. However,
+                     # This probably needs to be a state variable if we are constantly looking at the previous peak.
+    peak_demand = model.set_expression('peak_demand', fmax(total_power, peak_demand))
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
-    u_array = vertcat(
+    # u_array = vertcat(
+    #     t_dry_bulb,
+    #     h_glo_hor,
+    #     t_indoor_1,
+    #     t_heat_setpoint - t_indoor_1,
+    #     heating_power,
+    #     cooling_power,
+    #     t_indoor_1 - t_cool_setpoint,
+    #     occupancy_ratio,
+    #     t_indoor_1 - t_indoor_2,
+    #     t_dry_bulb - t_indoor_1,
+    # )
+    u_array =vertcat(
         t_dry_bulb,
         h_glo_hor,
-        t_indoor_1,
-        t_heat_setpoint - t_indoor_1,
-        heating_power,
-        cooling_power,
-        t_indoor_1 - t_cool_setpoint,
-        occupancy_ratio,
-        t_indoor_1 - t_indoor_2,
+        t_heat_setpoint - t_indoor,
+        t_indoor - t_cool_setpoint,
         t_dry_bulb - t_indoor_1,
     )
+
+    # LTI equations
     x_next = mp.a @ _x + mp.b @ u_array
     model.set_rhs('x', x_next)
-
     y_modeled = mp.c @ _x + mp.d @ u_array
 
     # when moving to MHE, then need to set the y_meas function, even though it will come
@@ -81,7 +92,7 @@ def template_model():
     model.set_rhs("t_indoor", y_modeled)
     # Store the previous indoor temperature - this will be used when we add T(t-1) to the x vector.
     model.set_rhs("t_indoor_1", t_indoor)
-    model.set_rhs("t_indoor_2", t_indoor_1)
+    # model.set_rhs("t_indoor_2", t_indoor_1)
 
     # Economic MPC
     # Each term is multiplier * max(value - threshold, 0) ** order
@@ -95,18 +106,14 @@ def template_model():
     # cost_function = power * r_t + penalty
     elec_unit_cost = 0.0589  # cost per kWh
     elec_demand_cost = 7.89  # cost per kW
-    # DR Time
-    w = [0.7, 0.2, 0.1]
-    # non-DR time
-    w = [0.0, 0.5, 0.5]
+    target_demand_limit = 50  # replace with correct number
+
     # tsetpoint_upper and tsetpoint_lower are defined in the model_parameters imports and vary with time
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
-    energy_consumption = 0
     energy_cost = total_power * elec_unit_cost
-    demand = 0
-    cost_function = discomfort + energy_cost
+    demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) **2)
+    cost_function = discomfort + energy_cost + demand_cost
     model.set_expression(expr_name='cost', expr=cost_function)
-
     model.setup()
 
     return model

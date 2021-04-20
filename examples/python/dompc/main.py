@@ -38,13 +38,17 @@ np.random.seed(99)
 
 # e = np.ones([model.n_x, 1])
 # These default x0's are from a random interval in the simulation.
-x0 = np.array([[-0.8227],
-               [-0.0350391],
-               [-0.0059108],
+x0 = np.array([[-0.200731],
                [293],  # indoor temp
                [293],  # prev indoor temp
-               [293],  # prev prev indoor temp
-               ])
+              ])
+# x0 = np.array([[-0.8227],
+#                [-0.0350391],
+#                [-0.0059108],
+#                [293],  # indoor temp
+#                [293],  # prev indoor temp
+#                [293],  # prev prev indoor temp
+#                ])
 # x0 = np.random.uniform(-3 * e, 3 * e)  # Values between +3 and +3 for all states
 mpc.x0 = x0
 simulator.x0 = x0
@@ -81,10 +85,10 @@ for var in mp.variables:
             #     mpc_plot.result_lines['_x', 'phi_2']+mpc_plot.result_lines['_tvp', 'phi_2_set']+mpc_plot.pred_lines['_x', 'phi_2'],
             #     ['Recorded', 'Setpoint', 'Predicted'], title='Disc 2')
 
-axis = 0
-ax[axis].set_title('Heating/Cooling Power')
-mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
-mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
+# axis = 0
+# ax[axis].set_title('Heating/Cooling Power')
+# mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+# mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
 
 axis = 1
 ax[axis].set_title('Indoor setpoints')
@@ -99,7 +103,7 @@ axis = 4
 ax[axis].set_title('Indoor Air Temperature')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
 mpc_plot.add_line('_x', 't_indoor_1', ax[axis], color='green')
-mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
+# mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
 ax[axis].set_ylim(270, 305)
 
 ax[5].set_title('Setpoints TVP')
