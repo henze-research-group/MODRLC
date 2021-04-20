@@ -135,6 +135,7 @@ class ModelParameters:
 
         # running configuration
         self.time_step = 300
+        # TODO: This should be one day once things are working.
         self.n_horizon = 30
 
         self.tvp_template = None
