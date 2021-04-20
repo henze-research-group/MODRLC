@@ -5,11 +5,16 @@ description = ""
 authors = ["Nicholas Long <nicholas.long@nrel.gov>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 requests = "^2.25.1"
 importlib-metadata = "^3.4.0"
 alfalfa-client = {git = "https://git@github.com/nrel/alfalfa-client.git", rev = "develop"}
 do-mpc = "^4.1.1"
+sklearn = "^0.0"
+sippy = {git = "https://github.com/henze-research-group/SIPPY.git"}
+xlrd = "^1.2.0"
+simple-pid = "^1.0.0"
+jupyterlab = "^3.0.14"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

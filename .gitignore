@@ -1,5 +1,6 @@
 .idea
 .python-version
+.ipynb_checkpoints
 examples/python/som3_mpc1/*
 *.pyc
 *.txt
@@ -14,6 +15,7 @@ testcase2/doc/build/
 parser/*.fmu
 parser/*.mo
 parser/*.json
+~$*
 
 # ignore the really large wrapped csv file
 examples/python/lasso_and_n4sid/wrapped 2.csv

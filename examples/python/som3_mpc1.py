@@ -2,9 +2,10 @@
 """
 This module creates an MPC controller for the SOM3 model.
 """
-import sys, os
-from pathlib import Path
 import json
+import os
+import sys
+from pathlib import Path
 
 # Allow access to boptest_client. boptest_client should be a separate package (like Alfalfa-client)
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'boptest_client'))
@@ -17,11 +18,25 @@ import pandas as pd
 
 # TEST CONTROLLER IMPORT
 # ----------------------
-from controllers.pidsom3b import compute_control, initialize
+from controllers.pidsom3b import initialize
 
 # pid = PID(0.00005, 100, 300, setpoint=294.15)
 from simple_pid import PID
+
 pid = PID(Kp=5, Ki=240, Kd=0, setpoint=23 + 273.15, output_limits=(0, 1))
+
+
+def control_u():
+    u = {
+        "oveHCSet_u": 1.0,
+        "oveHCSet_activate": 1,
+        "oveVFRSet_u": 0.7,
+        "oveVFRSet_activate": 1,
+        "oveCC_u": 0.0,
+        "oveCC_activate": 1
+    }
+    return u
+
 
 def run(plot=True, customized_kpi_config=None):
     """Run test case.
@@ -93,11 +108,14 @@ def run(plot=True, customized_kpi_config=None):
 
         # Compute next control signal
         # FOR MPC with perfect forecast, the compute control will optimize the forecast using PSO.
-        u, action = compute_control(y, pid)
-        actions.append(action)
+        # u, _action = compute_control(y, pid)
+        u = control_u()
+        print(json.dumps(u, indent=2))
+        res = client.advance(control_u=u)
         print(f"New control signals")
         print(f"  oveHCSet_u: {u['oveHCSet_u']}")
         print(f"  oveVFRSet_u: {u['oveVFRSet_u']}")
+        print(json.dumps(res, indent=2))
 
         # debug after 10
         # if i > 10:
@@ -127,7 +145,6 @@ def run(plot=True, customized_kpi_config=None):
                 df = pd.concat((df, pd.DataFrame(data=results[s][x], index=results['y']['time'], columns=[x])), axis=1)
     df.index.name = 'time'
     df.to_csv(save_dir / 'results.csv')
-
 
     time = [x / 3600 for x in results['y']['time']]  # convert s --> hr
     TZone = [x - 273.15 for x in results['y']['senTRoom_y']]  # convert K --> C
