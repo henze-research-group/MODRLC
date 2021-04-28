@@ -15,9 +15,9 @@ def template_model():
     # States struct (optimization variables):
     # x's shape is the A's num of columns x 1
     _x = model.set_variable(var_type='_x', var_name='x', shape=(mp.a.shape[1], 1))
-    # additional state for indoor temperature
+    # additional state for indoor temperature -- mainly for plotting right now
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
-    t_indoor_1 = model.set_variable(var_type='_x', var_name='t_indoor_1', shape=(1, 1))
+    # t_indoor_1 = model.set_variable(var_type='_x', var_name='t_indoor_1', shape=(1, 1))
     # t_indoor_2 = model.set_variable(var_type='_x', var_name='t_indoor_2', shape=(1, 1))
 
     # TVP Variables
@@ -30,8 +30,8 @@ def template_model():
             )
 
     # the control variables
-    t_heat_setpoint = model.set_variable(var_type='_u', var_name='t_heat_setpoint', shape=(1, 1))  # heating setpoint for single space
-    t_cool_setpoint = model.set_variable(var_type='_u', var_name='t_cool_setpoint', shape=(1, 1))  # cooling setpoint for single space
+    heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
+    fan_power = model.set_variable(var_type='_u', var_name='fan_power', shape=(1, 1))
     # heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
     # cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
 
@@ -71,13 +71,31 @@ def template_model():
     #     t_indoor_1 - t_indoor_2,
     #     t_dry_bulb - t_indoor_1,
     # )
+    # u_array = vertcat(
+    #     t_dry_bulb,
+    #     h_glo_hor,
+    #     t_heat_setpoint - t_indoor,
+    #     t_indoor - t_cool_setpoint,
+    #     t_dry_bulb - t_indoor_1,
+    # )
     u_array = vertcat(
         t_dry_bulb,
         h_glo_hor,
-        t_heat_setpoint - t_indoor,
-        t_indoor - t_cool_setpoint,
-        t_dry_bulb - t_indoor_1,
-    )
+        5,  # number of occupants
+        500,  # internal gains convective flow
+        heating_power,
+        fan_power,
+        0.175     # OA volumetric flow
+        )
+
+    # _u = np.array([273, # T_OA (K)  - freezing outside
+    #                0,  # Horizontal Global Irradiance (W)
+    #                0,  # No occupants [ 0 - 6]
+    #                1000,  # Internal gains convective flow (W), ?  [ 0 - 3000]
+    #                heating_power, # Heating Power (W), [0 - 6000]
+    #                500,  # Fan Power (W), ? [0 - 500]
+    #                0.175,    # OA Volumetric flow rate (m3/s), [0.01 - 0.175]  # full outside ai
+    #                ])
 
     # LTI equations
     x_next = mp.a @ _x + mp.b @ u_array
@@ -90,7 +108,7 @@ def template_model():
 
     model.set_rhs("t_indoor", y_modeled)
     # Store the previous indoor temperature - this will be used when we add T(t-1) to the x vector.
-    model.set_rhs("t_indoor_1", t_indoor)
+    # model.set_rhs("t_indoor_1", t_indoor)
     # model.set_rhs("t_indoor_2", t_indoor_1)
 
     # Economic MPC

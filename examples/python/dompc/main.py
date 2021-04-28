@@ -11,7 +11,6 @@ import do_mpc
 from template_model import template_model
 from template_mpc import template_mpc
 from template_simulator import template_simulator
-from template_mhe import template_mhe
 
 """ User settings: """
 show_animation = True
@@ -38,10 +37,10 @@ np.random.seed(99)
 
 # e = np.ones([model.n_x, 1])
 # These default x0's are from a random interval in the simulation.
-x0 = np.array([[-0.200731],
-               [293],  # indoor temp
-               [293],  # prev indoor temp
-              ])
+x0 = np.array([
+    [-3.92236858e-01], [-7.88940004e+00], [-5.34412096e+00], [2.21526326e-01], [2.70893994e-01], [1.47842629e-01], [-2.73510110e-02],
+    [293], # indoor temperature
+])
 # x0 = np.array([[-0.8227],
 #                [-0.0350391],
 #                [-0.0059108],
@@ -85,15 +84,15 @@ for var in mp.variables:
             #     mpc_plot.result_lines['_x', 'phi_2']+mpc_plot.result_lines['_tvp', 'phi_2_set']+mpc_plot.pred_lines['_x', 'phi_2'],
             #     ['Recorded', 'Setpoint', 'Predicted'], title='Disc 2')
 
-# axis = 0
-# ax[axis].set_title('Heating/Cooling Power')
-# mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+axis = 0
+ax[axis].set_title('X States')
+mpc_plot.add_line('_x', 'x', ax[axis], color='red')
 # mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
 
 axis = 1
-ax[axis].set_title('Indoor setpoints')
-mpc_plot.add_line('_u', 't_heat_setpoint', ax[axis], color='red')
-mpc_plot.add_line('_u', 't_cool_setpoint', ax[axis], color='blue')
+ax[axis].set_title('Power setpoints')
+mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+mpc_plot.add_line('_u', 'fan_power', ax[axis], color='blue')
 
 ax[2].set_title('OA Temperatures TVPs')
 
@@ -102,11 +101,12 @@ ax[3].set_title('Irradiance TVPs')
 axis = 4
 ax[axis].set_title('Indoor Air Temperature')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
-mpc_plot.add_line('_x', 't_indoor_1', ax[axis], color='green')
+# mpc_plot.add_line('_x', 't_indoor_1', ax[axis], color='green')
 # mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
-ax[axis].set_ylim(270, 305)
 
-ax[5].set_title('Setpoints TVP')
+axis = 5
+ax[axis].set_title('Setpoints TVP')
+mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
 
 ax[6].set_title('Elec Cost')
 
@@ -146,6 +146,9 @@ for k in range(288):
         mpc_plot.plot_results(t_ind=k)
         mpc_plot.plot_predictions(t_ind=k)
         mpc_plot.reset_axes()
+        ax[4].set_ylim(220, 305)
+        ax[5].set_ylim(220, 305)
+
         # mhe_plot.plot_results()
         # sim_plot.plot_results()
         # mhe_plot.reset_axes()
