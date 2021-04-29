@@ -11,6 +11,7 @@ import do_mpc
 from template_model import template_model
 from template_mpc import template_mpc
 from template_simulator import template_simulator
+from template_mhe import template_mhe
 
 """ User settings: """
 show_animation = True
@@ -67,7 +68,7 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=9, ncols=1, sharex=True, figsize=(10, 9))
+fig, ax = plt.subplots(nrows=9, ncols=1, sharex=True, figsize=(15, 10))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
@@ -105,7 +106,7 @@ mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
 # mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
 
 axis = 5
-ax[axis].set_title('Setpoints TVP')
+ax[axis].set_title('Setpoints and Temperatures')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
 
 ax[6].set_title('Elec Cost')
@@ -146,8 +147,8 @@ for k in range(288):
         mpc_plot.plot_results(t_ind=k)
         mpc_plot.plot_predictions(t_ind=k)
         mpc_plot.reset_axes()
-        ax[4].set_ylim(220, 305)
-        ax[5].set_ylim(220, 305)
+        # ax[4].set_ylim(220, 305)
+        # ax[5].set_ylim(220, 305)
 
         # mhe_plot.plot_results()
         # sim_plot.plot_results()

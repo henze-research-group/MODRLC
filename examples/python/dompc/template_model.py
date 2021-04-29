@@ -90,8 +90,8 @@ def template_model():
 
     # _u = np.array([273, # T_OA (K)  - freezing outside
     #                0,  # Horizontal Global Irradiance (W)
-    #                0,  # No occupants [ 0 - 6]
-    #                1000,  # Internal gains convective flow (W), ?  [ 0 - 3000]
+    #                0,  # No occupants [0 - 6]
+    #                1000,  # Internal gains convective flow (W), ?  [0 - 3000]
     #                heating_power, # Heating Power (W), [0 - 6000]
     #                500,  # Fan Power (W), ? [0 - 500]
     #                0.175,    # OA Volumetric flow rate (m3/s), [0.01 - 0.175]  # full outside ai
@@ -103,7 +103,7 @@ def template_model():
     y_modeled = mp.c @ _x + mp.d @ u_array
 
     # when moving to MHE, then need to set the y_meas function, even though it will come
-    # from BOPTEST.(if using BOPTEST)
+    # from BOPTEST. (if using BOPTEST)
     # model.set_meas("t_indoor", y_modeled, meas_noise=False)
 
     model.set_rhs("t_indoor", y_modeled)

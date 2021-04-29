@@ -28,8 +28,8 @@ def template_mhe(model):
     # P_v = model.tvp['P_v']
 
     # P_x is the weighting matrix, which is the size of the X order
-    #   + 3 to handle the indoor temperature state, prev indoor temperature state, and prev prev
-    P_x = 1e-4 * np.eye(mp.a.shape[1] + 3)
+    #   + 1 to handle the indoor temperature state, prev indoor temperature state, and prev prev
+    P_x = 1e-4 * np.eye(mp.a.shape[1] + 1)
     # P_p = model.p['P_p']
 
     # no error weighting in the measurement
@@ -88,22 +88,14 @@ def template_mhe(model):
     # need to determine the ranges for the state space model.
     mhe.bounds['lower', '_x', 'x'] = mp.min_x
     mhe.bounds['upper', '_x', 'x'] = mp.max_x
-    mhe.bounds['lower', '_x', 't_indoor'] = mp.min_indoor_t
-    mhe.bounds['lower', '_x', 't_indoor'] = mp.max_indoor_t
-    mhe.bounds['lower', '_x', 't_indoor_1'] = mp.min_indoor_t
-    mhe.bounds['lower', '_x', 't_indoor_1'] = mp.max_indoor_t
-    mhe.bounds['lower', '_x', 't_indoor_2'] = mp.min_indoor_t
-    mhe.bounds['lower', '_x', 't_indoor_2'] = mp.max_indoor_t
+    # mhe.bounds['lower', '_x', 't_indoor'] = mp.min_indoor_t
+    # mhe.bounds['lower', '_x', 't_indoor'] = mp.max_indoor_t
 
     # u for the example is dim(1,1). Need to determine the ranges.
-    mhe.bounds['lower', '_u', 't_heat_setpoint'] = mp.min_indoor_t
-    mhe.bounds['upper', '_u', 't_heat_setpoint'] = mp.max_indoor_t
-    mhe.bounds['lower', '_u', 't_cool_setpoint'] = mp.min_indoor_t
-    mhe.bounds['upper', '_u', 't_cool_setpoint'] = mp.max_indoor_t
-    mpc.bounds['lower', '_u', 'heating_power'] = mp.min_heating
-    mpc.bounds['upper', '_u', 'heating_power'] = mp.max_heating
-    mpc.bounds['lower', '_u', 'cooling_power'] = mp.min_cooling
-    mpc.bounds['upper', '_u', 'cooling_power'] = mp.max_cooling
+    mhe.bounds['lower', '_u', 'heating_power'] = mp.min_heating
+    mhe.bounds['upper', '_u', 'heating_power'] = mp.max_heating
+    mhe.bounds['lower', '_u', 'fan_power'] = mp.min_fan_power
+    mhe.bounds['upper', '_u', 'fan_power'] = mp.max_fan_power
 
     # The MHE also supports nonlinear constraints (here they are still linear however) ...
     # mhe.set_nl_cons('p_est_lb', -mhe._p_est['Theta_1'] + 1e-5, 0)

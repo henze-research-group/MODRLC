@@ -67,10 +67,10 @@ class ModelParameters:
         self.max_setpoint_t = np.array([298])
 
         self.min_cooling = 0
-        self.max_cooling = 7000
+        self.max_cooling = 0
         self.min_heating = 3000
         self.max_heating = 6000
-        self.min_fan_power = 0
+        self.min_fan_power = 500
         self.max_fan_power = 500
 
         # state space u values
@@ -139,7 +139,7 @@ class ModelParameters:
         # running configuration
         self.time_step = 300
         # TODO: This should be one day once things are working.
-        self.n_horizon = 30
+        self.n_horizon = 30  # 2.5 hours ahead
 
         self.tvp_template = None
 
