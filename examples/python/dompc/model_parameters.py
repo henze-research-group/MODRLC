@@ -68,9 +68,9 @@ class ModelParameters:
 
         self.min_cooling = 0
         self.max_cooling = 0
-        self.min_heating = 3000
+        self.min_heating = 0
         self.max_heating = 6000
-        self.min_fan_power = 500
+        self.min_fan_power = 0
         self.max_fan_power = 500
 
         # state space u values
@@ -91,14 +91,12 @@ class ModelParameters:
             "type": "tvp",
             "var_name": "TDryBul",
             "data_column_name": "mod.building.weaBus.TDryBul",
-            "plot_axis": 2,
             "local_var_name": "t_dry_bulb",
         })
         self.variables.append({
             "type": "tvp",
             "var_name": "HGloHor",
             "data_column_name": "mod.building.weaBus.HGloHor",
-            "plot_axis": 3,
             "local_var_name": "h_glo_hor",
         })
         self.variables.append({
@@ -106,7 +104,6 @@ class ModelParameters:
             "data_source": "tvp_setpoint_data",
             "var_name": "occupancy_ratio",
             "data_column_name": "occupancy_ratio",
-            "plot_axis": 7,
             "local_var_name": "occupancy_ratio",
         })
         # tvp_setpoint_data
@@ -116,7 +113,6 @@ class ModelParameters:
             "data_source": "tvp_setpoint_data",
             "var_name": "TSetpoint_Lower",
             "data_column_name": "tsetpoint_lower",
-            "plot_axis": 5,
             "local_var_name": "tsetpoint_lower",
         })
         self.variables.append({
@@ -124,7 +120,6 @@ class ModelParameters:
             "data_source": "tvp_setpoint_data",
             "var_name": "TSetpoint_Upper",
             "data_column_name": "tsetpoint_upper",
-            "plot_axis": 5,
             "local_var_name": "tsetpoint_upper",
         })
         self.variables.append({
@@ -132,7 +127,6 @@ class ModelParameters:
             "data_source": "tvp_setpoint_data",
             "var_name": "ElecCost",
             "data_column_name": "elec_cost",
-            "plot_axis": 6,
             "local_var_name": "elec_cost",
         })
 

@@ -32,6 +32,7 @@ def template_model():
     # the control variables
     heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
     fan_power = model.set_variable(var_type='_u', var_name='fan_power', shape=(1, 1))
+    oa_vent = model.set_variable(var_type='_u', var_name='oa_vent', shape=(1, 1))
     # heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
     # cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
 
@@ -85,7 +86,7 @@ def template_model():
         500,  # internal gains convective flow
         heating_power,
         fan_power,
-        0.175     # OA volumetric flow
+        oa_vent     # OA volumetric flow
         )
 
     # _u = np.array([273, # T_OA (K)  - freezing outside

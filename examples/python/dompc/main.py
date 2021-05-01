@@ -74,48 +74,44 @@ mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
-# Setup the plots based on the ModelParameter variables
-mp = ModelParameters()
-for var in mp.variables:
-    # find all of the tvp
-    if var["type"] == "tvp":
-        if var["plot_axis"] is not None:
-            mpc_plot.add_line("_tvp", var["var_name"], ax[var["plot_axis"]])
-            # ax[1].legend(
-            #     mpc_plot.result_lines['_x', 'phi_2']+mpc_plot.result_lines['_tvp', 'phi_2_set']+mpc_plot.pred_lines['_x', 'phi_2'],
-            #     ['Recorded', 'Setpoint', 'Predicted'], title='Disc 2')
-
 axis = 0
-ax[axis].set_title('X States')
+ax[axis].set_title('N4SID X States')
 mpc_plot.add_line('_x', 'x', ax[axis], color='red')
 # mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
 
-axis = 1
-ax[axis].set_title('Power setpoints')
+axis += axis
+ax[axis].set_title('Control Variables')
 mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
 mpc_plot.add_line('_u', 'fan_power', ax[axis], color='blue')
+mpc_plot.add_line('_u', 'oa_vent', ax[axis], color='green')
 
-ax[2].set_title('OA Temperatures TVPs')
+axis += 1
+ax[axis].set_title('OA Temperatures TVPs')
+mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
 
-ax[3].set_title('Irradiance TVPs')
+axis += 1
+ax[axis].set_title('Irradiance TVPs')
+mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
 
-axis = 4
+axis += 1
 ax[axis].set_title('Indoor Air Temperature')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
-# mpc_plot.add_line('_x', 't_indoor_1', ax[axis], color='green')
-# mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
 
-axis = 5
+axis += 1
 ax[axis].set_title('Setpoints and Temperatures')
-mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
+mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
+mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
+mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
 
-ax[6].set_title('Elec Cost')
+axis += 1
+ax[axis].set_title('Elecritiy Cost')
+mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
 
-axis = 7
-ax[axis].set_title('Power')
+axis += 1
+ax[axis].set_title('Total Power')
 mpc_plot.add_line('_aux', 'total_power', ax[axis])
 
-axis = 8
+axis += 1
 ax[axis].set_title('Cost Function')
 mpc_plot.add_line('_aux', 'cost', ax[axis])
 
