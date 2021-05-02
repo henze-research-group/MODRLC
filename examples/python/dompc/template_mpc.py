@@ -51,10 +51,11 @@ def template_mpc(model):
 
     # set the penalty term
     # mpc.set_rterm(T_supply=1e-4, Q_flow=1e-4, fanP=1e-4, volSenSupV_flow=1e-4, volSenOAV_flow=1e-4, room_relHum=1e-4)
-    mpc.set_rterm(fake_heating_power=1e-4) # cooling_power=1e-4) fan_power=1e-4,
+    mpc.set_rterm(heating_power=1e-4)  # cooling_power=1e-4) fan_power=1e-4,
 
     mpc.bounds['lower', '_x', 'x'] = mp.min_x
     mpc.bounds['upper', '_x', 'x'] = mp.max_x
+
     # mpc.bounds['lower', '_x', 't_indoor'] = mp.min_indoor_t
     # mpc.bounds['lower', '_x', 't_indoor'] = mp.max_indoor_t
 
@@ -63,8 +64,8 @@ def template_mpc(model):
     # mpc.bounds['upper', '_u', 'oa_vent'] = 0.175
     # mpc.bounds['lower', '_u', 'fan_power'] = mp.min_fan_power
     # mpc.bounds['upper', '_u', 'fan_power'] = mp.max_fan_power
-    mpc.bounds['lower', '_u', 'fake_heating_power'] = mp.min_heating
-    mpc.bounds['upper', '_u', 'fake_heating_power'] = mp.max_heating
+    mpc.bounds['lower', '_u', 'heating_power'] = mp.min_heating
+    mpc.bounds['upper', '_u', 'heating_power'] = mp.max_heating
     # mpc.bounds['lower', '_u', 'cooling_power'] = mp.min_cooling
     # mpc.bounds['upper', '_u', 'cooling_power'] = mp.max_cooling
 

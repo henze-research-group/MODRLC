@@ -40,8 +40,10 @@ np.random.seed(99)
 # These default x0's are from a random interval in the simulation.
 mp = ModelParameters()
 print(mp.x0)
-x0 = np.vstack((mp.x0, np.array([[293]])))
+x0 = np.vstack((mp.x0,
+                np.array([[293], [0]])))
 print(f"X0 is now this: {x0}")
+
 # x0 = np.array([
 #     [-3.92236858e-01], [-7.88940004e+00], [-5.34412096e+00], [2.21526326e-01], [2.70893994e-01], [1.47842629e-01], [-2.73510110e-02],
 #     [293], # indoor temperature
@@ -92,9 +94,9 @@ mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
 
 axis += 1
 ax[axis].set_title('Power TVP Variables')
-# mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
-mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
+# mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
 
 axis += 1
@@ -107,14 +109,9 @@ mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
 
-
-# ax[axis].set_title('N4SID X States')
-# mpc_plot.add_line('_x', 'x', ax[axis], color='red')
-# mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
-
-# axis += 1
-# ax[axis].set_title('Electricity Cost')
-# mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
+axis += 1
+ax[axis].set_title('Electricity Cost')
+mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
 
 # axis += 1
 # ax[axis].set_title('Total Power')
@@ -160,8 +157,8 @@ for k in range(288):
         # sim_plot.reset_axes()
 
         plt.show()
-        # plt.pause(0.01)
-        plt.pause(1)
+        plt.pause(0.01)
+        # plt.pause(30)
 
 print(f"Finished. Store results is set to {store_results}")
 input('Press any key to exit.')

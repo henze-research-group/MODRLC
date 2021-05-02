@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import casadi
 
 
 class ModelParameters:
@@ -18,7 +19,7 @@ class ModelParameters:
             self.c = np.load(p / 'output' / 'matrix_C1.npy')
             self.d = np.load(p / 'output' / 'matrix_D1.npy')
             self.x0 = np.load(p / 'output' / 'sys_id1_x0.npy')
-            self.u1test = pd.DataFrame.from_csv(p / 'output' / 'u1test.csv')
+            self.u1test = pd.read_excel(p / 'output' / 'u1test.xlsx')
 
             # Read in the time varying parameters
             tvp_file = Path(p.parent / 'wrapped 2.csv')
@@ -120,14 +121,14 @@ class ModelParameters:
             "data_column_name": "P1_IntGaiTot",
             "local_var_name": "P1_IntGaiTot",
         })
-        self.variables.append({
-            "type": "tvp",
-            # "data_source": "tvp_setpoint_data",
-            "data_source": "u1test",
-            "var_name": "P1_HeaPow",
-            "data_column_name": "P1_HeaPow",
-            "local_var_name": "P1_HeaPow",
-        })
+        # self.variables.append({
+        #     "type": "tvp",
+        #     # "data_source": "tvp_setpoint_data",
+        #     "data_source": "u1test",
+        #     "var_name": "P1_HeaPow",
+        #     "data_column_name": "P1_HeaPow",
+        #     "local_var_name": "P1_HeaPow",
+        # })
         self.variables.append({
             "type": "tvp",
             # "data_source": "tvp_setpoint_data",
@@ -148,21 +149,21 @@ class ModelParameters:
         # tvp_setpoint_data
         self.variables.append({
             "type": "tvp",
-            "data_source": "tvp_setpoint_data",
+            "data_source": "u1test",
             "var_name": "TSetpoint_Lower",
             "data_column_name": "tsetpoint_lower",
             "local_var_name": "tsetpoint_lower",
         })
         self.variables.append({
             "type": "tvp",
-            "data_source": "tvp_setpoint_data",
+            "data_source": "u1test",
             "var_name": "TSetpoint_Upper",
             "data_column_name": "tsetpoint_upper",
             "local_var_name": "tsetpoint_upper",
         })
         self.variables.append({
             "type": "tvp",
-            "data_source": "tvp_setpoint_data",
+            "data_source": "u1test",
             "var_name": "ElecCost",
             "data_column_name": "elec_cost",
             "local_var_name": "elec_cost",
@@ -171,7 +172,7 @@ class ModelParameters:
         # running configuration
         self.time_step = 300
         # TODO: This should be one day once things are working.
-        self.n_horizon = 100  # 2.5 hours ahead
+        self.n_horizon = 100
 
         self.tvp_template = None
 
@@ -196,6 +197,35 @@ class ModelParameters:
             # The data need to be passed as a list of array elements (so list of np.array([d]))
             # The length is n_horizon + 1.
             loaded_data = data_source[var["data_column_name"]].values[ind:ind + self.n_horizon + 1]
+
             self.tvp_template["_tvp", :, var["var_name"]] = [np.array([d]) for d in loaded_data]
 
         return self.tvp_template
+
+    def tvp_fun_simulator(self, t_now):
+        if self.tvp_template is None:
+            raise Exception("Need to set tvp_template in the ModelParameters instance.")
+
+        ind = int(t_now / self.time_step)
+
+        # populate all of the time varying parameters
+        for var in self.variables:
+            # determine which datafile to use
+            if var["data_source"] == "tvp_setpoint_data":
+                data_source = self.tvp_setpoint_data
+            elif var["data_source"] == "u1test":
+                data_source = self.u1test
+            elif var["data_source"] == "tvp_data":
+                data_source = self.tvp_data
+            else:
+                raise Exception("Missing 'data_source' in model_parameter column definition dictionary")
+
+            # The data need to be passed as a list of array elements (so list of np.array([d]))
+            # The length is n_horizon + 1.
+            loaded_data = data_source[var["data_column_name"]].values[ind:ind + self.n_horizon + 1]
+
+            # For the simulator case only return a single value
+            self.tvp_template[var["var_name"]] = loaded_data[0]
+
+        return self.tvp_template
+
