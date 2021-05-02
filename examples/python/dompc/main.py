@@ -38,10 +38,14 @@ np.random.seed(99)
 
 # e = np.ones([model.n_x, 1])
 # These default x0's are from a random interval in the simulation.
-x0 = np.array([
-    [-3.92236858e-01], [-7.88940004e+00], [-5.34412096e+00], [2.21526326e-01], [2.70893994e-01], [1.47842629e-01], [-2.73510110e-02],
-    [293], # indoor temperature
-])
+mp = ModelParameters()
+print(mp.x0)
+x0 = np.vstack((mp.x0, np.array([[293]])))
+print(f"X0 is now this: {x0}")
+# x0 = np.array([
+#     [-3.92236858e-01], [-7.88940004e+00], [-5.34412096e+00], [2.21526326e-01], [2.70893994e-01], [1.47842629e-01], [-2.73510110e-02],
+#     [293], # indoor temperature
+# ])
 # x0 = np.array([[-0.8227],
 #                [-0.0350391],
 #                [-0.0059108],
@@ -68,34 +72,34 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=9, ncols=1, sharex=True, figsize=(15, 10))
+fig, ax = plt.subplots(nrows=8, ncols=1, sharex=True, figsize=(15, 10))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
 axis = 0
-ax[axis].set_title('N4SID X States')
-mpc_plot.add_line('_x', 'x', ax[axis], color='red')
-# mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
-
-axis += axis
-ax[axis].set_title('Control Variables')
-mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
-mpc_plot.add_line('_u', 'fan_power', ax[axis], color='blue')
-mpc_plot.add_line('_u', 'oa_vent', ax[axis], color='green')
-
-axis += 1
 ax[axis].set_title('OA Temperatures TVPs')
 mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
 
 axis += 1
-ax[axis].set_title('Irradiance TVPs')
+ax[axis].set_title('HGloHor TVPs')
 mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
 
 axis += 1
-ax[axis].set_title('Indoor Air Temperature')
-mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
+ax[axis].set_title('occupancy_ratio TVPs')
+mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
+
+axis += 1
+ax[axis].set_title('Power TVP Variables')
+# mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
+mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
+mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
+
+axis += 1
+ax[axis].set_title('oa_vent TVPs')
+mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
 
 axis += 1
 ax[axis].set_title('Setpoints and Temperatures')
@@ -103,13 +107,18 @@ mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
 
-axis += 1
-ax[axis].set_title('Elecritiy Cost')
-mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
 
-axis += 1
-ax[axis].set_title('Total Power')
-mpc_plot.add_line('_aux', 'total_power', ax[axis])
+# ax[axis].set_title('N4SID X States')
+# mpc_plot.add_line('_x', 'x', ax[axis], color='red')
+# mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
+
+# axis += 1
+# ax[axis].set_title('Electricity Cost')
+# mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
+
+# axis += 1
+# ax[axis].set_title('Total Power')
+# mpc_plot.add_line('_aux', 'total_power', ax[axis])
 
 axis += 1
 ax[axis].set_title('Cost Function')
@@ -143,8 +152,7 @@ for k in range(288):
         mpc_plot.plot_results(t_ind=k)
         mpc_plot.plot_predictions(t_ind=k)
         mpc_plot.reset_axes()
-        # ax[4].set_ylim(220, 305)
-        # ax[5].set_ylim(220, 305)
+        # ax[3].set_ylim(250, 310)
 
         # mhe_plot.plot_results()
         # sim_plot.plot_results()
@@ -152,7 +160,8 @@ for k in range(288):
         # sim_plot.reset_axes()
 
         plt.show()
-        plt.pause(0.01)
+        # plt.pause(0.01)
+        plt.pause(1)
 
 print(f"Finished. Store results is set to {store_results}")
 input('Press any key to exit.')

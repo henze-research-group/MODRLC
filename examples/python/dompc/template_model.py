@@ -30,10 +30,9 @@ def template_model():
             )
 
     # the control variables
-    heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
-    fan_power = model.set_variable(var_type='_u', var_name='fan_power', shape=(1, 1))
-    oa_vent = model.set_variable(var_type='_u', var_name='oa_vent', shape=(1, 1))
-    # heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
+    fake_heating_power = model.set_variable(var_type='_u', var_name='fake_heating_power', shape=(1, 1))
+    # fan_power = model.set_variable(var_type='_u', var_name='fan_power', shape=(1, 1))
+    # oa_vent = model.set_variable(var_type='_u', var_name='oa_vent', shape=(1, 1))
     # cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
 
     # weighting parameters
@@ -79,15 +78,50 @@ def template_model():
     #     t_indoor - t_cool_setpoint,
     #     t_dry_bulb - t_indoor_1,
     # )
+    # u_array = vertcat(
+    #     t_dry_bulb,
+    #     h_glo_hor,
+    #     occupancy_ratio,  # number of occupants
+    #     P1_IntGaiTot,  # internal gains convective flow
+    #     P1_HeaPow,
+    #     P1_FanPow,
+    #     oa_vent     # OA volumetric flow
+    #     )
     u_array = vertcat(
-        t_dry_bulb,
-        h_glo_hor,
-        5,  # number of occupants
-        500,  # internal gains convective flow
-        heating_power,
-        fan_power,
-        oa_vent     # OA volumetric flow
-        )
+        horzcat(t_dry_bulb),
+        horzcat(h_glo_hor),
+        horzcat(occupancy_ratio),  # number of occupants
+        horzcat(P1_IntGaiTot),  # internal gains convective flow
+        horzcat(P1_HeaPow),
+        horzcat(P1_FanPow),
+        horzcat(oa_vent)     # OA volumetric flow
+    )
+    # u_array = np.array([
+    #     [t_dry_bulb],
+    #     [h_glo_hor],
+    #     [occupancy_ratio],  # number of occupants
+    #     [P1_IntGaiTot],  # internal gains convective flow
+    #     [P1_HeaPow],
+    #     [P1_FanPow],
+    #     [oa_vent]     # OA volumetric flow
+    # ])
+    # u_array = vertcat([
+    #     [t_dry_bulb],
+    #     [h_glo_hor],
+    #     [occupancy_ratio],  # number of occupants
+    #     [P1_IntGaiTot],  # internal gains convective flow
+    #     [P1_HeaPow],
+    #     [P1_FanPow],
+    #     [oa_vent]     # OA volumetric flow
+    # ])
+
+
+    print(u_array.shape)
+    print(_x.shape)
+    print(f"{mp.a.shape}")
+    print(f"{mp.b.shape}")
+    print(f"{mp.c.shape}")
+    print(f"{mp.d.shape}")
 
     # _u = np.array([273, # T_OA (K)  - freezing outside
     #                0,  # Horizontal Global Irradiance (W)
@@ -100,14 +134,20 @@ def template_model():
 
     # LTI equations
     x_next = mp.a @ _x + mp.b @ u_array
-    model.set_rhs('x', x_next)
     y_modeled = mp.c @ _x + mp.d @ u_array
+    model.set_rhs('x', x_next)
+
+    print(x_next)
+    print(y_modeled)
 
     # when moving to MHE, then need to set the y_meas function, even though it will come
     # from BOPTEST. (if using BOPTEST)
     # model.set_meas("t_indoor", y_modeled, meas_noise=False)
+    model.set_rhs("t_indoor", y_modeled[0][0])
 
-    model.set_rhs("t_indoor", y_modeled)
+    # This is needed just to provide an optimization variable.
+    # model.set_rhs('fake_heating_power', y_modeled)
+
     # Store the previous indoor temperature - this will be used when we add T(t-1) to the x vector.
     # model.set_rhs("t_indoor_1", t_indoor)
     # model.set_rhs("t_indoor_2", t_indoor_1)
