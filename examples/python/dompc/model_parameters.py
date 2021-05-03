@@ -19,30 +19,30 @@ class ModelParameters:
             self.c = np.load(p / 'output' / 'matrix_C1.npy')
             self.d = np.load(p / 'output' / 'matrix_D1.npy')
             self.x0 = np.load(p / 'output' / 'sys_id1_x0.npy')
-            self.u1test = pd.read_excel(p / 'output' / 'u1test.xlsx')
 
-            # Read in the time varying parameters
-            tvp_file = Path(p.parent / 'wrapped 2.csv')
-            if not tvp_file.exists():
-                raise Exception("There is no time varying parameter file, make sure to unzip wrapped 2.7z")
+            # TODO: need to write a check to make sure these files exist.. someday
+            # if not tvp_file.exists():
+            #     raise Exception("There is no time varying parameter file, make sure to unzip wrapped 2.7z")
 
-            tvp_data = pd.read_csv(tvp_file)
-            df = pd.DataFrame(tvp_data)
-            # only save the samples of 300 seconds
-            df = df.loc[df['Time'] % 300.0 == 0]
-            self.tvp_data = df.drop_duplicates(subset=['Time'])
+            self.u1test = pd.DataFrame.from_csv(p / 'output' / 'u1test.csv')
 
-            # just temporary -- save off the first 3 months of data to a file to make
+            # # Read in the time varying parameters -- old processing code
+            # tvp_data = pd.read_csv(tvp_file)
+            # df = pd.DataFrame(tvp_data)
+            # # only save the samples of 300 seconds
+            # df = df.loc[df['Time'] % 300.0 == 0]
+            # self.tvp_data = df.drop_duplicates(subset=['Time'])
+            # # just temporary -- save off the first 3 months of data to a file to make
             # it easier to inspect
-            self.tvp_data = self.tvp_data.head(int(7000000 / 300))
-            self.tvp_data.to_csv('tmp_exogenous_data.csv')
+            # self.tvp_data = self.tvp_data.head(int(7000000 / 300))
+            # self.tvp_data.to_csv('tmp_exogenous_data.csv')
 
-            p_data = Path('.').resolve() / 'setpoint_tvp.xlsx'
+            p_data = p.resolve() / 'output' / 'u1test_tvps.xlsx'
             if not p_data.exists():
                 raise Exception(f"There is not time varying setpoint parameter file, make sure it exists {p_data}")
 
             data = pd.read_excel(p_data)
-            self.tvp_setpoint_data = pd.DataFrame(data)
+            self.tvp_data = pd.DataFrame(data)
 
             # print(self.u1test['mod.building.weaBus.TDryBul'].values[0:100])
             # raise SystemExit()
@@ -91,31 +91,27 @@ class ModelParameters:
         self.variables = []
         self.variables.append({
             "type": "tvp",
-            # "data_source": "tvp_setpoint_data",
             "data_source": "u1test",
             "var_name": "TDryBul",
-            "data_column_name": "mod.building.weaBus.TDryBul",
+            "data_column_name": "T_OA",
             "local_var_name": "t_dry_bulb",
         })
         self.variables.append({
             "type": "tvp",
-            # "data_source": "tvp_setpoint_data",
             "data_source": "u1test",
             "var_name": "HGloHor",
-            "data_column_name": "mod.building.weaBus.HGloHor",
+            "data_column_name": "HgloHor",
             "local_var_name": "h_glo_hor",
         })
         self.variables.append({
             "type": "tvp",
-            # "data_source": "tvp_setpoint_data",
             "data_source": "u1test",
             "var_name": "occupancy_ratio",
-            "data_column_name": "occupancy_ratio",
+            "data_column_name": "P1_OccN",
             "local_var_name": "occupancy_ratio",
         })
         self.variables.append({
             "type": "tvp",
-            # "data_source": "tvp_setpoint_data",
             "data_source": "u1test",
             "var_name": "P1_IntGaiTot",
             "data_column_name": "P1_IntGaiTot",
@@ -131,7 +127,6 @@ class ModelParameters:
         # })
         self.variables.append({
             "type": "tvp",
-            # "data_source": "tvp_setpoint_data",
             "data_source": "u1test",
             "var_name": "P1_FanPow",
             "data_column_name": "P1_FanPow",
@@ -139,31 +134,30 @@ class ModelParameters:
         })
         self.variables.append({
             "type": "tvp",
-            # "data_source": "tvp_setpoint_data",
             "data_source": "u1test",
             "var_name": "OAVent",
-            "data_column_name": "OAVent",
+            "data_column_name": "P1_OAVol",
             "local_var_name": "oa_vent",
         })
 
         # tvp_setpoint_data
         self.variables.append({
             "type": "tvp",
-            "data_source": "u1test",
+            "data_source": "u1test_tvps",
             "var_name": "TSetpoint_Lower",
             "data_column_name": "tsetpoint_lower",
             "local_var_name": "tsetpoint_lower",
         })
         self.variables.append({
             "type": "tvp",
-            "data_source": "u1test",
+            "data_source": "u1test_tvps",
             "var_name": "TSetpoint_Upper",
             "data_column_name": "tsetpoint_upper",
             "local_var_name": "tsetpoint_upper",
         })
         self.variables.append({
             "type": "tvp",
-            "data_source": "u1test",
+            "data_source": "u1test_tvps",
             "var_name": "ElecCost",
             "data_column_name": "elec_cost",
             "local_var_name": "elec_cost",
@@ -172,7 +166,7 @@ class ModelParameters:
         # running configuration
         self.time_step = 300
         # TODO: This should be one day once things are working.
-        self.n_horizon = 100
+        self.n_horizon = 80
 
         self.tvp_template = None
 
@@ -185,11 +179,9 @@ class ModelParameters:
         # populate all of the time varying parameters
         for var in self.variables:
             # determine which datafile to use
-            if var["data_source"] == "tvp_setpoint_data":
-                data_source = self.tvp_setpoint_data
-            elif var["data_source"] == "u1test":
+            if var["data_source"] == "u1test":
                 data_source = self.u1test
-            elif var["data_source"] == "tvp_data":
+            elif var["data_source"] == "u1test_tvps":
                 data_source = self.tvp_data
             else:
                 raise Exception("Missing 'data_source' in model_parameter column definition dictionary")
@@ -211,11 +203,9 @@ class ModelParameters:
         # populate all of the time varying parameters
         for var in self.variables:
             # determine which datafile to use
-            if var["data_source"] == "tvp_setpoint_data":
-                data_source = self.tvp_setpoint_data
-            elif var["data_source"] == "u1test":
+            if var["data_source"] == "u1test":
                 data_source = self.u1test
-            elif var["data_source"] == "tvp_data":
+            elif var["data_source"] == "u1test_tvps":
                 data_source = self.tvp_data
             else:
                 raise Exception("Missing 'data_source' in model_parameter column definition dictionary")

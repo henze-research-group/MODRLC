@@ -13,6 +13,7 @@ from sklearn.metrics import r2_score
 from sklearn.metrics import median_absolute_error
 #from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
+import datetime
 
 
 from past.utils import old_div
@@ -31,12 +32,17 @@ from sippy import functionset as fset
 from sippy import functionsetSIM as fsetSIM
 import pandas as pd
 import matplotlib.pyplot as plt
+
+# Not sure how to get this to work. Document the command line call if you can.
 # plt.style.use('science')
 
 data_file = "SOM3N4SID_clean3.csv"
 if not os.path.exists(data_file):
-    print("Data file does not exist. Un7zip SOM3N4SID_clean3.7z (e.g., ...)")
-    SystemExit()
+    print("*************** Input data file does not exist! *****************")
+    print("Download from here: https://drive.google.com/open?id=1rEErpNNYGF4dKV2alRqC6h5-3TLFRadx")
+    print(f"Unzip (`7z x {data_file}.7z) and place resulting CSV into the same folder as this file.")
+    exit(1)
+
 data = pd.read_csv(data_file)  # dataset from January to January 12 months
 df=pd.DataFrame(data)
 df.mean()
@@ -44,12 +50,18 @@ df=df.fillna(df.mean())
 
 # Sample at 300 seconds
 df = df.loc[df['Time'] % 300.0 == 0]
-# df = df.loc[df['Time'] < (525600*60)]
+
+# Create a date time column based on Jan 1, 2019 data (no leapyear)
+basetime = 1546300800  # 1/1/2019 00:00:00 (epoch time in seconds)
+df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce')
+print(df)
 
 #MODEL 1 of N4SID: FIRST 4 MONTHS OF THE DATASET (JAN-FEB-MARCH-)
-
-print(df)
 m=df.shape[0]
+
+# I'd recommend updating this to use the new datetime column to constrain the time
+# It will make it much easier to track what the actual time is. Example is on the next line below.
+# df = df[(df['datetime'] < datetime.datetime(2019, 1, 31, 23, 59, 59))]
 
 starting_month=1; # 1=JANUARY, 2=FEBRUARY, 3=MARCH..., 12= DECEMBER #
 months_offset=1+(starting_month-1);
@@ -71,25 +83,25 @@ for p in range(1):
     t_1=t_0+int(m*k/w_y);
     t_2=t_1+int(m*f/w_y);
 
-    # Save off the training dataset that exists
-    # starting at t_1.
-    dfsmall = df.iloc[t_1:t_1+10]
-    dfsmall.to_csv('SOM3N4SID_clean3_downsampled.csv')
-
     df1=df.iloc[t_0:t_1];
     # print(t_0)
     # print(f"t_1 starts at {t_1} with {df.iloc[t_1]}")
     # print(t_2)
 
-    # exit()
     df1_test =df.iloc[t_1:t_2];
 #
     df1=df1.fillna(df1.mean())
     df1_test=df1_test.fillna(df1_test.mean())
 #    print(df1)
 #    print(df1_test)
-##
-##
+
+    # Save off the training and test dataset for 100 records to allow for easy inspection
+    # starting at t_1.
+    dfsmall = df1.iloc[0:100]
+    dfsmall.to_csv('SOM3N4SID_clean3_train_downsampled.csv')
+    dfsmall = df1_test.iloc[0:100]
+    dfsmall.to_csv('SOM3N4SID_clean3_test_downsampled.csv')
+
     Time1 = np.array([df1['Time'].values.tolist()])
     Time_months1=Time1/24/3600/30;
 ##
@@ -98,19 +110,10 @@ for p in range(1):
 
 ## Definition of the Inputs Vector. Training dataset
 
-    # Order matters!
+    # Order matters! --- Make sure to add the variable names to the 'list_of_var_colnames' so
+    # that the resulting dataframe/csv file can be read into the dompc world with ease.
     list_of_vars = [
         'T_OA', 'HgloHor', 'P1_OccN', 'P1_IntGaiTot', 'P1_HeaPow', 'P1_FanPow', 'P1_OAVol',
-    ]
-
-    list_of_var_colnames = [
-        'mod.building.weaBus.TDryBul',
-        'mod.building.weaBus.HGloHor',
-        'occupancy_ratio',
-        'P1_IntGaiTot',
-        'P1_HeaPow',
-        'P1_FanPow',
-        'OAVent',
     ]
     U1 = [df1[x].values.tolist() for x in list_of_vars]
 
@@ -449,10 +452,9 @@ for p in range(1):
     np.save('output/matrix_D1.npy', D1)
     np.save('output/sys_id1_x0.npy', sys_id1.x1)
 
-    np.save('output/u1test.npy', U1_test)
-    # U_1_test is ndarray where u1test is a list.
-    df_u1test = pd.DataFrame(U_1_test.T, columns=list_of_var_colnames)
-    df_u1test.to_csv('output/u1test.csv')
+    # Save off the test data for use with the MPC problem. Only save of the variables
+    # of interest, plus the datetime.
+    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
 
     # #SAVE ALL KALMAN GAINS
     #np.save('matrix_K1.npy', K1)
