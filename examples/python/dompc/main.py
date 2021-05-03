@@ -74,43 +74,43 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=8, ncols=1, sharex=True, figsize=(15, 10))
+fig, ax = plt.subplots(nrows=8, ncols=1, sharex=True, figsize=(10, 12))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
 axis = 0
-ax[axis].set_title('OA Temperatures TVPs')
+ax[axis].set_title('OA Temperature')
 mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
 
 axis += 1
-ax[axis].set_title('HGloHor TVPs')
+ax[axis].set_title('Horizontal Global Irradiance')
 mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
 
 axis += 1
-ax[axis].set_title('occupancy_ratio TVPs')
+ax[axis].set_title('Occupancy Count')
 mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
 
 axis += 1
-ax[axis].set_title('Power TVP Variables')
+ax[axis].set_title('Power Variables')
 mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
 # mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
 
 axis += 1
-ax[axis].set_title('oa_vent TVPs')
+ax[axis].set_title('Outside Air (m3/s)')
 mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
 
 axis += 1
-ax[axis].set_title('Setpoints and Temperatures')
+ax[axis].set_title('Setpoints and Indoor Temperature')
 mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
 
 axis += 1
-ax[axis].set_title('Electricity Cost')
+ax[axis].set_title('Electricity Cost Multiplier')
 mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
 
 # axis += 1
