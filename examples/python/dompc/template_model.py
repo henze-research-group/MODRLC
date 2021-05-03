@@ -15,11 +15,10 @@ def template_model():
     # States struct (optimization variables):
     # x's shape is the A's num of columns x 1
     _x = model.set_variable(var_type='_x', var_name='x', shape=(mp.a.shape[1], 1))
+
     # additional state for indoor temperature -- mainly for plotting right now
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
     cf_heating_power = model.set_variable(var_type='_x', var_name='cf_heating_power', shape=(1, 1))
-    # t_indoor_1 = model.set_variable(var_type='_x', var_name='t_indoor_1', shape=(1, 1))
-    # t_indoor_2 = model.set_variable(var_type='_x', var_name='t_indoor_2', shape=(1, 1))
 
     # TVP Variables
     for var in mp.variables:
@@ -61,70 +60,20 @@ def template_model():
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
-    # u_array = vertcat(
-    #     t_dry_bulb,
-    #     h_glo_hor,
-    #     t_indoor_1,
-    #     t_heat_setpoint - t_indoor_1,
-    #     heating_power,
-    #     cooling_power,
-    #     t_indoor_1 - t_cool_setpoint,
-    #     occupancy_ratio,
-    #     t_indoor_1 - t_indoor_2,
-    #     t_dry_bulb - t_indoor_1,
-    # )
-    # u_array = vertcat(
-    #     t_dry_bulb,
-    #     h_glo_hor,
-    #     t_heat_setpoint - t_indoor,
-    #     t_indoor - t_cool_setpoint,
-    #     t_dry_bulb - t_indoor_1,
-    # )
-    # u_array = vertcat(
-    #     t_dry_bulb,
-    #     h_glo_hor,
-    #     occupancy_ratio,  # number of occupants
-    #     P1_IntGaiTot,  # internal gains convective flow
-    #     P1_HeaPow,
-    #     P1_FanPow,
-    #     oa_vent     # OA volumetric flow
-    #     )
     u_array = vertcat(
-        horzcat(t_dry_bulb),
-        horzcat(h_glo_hor),
-        horzcat(occupancy_ratio),  # number of occupants
-        horzcat(P1_IntGaiTot),  # internal gains convective flow
-        horzcat(heating_power),
-        horzcat(P1_FanPow),
-        horzcat(oa_vent)     # OA volumetric flow
+        t_dry_bulb,
+        h_glo_hor,
+        occupancy_ratio,  # number of occupants
+        P1_IntGaiTot,  # internal gains convective flow
+        heating_power,
+        P1_FanPow,
+        oa_vent     # OA volumetric flow
     )
-    #
-    # print(u_array.shape)
-    # print(_x.shape)
-    # print(f"{mp.a.shape}")
-    # print(f"{mp.b.shape}")
-    # print(f"{mp.c.shape}")
-    # print(f"{mp.d.shape}")
-    # print(mp.a)
-    # print(mp.b)
-    # print(mp.c)
-
-    # _u = np.array([273, # T_OA (K)  - freezing outside
-    #                0,  # Horizontal Global Irradiance (W)
-    #                0,  # No occupants [0 - 6]
-    #                1000,  # Internal gains convective flow (W), ?  [0 - 3000]
-    #                heating_power, # Heating Power (W), [0 - 6000]
-    #                500,  # Fan Power (W), ? [0 - 500]
-    #                0.175,    # OA Volumetric flow rate (m3/s), [0.01 - 0.175]  # full outside ai
-    #                ])
 
     # LTI equations
     x_next = mp.a @ _x + mp.b @ u_array
     y_modeled = mp.c @ _x + mp.d @ u_array
     model.set_rhs('x', x_next)
-
-    print(x_next)
-    print(y_modeled)
 
     # when moving to MHE, then need to set the y_meas function, even though it will come
     # from BOPTEST. (if using BOPTEST)
