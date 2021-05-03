@@ -38,10 +38,16 @@ np.random.seed(99)
 
 # e = np.ones([model.n_x, 1])
 # These default x0's are from a random interval in the simulation.
-x0 = np.array([[-0.200731],
-               [293],  # indoor temp
-               [293],  # prev indoor temp
-              ])
+mp = ModelParameters()
+print(mp.x0)
+x0 = np.vstack((mp.x0,
+                np.array([[293], [0]])))
+print(f"X0 is now this: {x0}")
+
+# x0 = np.array([
+#     [-3.92236858e-01], [-7.88940004e+00], [-5.34412096e+00], [2.21526326e-01], [2.70893994e-01], [1.47842629e-01], [-2.73510110e-02],
+#     [293], # indoor temperature
+# ])
 # x0 = np.array([[-0.8227],
 #                [-0.0350391],
 #                [-0.0059108],
@@ -68,53 +74,50 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=9, ncols=1, sharex=True, figsize=(10, 9))
+fig, ax = plt.subplots(nrows=8, ncols=1, sharex=True, figsize=(10, 12))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
-# Setup the plots based on the ModelParameter variables
-mp = ModelParameters()
-for var in mp.variables:
-    # find all of the tvp
-    if var["type"] == "tvp":
-        if var["plot_axis"] is not None:
-            mpc_plot.add_line("_tvp", var["var_name"], ax[var["plot_axis"]])
-            # ax[1].legend(
-            #     mpc_plot.result_lines['_x', 'phi_2']+mpc_plot.result_lines['_tvp', 'phi_2_set']+mpc_plot.pred_lines['_x', 'phi_2'],
-            #     ['Recorded', 'Setpoint', 'Predicted'], title='Disc 2')
+axis = 0
+ax[axis].set_title('OA Temperature')
+mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
 
-# axis = 0
-# ax[axis].set_title('Heating/Cooling Power')
-# mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
-# mpc_plot.add_line('_u', 'cooling_power', ax[axis], color='blue')
+axis += 1
+ax[axis].set_title('Horizontal Global Irradiance')
+mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
 
-axis = 1
-ax[axis].set_title('Indoor setpoints')
-mpc_plot.add_line('_u', 't_heat_setpoint', ax[axis], color='red')
-mpc_plot.add_line('_u', 't_cool_setpoint', ax[axis], color='blue')
+axis += 1
+ax[axis].set_title('Occupancy Count')
+mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
 
-ax[2].set_title('OA Temperatures TVPs')
+axis += 1
+ax[axis].set_title('Power Variables')
+mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
+# mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
+mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
 
-ax[3].set_title('Irradiance TVPs')
+axis += 1
+ax[axis].set_title('Outside Air (m3/s)')
+mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
 
-axis = 4
-ax[axis].set_title('Indoor Air Temperature')
-mpc_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
-mpc_plot.add_line('_x', 't_indoor_1', ax[axis], color='green')
-# mpc_plot.add_line('_x', 't_indoor_2', ax[axis], color='red')
-ax[axis].set_ylim(270, 305)
+axis += 1
+ax[axis].set_title('Setpoints and Indoor Temperature')
+mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
+mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
+mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
 
-ax[5].set_title('Setpoints TVP')
+axis += 1
+ax[axis].set_title('Electricity Cost Multiplier')
+mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
 
-ax[6].set_title('Elec Cost')
+# axis += 1
+# ax[axis].set_title('Total Power')
+# mpc_plot.add_line('_aux', 'total_power', ax[axis])
 
-axis = 7
-ax[axis].set_title('Power')
-mpc_plot.add_line('_aux', 'total_power', ax[axis])
-
-axis = 8
+axis += 1
 ax[axis].set_title('Cost Function')
 mpc_plot.add_line('_aux', 'cost', ax[axis])
 
@@ -133,7 +136,7 @@ Run MPC main loop:
 """
 
 # 288 5-minute intervals per day
-for k in range(288):
+for k in range(288 * 2):
     # for k in range(10):
     u0 = mpc.make_step(x0)
     y_next = simulator.make_step(u0)
@@ -146,6 +149,8 @@ for k in range(288):
         mpc_plot.plot_results(t_ind=k)
         mpc_plot.plot_predictions(t_ind=k)
         mpc_plot.reset_axes()
+        # ax[3].set_ylim(250, 310)
+
         # mhe_plot.plot_results()
         # sim_plot.plot_results()
         # mhe_plot.reset_axes()
@@ -153,6 +158,7 @@ for k in range(288):
 
         plt.show()
         plt.pause(0.01)
+        # plt.pause(30)
 
 print(f"Finished. Store results is set to {store_results}")
 input('Press any key to exit.')

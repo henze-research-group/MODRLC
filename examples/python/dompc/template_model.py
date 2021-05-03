@@ -15,10 +15,10 @@ def template_model():
     # States struct (optimization variables):
     # x's shape is the A's num of columns x 1
     _x = model.set_variable(var_type='_x', var_name='x', shape=(mp.a.shape[1], 1))
-    # additional state for indoor temperature
+
+    # additional state for indoor temperature -- mainly for plotting right now
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
-    t_indoor_1 = model.set_variable(var_type='_x', var_name='t_indoor_1', shape=(1, 1))
-    # t_indoor_2 = model.set_variable(var_type='_x', var_name='t_indoor_2', shape=(1, 1))
+    cf_heating_power = model.set_variable(var_type='_x', var_name='cf_heating_power', shape=(1, 1))
 
     # TVP Variables
     for var in mp.variables:
@@ -30,9 +30,9 @@ def template_model():
             )
 
     # the control variables
-    t_heat_setpoint = model.set_variable(var_type='_u', var_name='t_heat_setpoint', shape=(1, 1))  # heating setpoint for single space
-    t_cool_setpoint = model.set_variable(var_type='_u', var_name='t_cool_setpoint', shape=(1, 1))  # cooling setpoint for single space
-    # heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
+    heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
+    # fan_power = model.set_variable(var_tsype='_u', var_name='fan_power', shape=(1, 1))
+    # oa_vent = model.set_variable(var_type='_u', var_name='oa_vent', shape=(1, 1))
     # cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
 
     # weighting parameters
@@ -56,41 +56,34 @@ def template_model():
     peak_demand = 0  # have to always initialize variable in this case before sending to Casadi. However,
                      # This probably needs to be a state variable if we are constantly looking at the previous peak.
     peak_demand = model.set_expression('peak_demand', fmax(total_power, peak_demand))
+    # min_heating_power = model.set_expression('min_heating_power', heating_power)
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
-    # u_array = vertcat(
-    #     t_dry_bulb,
-    #     h_glo_hor,
-    #     t_indoor_1,
-    #     t_heat_setpoint - t_indoor_1,
-    #     heating_power,
-    #     cooling_power,
-    #     t_indoor_1 - t_cool_setpoint,
-    #     occupancy_ratio,
-    #     t_indoor_1 - t_indoor_2,
-    #     t_dry_bulb - t_indoor_1,
-    # )
     u_array = vertcat(
         t_dry_bulb,
         h_glo_hor,
-        t_heat_setpoint - t_indoor,
-        t_indoor - t_cool_setpoint,
-        t_dry_bulb - t_indoor_1,
+        occupancy_ratio,  # number of occupants
+        P1_IntGaiTot,  # internal gains convective flow
+        heating_power,
+        P1_FanPow,
+        oa_vent     # OA volumetric flow
     )
 
     # LTI equations
     x_next = mp.a @ _x + mp.b @ u_array
-    model.set_rhs('x', x_next)
     y_modeled = mp.c @ _x + mp.d @ u_array
+    model.set_rhs('x', x_next)
 
     # when moving to MHE, then need to set the y_meas function, even though it will come
-    # from BOPTEST.(if using BOPTEST)
+    # from BOPTEST. (if using BOPTEST)
     # model.set_meas("t_indoor", y_modeled, meas_noise=False)
+    model.set_rhs("t_indoor", y_modeled[0][0])
+    model.set_rhs("cf_heating_power", heating_power)
+    # This is needed just to provide an optimization variable.
 
-    model.set_rhs("t_indoor", y_modeled)
     # Store the previous indoor temperature - this will be used when we add T(t-1) to the x vector.
-    model.set_rhs("t_indoor_1", t_indoor)
+    # model.set_rhs("t_indoor_1", t_indoor)
     # model.set_rhs("t_indoor_2", t_indoor_1)
 
     # Economic MPC
@@ -113,7 +106,8 @@ def template_model():
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
     energy_cost = total_power * elec_unit_cost
     demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
-    cost_function = discomfort + energy_cost + demand_cost
+    # cost_function = discomfort + energy_cost + demand_cost
+    cost_function = cf_heating_power * elec_cost + 1000 * discomfort
     model.set_expression(expr_name='cost', expr=cost_function)
     model.setup()
 

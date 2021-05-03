@@ -17,6 +17,7 @@ parser/*.mo
 parser/*.json
 ~$*
 
-# ignore the really large wrapped csv file
+# ignore the really large csv files for MPC related analysis
 examples/python/lasso_and_n4sid/wrapped 2.csv
+examples/python/lasso_and_n4sid/n4sid_v6/SOM3N4SID_clean3*
 examples/python/dompc/.ipynb_checkpoints

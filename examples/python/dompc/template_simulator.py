@@ -40,10 +40,13 @@ def template_simulator(model):
     # We are running the MPC model at t=300 seconds (5 min).
     simulator.set_param(t_step=mp.time_step)
 
-    tvp_template = simulator.get_tvp_template()
-    def tvp_fun(t_now):
-        return tvp_template
-    simulator.set_tvp_fun(tvp_fun)
+    mp.tvp_template = simulator.get_tvp_template()
+    simulator.set_tvp_fun(mp.tvp_fun_simulator)
+
+    # tvp_template = simulator.get_tvp_template()
+    # def tvp_fun(t_now):
+    #     return tvp_template
+    # simulator.set_tvp_fun(tvp_fun)
 
     # Testing the parameter configuration
     # p_template_sim = simulator.get_p_template()
