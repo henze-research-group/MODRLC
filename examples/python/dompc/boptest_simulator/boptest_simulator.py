@@ -454,7 +454,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
         if self.model.model_type == 'discrete':
             if self.model.n_z > 0:  # Solve DAE only when it exists ...
-                r = self.discrete_dae_solver(x0=sim_z_num, ubg=0, lbg=0, p=vertcat(sim_x_num, sim_p_num))
+                r = self.discrete_dae_solver(x0=sim_z_num, ubzg=0, lbg=0, p=vertcat(sim_x_num, sim_p_num))
                 sim_z_num.master = r['x']
             x_new = self.simulator(sim_x_num, sim_z_num, sim_p_num)
         elif self.model.model_type == 'continuous':

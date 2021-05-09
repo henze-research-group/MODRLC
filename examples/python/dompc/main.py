@@ -138,6 +138,7 @@ Run MPC main loop:
 # 288 5-minute intervals per day
 for k in range(288 * 2):
     # for k in range(10):
+    print(f"{k}: {x0}")
     u0 = mpc.make_step(x0)
     y_next = simulator.make_step(u0)
     x0 = estimator.make_step(y_next)
