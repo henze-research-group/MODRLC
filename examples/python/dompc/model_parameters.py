@@ -24,7 +24,7 @@ class ModelParameters:
             # if not tvp_file.exists():
             #     raise Exception("There is no time varying parameter file, make sure to unzip wrapped 2.7z")
 
-            self.u1test = pd.DataFrame.from_csv(p / 'output' / 'u1test.csv')
+            self.u1test = pd.read_csv(p / 'output' / 'u1test.csv')
 
             # # Read in the time varying parameters -- old processing code
             # tvp_data = pd.read_csv(tvp_file)

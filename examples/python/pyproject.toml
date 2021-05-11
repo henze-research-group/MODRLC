@@ -1,20 +1,22 @@
 [tool.poetry]
-name = "modlrl-python-controllers"
+name = "modrlc-python-controllers"
 version = "0.1.0"
 description = ""
 authors = ["Nicholas Long <nicholas.long@nrel.gov>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7.1,<4.0"
 requests = "^2.25.1"
 importlib-metadata = "^3.4.0"
-alfalfa-client = {git = "https://git@github.com/nrel/alfalfa-client.git", rev = "develop"}
+#alfalfa-client = {git = "https://git@github.com/nrel/alfalfa-client.git", rev = "develop"}
 do-mpc = "^4.1.1"
 sklearn = "^0.0"
 sippy = {git = "https://github.com/henze-research-group/SIPPY.git"}
 xlrd = "^1.2.0"
 simple-pid = "^1.0.0"
 jupyterlab = "^3.0.14"
+pandas = "^1.2.4"
+numpy = "^1.20.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
