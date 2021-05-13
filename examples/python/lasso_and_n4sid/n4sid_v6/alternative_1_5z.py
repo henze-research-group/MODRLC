@@ -56,6 +56,8 @@ basetime = 1546300800  # 1/1/2019 00:00:00 (epoch time in seconds)
 df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce')
 print(df)
 
+# training_df = df[df['datetime'] > datetime.datetime(1,1,2019,0,0) & df['datetime'] < date]
+
 #MODEL 1 of N4SID: FIRST 4 MONTHS OF THE DATASET (JAN-FEB-MARCH-)
 m=df.shape[0]
 

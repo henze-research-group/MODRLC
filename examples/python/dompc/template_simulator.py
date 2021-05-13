@@ -21,6 +21,7 @@ def template_simulator(model):
         client = BoptestClient('http://localhost:5000')
         if client.name() is not None:
             print("BOPTEST is configured to act as simulator")
+            client.set_step(step=300)
         else:
             print("Defaulting to simulator=model")
             client = None

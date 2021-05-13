@@ -113,19 +113,17 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         self._t0 = np.array([0])
         self.data.init_storage()
 
-    def _calculate_u(self, boptest_u ):
+    def _calculate_u(self, heating_power ):
         """Take the _u vector from do-mpc and configure it to run with the BOPTEST
         """
         # do-mpc vector is
-        print(f"do-mpc vector is: {self.sim_p_num['_u']}")
+        print(f"do-mpc vector is: {float(self.sim_p_num['_u'])}")
         # map do-mpc to u
         u = {
-            "oveHCSet_u": 1.0,
-            "oveHCSet_activate": 1,
-            "oveVFRSet_u": 0.7,
-            "oveVFRSet_activate": 1,
-            "oveCC_u": 0.0,
-            "oveCC_activate": 1
+            "oveHCSet1_u": float(self.sim_p_num['_u']) / 6000,
+            "oveHCSet1_activate": 1,
+            "oveVFRSet1_u": 0.7,
+            "oveVFRSet1_activate": 1
         }
         return u
 
@@ -558,7 +556,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
             #determine what this looks like in BOPTEST-land
             y_next = self.client.advance(control_u=self._calculate_u(None))
-            t_room = y_next['senTRoom_y']
+            t_room = y_next['senTRoom1_y']
+            return t_room
             print(f"t_room is {t_room}")
             # with MHE, old_y_next is a single value (for now)
             # old_y_next[0] = t_room
