@@ -140,6 +140,8 @@ Run MPC main loop:
 for k in range(288 * 2):
     # for k in range(10):
     print(f"{k}: {x0}")
+    # This works with BOPTEST only. TODO: Need to configure both the
+    # StateEstimator feedback in addition to this method.
     u0 = mpc.make_step(x0)
     y_measured = simulator.make_step(u0)
 

@@ -14,7 +14,7 @@ from sklearn.metrics import median_absolute_error
 #from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 import datetime
-
+import matplotlib.dates as mdates
 
 from past.utils import old_div
 
@@ -44,9 +44,9 @@ if not os.path.exists(data_file):
     exit(1)
 
 data = pd.read_csv(data_file)  # dataset from January to January 12 months
-df=pd.DataFrame(data)
+df = pd.DataFrame(data)
 df.mean()
-df=df.fillna(df.mean())
+df = df.fillna(df.mean())
 
 # Sample at 300 seconds
 df = df.loc[df['Time'] % 300.0 == 0]
@@ -54,48 +54,47 @@ df = df.loc[df['Time'] % 300.0 == 0]
 # Create a date time column based on Jan 1, 2019 data (no leapyear)
 basetime = 1546300800  # 1/1/2019 00:00:00 (epoch time in seconds)
 df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce')
-print(df)
 
-# training_df = df[df['datetime'] > datetime.datetime(1,1,2019,0,0) & df['datetime'] < date]
+# Set when you want to start the test data (actual data start). The
+# 2020 year is a misnomer and is really just the same weather data ran twice (TODO: verify this)
+#   ** The dates below are from the original period, when shifting to 2020/1/1, the model doesn't hold
+#   ** up nearly as well.
+#   ** [Train Data Set] Start: 2019-01-31 02:20:00 End: 2019-12-28 04:35:00
+#   ** [Test Data Set] Start: 2019-12-28 04:40:00 End: 2020-01-27 06:55:00
+# test_date_start = datetime.datetime(2019, 12, 28, 4, 40, 0)
+# test_date_end = datetime.datetime(2020, 1, 27, 6, 55, 0)
+# train_date_start = datetime.datetime(2019, 1, 31, 2, 20, 0)
+
+test_date_start = datetime.datetime(2020, 1, 1, 0, 0, 0)
+test_date_end = test_date_start + datetime.timedelta(weeks=4)
+train_date_start = test_date_start - datetime.timedelta(days=330)
 
 #MODEL 1 of N4SID: FIRST 4 MONTHS OF THE DATASET (JAN-FEB-MARCH-)
-m=df.shape[0]
 
-# I'd recommend updating this to use the new datetime column to constrain the time
-# It will make it much easier to track what the actual time is. Example is on the next line below.
-# df = df[(df['datetime'] < datetime.datetime(2019, 1, 31, 23, 59, 59))]
-
-starting_month=1; # 1=JANUARY, 2=FEBRUARY, 3=MARCH..., 12= DECEMBER #
-months_offset=1+(starting_month-1);
-#week_number=0;
-
-offset=((months_offset)*4.3);
-
-#47095
-k=11*4.3; #number of weeks of data for the estimationand training the N4SID
-f=1*4.3; # number of estimated weeks with the N4SID algorithm
-
-w_y=2*52;  # Number of weeks during the year
-j=int((w_y-k-offset)/(f));
+# The methods below are no long
+# m=df.shape[0]
+# starting_month=1; # 1=JANUARY, 2=FEBRUARY, 3=MARCH..., 12= DECEMBER #
+# months_offset=1+(starting_month-1);
+# week_number=0;
+# offset=((months_offset)*4.3);
+# k=11*4.3; #number of weeks of data for the estimationand training the N4SID
+# f=1*4.3; # number of estimated weeks with the N4SID algorithm
+# w_y=2*52;  # Number of weeks during the year
+# j=int((w_y-k-offset)/(f));
 
 for p in range(1):
-    i=p;
-    print("Model number: ",i)
-    t_0=int(i*4.3*m/w_y)+int(offset*m/w_y);
-    t_1=t_0+int(m*k/w_y);
-    t_2=t_1+int(m*f/w_y);
+    print("Model number: ", p)
+    # t_0 = int(i*4.3*m/w_y)+int(offset*m/w_y)
+    # t_1 = t_0+int(m*k/w_y)
+    # t_2 = t_1+int(m*f/w_y)
 
-    df1=df.iloc[t_0:t_1];
-    # print(t_0)
-    # print(f"t_1 starts at {t_1} with {df.iloc[t_1]}")
-    # print(t_2)
+    df1 = df[(df['datetime'] >= train_date_start) & (df['datetime'] < test_date_start)]
+    # df1=df.iloc[t_0:t_1];
+    print(f"[Train Data Set] Start: {df1.iloc[0]['datetime']} End: {df1.iloc[-1]['datetime']}")
 
-    df1_test =df.iloc[t_1:t_2];
-#
-    df1=df1.fillna(df1.mean())
-    df1_test=df1_test.fillna(df1_test.mean())
-#    print(df1)
-#    print(df1_test)
+    df1_test = df[(df['datetime'] >= test_date_start) & (df['datetime'] < test_date_end )]
+    # df1_test =df.iloc[t_1:t_2]
+    print(f"[Test Data Set] Start: {df1_test.iloc[0]['datetime']} End: {df1_test.iloc[-1]['datetime']}")
 
     # Save off the training and test dataset for 100 records to allow for easy inspection
     # starting at t_1.
@@ -105,10 +104,10 @@ for p in range(1):
     dfsmall.to_csv('SOM3N4SID_clean3_test_downsampled.csv')
 
     Time1 = np.array([df1['Time'].values.tolist()])
-    Time_months1=Time1/24/3600/30;
+    Time_months1 = Time1/24/3600/30
 ##
     Time1_test = np.array([df1_test['Time'].values.tolist()])
-    Time_months1_test=Time1_test/24/3600/30;
+    Time_months1_test = Time1_test/24/3600/30
 
 ## Definition of the Inputs Vector. Training dataset
 
@@ -362,10 +361,10 @@ for p in range(1):
     ##Calculate the metrics
     #Results of Temperature estimation of core zone
 
-    mae_core=median_absolute_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1]);
-#    mape_core= mean_absolute_percentage_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1]);
-    mse_core=mean_squared_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1]);
-    r2_core=r2_score(yid1_test[0,0:t_2-t_1], y_tot1_test[0,0:t_2-t_1]);
+    mae_core=median_absolute_error(y_tot1_test[0],yid1_test[0])
+   # mape_core= mean_absolute_percentage_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1])
+    mse_core=mean_squared_error(y_tot1_test[0],yid1_test[0])
+    r2_core=r2_score(yid1_test[0], y_tot1_test[0])
     print("Determination Coefficient: ")
     print(r2_core)
 
@@ -442,6 +441,7 @@ for p in range(1):
 
     # GET ALL KALMAN GAINS
     K1=sys_id1.K
+    print(f"Kalman Gain is {K1}")
 
     # GET ALL KALMAN MATRICES A_K AND B_K
     KA1=sys_id1.A_K
@@ -455,7 +455,7 @@ for p in range(1):
     np.save('output/sys_id1_x0.npy', sys_id1.x1)
 
     # Save off the test data for use with the MPC problem. Only save of the variables
-    # of interest, plus the datetime.
+    # of interest, plus the time and datetime.
     df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
 
     # #SAVE ALL KALMAN GAINS
@@ -466,16 +466,24 @@ for p in range(1):
     #np.save('matrix_AK1.npy', KB1)
 
     plt.figure()
-    plt.plot(Time_months1_test[0,0:t_2-t_1], y_tot1_test[0,0:t_2-t_1]-273.15,linewidth=3, color='forestgreen')
-    plt.plot(Time_months1_test[0,0:t_2-t_1], yid1_test[0,0:t_2-t_1]-273.15, linestyle='dashed',linewidth=1.5, color='lightgreen')
-    plt.plot(Time_months1[0,2:t_1-t_0], y_tot1[0,2:t_1-t_0]-273.15,linewidth=3, color='steelblue')
-    plt.plot(Time_months1[0,2:t_1-t_0], yid1_train[0,2:t_1-t_0]-273.15, linestyle='dashed',linewidth=1.5, color='cyan')
-    plt.ylabel("Indoor Air Temperature (ºC)",size=16)
+    # Time_months1_test, Time_months1, y_tot1_test, and yid1... are list of lists (array of array, so grab [0])
+    plt.plot(df1_test['datetime'], y_tot1_test[0]-273.15, linewidth=3, color='forestgreen')
+    plt.plot(df1_test['datetime'], yid1_test[0]-273.15, linestyle='dashed',linewidth=1.5, color='lightgreen')
+    plt.plot(df1['datetime'], y_tot1[0]-273.15,linewidth=3, color='steelblue')
+    plt.plot(df1['datetime'], yid1_train[0]-273.15, linestyle='dashed',linewidth=1.5, color='cyan')
+    # Specify the format - %b gives us Jan, Feb...
+    fmt = mdates.DateFormatter('%b')
+    ax = plt.gca().xaxis
+    ax.set_major_locator(mdates.MonthLocator())
+    ax.set_major_formatter(fmt)
+    ax.set_minor_locator(mdates.DayLocator(interval=7))
+    ax.set_minor_formatter(mdates.DateFormatter('%d'))
+    plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
     plt.show()
-#    #
-##    plt.text(1, 10, "R2=",r2_core,size=18)
+
+#    plt.text(1, 10, "R2=",r2_core,size=18)
 #    plt.yticks(size=16)
 #    plt.xticks(size=10)
 #    plt.title("Comparison of original data and the output of the N4SID model. CORE ZONE",size=20)
@@ -588,7 +596,7 @@ for p in range(1):
 ##    plt.xticks(positions, labels)
 #    plt.ylim([15, 27])
 #    plt.show()
-    f=int(1*4.3);
+#     f=int(1*4.3);
 #
 # MODELS FINISHED. NOW THE METRICS AND MATRICES ARE SAVED
 
