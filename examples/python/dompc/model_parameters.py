@@ -18,6 +18,7 @@ class ModelParameters:
             self.b = np.load(p / 'output' / 'matrix_B1.npy')
             self.c = np.load(p / 'output' / 'matrix_C1.npy')
             self.d = np.load(p / 'output' / 'matrix_D1.npy')
+            self.K= np.load(p / 'output' / 'kalman_gain_K.npy')
             self.x0 = np.load(p / 'output' / 'sys_id1_x0.npy')
 
             # TODO: need to write a check to make sure these files exist.. someday

@@ -141,7 +141,20 @@ for k in range(288 * 2):
     print(f"{k}: {x0}")
     u0 = mpc.make_step(x0)
     y_next = simulator.make_step(u0)
-    x0 = estimator.make_step(y_next)
+
+    y_measured = y_next[5][0]
+    y_pred = (mp.c @ simulator.data['_x', 'x'][-1])[0]
+
+    y_next[0:5] = y_next[0:5] + mp.K * (y_measured - y_pred)
+    x0 = np.vstack((
+            y_next[0:5],
+            np.array([
+                [y_measured],
+                u0[0]
+            ])))
+    print(x0)
+
+    # x0 = estimator.make_step(y_next)
 
     if show_animation:
         # graphics.plot_results(t_ind=k)
