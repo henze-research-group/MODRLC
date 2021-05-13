@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Feb 12 18:25:17 2021
-
 @author: joseleiva
 """
 from __future__ import division
@@ -32,7 +31,7 @@ from sippy import functionset as fset
 from sippy import functionsetSIM as fsetSIM
 import pandas as pd
 import matplotlib.pyplot as plt
-
+plt.style.use('science')
 # Not sure how to get this to work. Document the command line call if you can.
 # plt.style.use('science')
 
@@ -66,8 +65,8 @@ df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce'
 # train_date_start = datetime.datetime(2019, 1, 31, 2, 20, 0)
 
 test_date_start = datetime.datetime(2020, 1, 1, 0, 0, 0)
-test_date_end = test_date_start + datetime.timedelta(weeks=4)
-train_date_start = test_date_start - datetime.timedelta(days=330)
+test_date_end = test_date_start + datetime.timedelta(days=7)
+train_date_start = test_date_start - datetime.timedelta(days=35)
 
 #MODEL 1 of N4SID: FIRST 4 MONTHS OF THE DATASET (JAN-FEB-MARCH-)
 
@@ -274,16 +273,26 @@ for p in range(1):
     #
 #
     method = 'N4SID'
-    sys_id1 = system_identification(y_tot1, U_1, method, SS_fixed_order=5) #IC='AICc')
+    sys_id1 = system_identification(y_tot1, U_1, method, SS_fixed_order=4) #IC='AICc')
 
     #print(sys_id1)
     #SS_fixed_order=7
     #    SS_fixed_order=5
-    ##sys_id1.x0=np.array([[-2.48],[-0.08]])
+    sys_id1.x2=np.array(([-2.60719],
+                         [0.117847],
+                         [0.751528],
+                         [-0.365441],
+                         
+                         ))
+
+
+
+
+
 
 
     # xid1_train, yid1_train = fsetSIM.SS_lsim_process_form(sys_id1.A, sys_id1.B, sys_id1.C, sys_id1.D, U_1,sys_id1.x0)
-    xid1_train, yid1_train = fsetSIM.SS_lsim_predictor_form(sys_id1.A_K, sys_id1.B_K, sys_id1.C, sys_id1.D, sys_id1.K, y_tot1, U_1, sys_id1.x0)
+    xid1_train, yid1_train = fsetSIM.SS_lsim_predictor_form(sys_id1.A_K, sys_id1.B_K, sys_id1.C, sys_id1.D, sys_id1.K, y_tot1, U_1, sys_id1.x2)
     #    print(xid1_train,yid1_train)
     #
     #
@@ -292,9 +301,9 @@ for p in range(1):
     b=xid1_train[1,len(xid1_train[0])-1];
     c=xid1_train[2,len(xid1_train[0])-1];
     d=xid1_train[3,len(xid1_train[0])-1];
-    e=xid1_train[4,len(xid1_train[0])-1];
-    # f=xid1_train[5,len(xid1_train[0])-1];
-    # g=xid1_train[6,len(xid1_train[0])-1];
+#    e=xid1_train[4,len(xid1_train[0])-1];
+#    f=xid1_train[5,len(xid1_train[0])-1];
+#    g=xid1_train[6,len(xid1_train[0])-1];
 #    h=xid1_train[7,len(xid1_train[0])-1];
 #    i=xid1_train[8,len(xid1_train[0])-1];
 #    l=xid1_train[9,len(xid1_train[0])-1];
@@ -308,15 +317,15 @@ for p in range(1):
     ## TRY ORDER=2
 #    sys_id1.x1=np.array([[a],[b]])
     ## TRY ORDER=3
-    # sys_id1.x1=np.array([[a],[b],[c]])
+#    sys_id1.x1=np.array([[a],[b],[c]])
     ## TRY ORDER=4
-#    sys_id1.x1=np.array([[a],[b],[c],[d]])
+    sys_id1.x1=np.array([[a],[b],[c],[d]])
     ## TRY ORDER=5
-    sys_id1.x1=np.array([[a],[b],[c],[d],[e]])
-    ## TRY ORDER=6
+#    sys_id1.x1=np.array([[a],[b],[c],[d],[e]])
+#    ## TRY ORDER=6
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f]])
     ## TRY ORDER=7
-    # sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g]]);
+#    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g]]);
     ## TRY ORDER=8
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g],[h]])
     ## TRY ORDER=9
@@ -361,23 +370,29 @@ for p in range(1):
     ##Calculate the metrics
     #Results of Temperature estimation of core zone
 
-    mae_core=median_absolute_error(y_tot1_test[0],yid1_test[0])
-   # mape_core= mean_absolute_percentage_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1])
-    mse_core=mean_squared_error(y_tot1_test[0],yid1_test[0])
-    r2_core=r2_score(yid1_test[0], y_tot1_test[0])
+#    mae_core=median_absolute_error(y_tot1_test[0],yid1_test[0])
+#   # mape_core= mean_absolute_percentage_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1])
+#    mse_core=mean_squared_error(y_tot1_test[0],yid1_test[0])
+#    r2_core=r2_score(yid1_test[0], y_tot1_test[0])
+#    print("Determination Coefficient: ")
+#    print(r2_core)
+#    print("Mean Absolute Errors: ")
+#    print(mae_core)
+#    print("Mean Square Errors: ")
+#    print(mse_core)
+
+#    Results of Temperature estimation of zone 1
+
+    mae_z1=median_absolute_error(y_tot1_test[0],yid1_test[0]);
+ #    mape_z1= mean_absolute_percentage_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
+    mse_z1=mean_squared_error(y_tot1_test[0],yid1_test[0]);
+    r2_z1=(r2_score(yid1_test[0], y_tot1_test[0]));
     print("Determination Coefficient: ")
-    print(r2_core)
-
-
-#    #Results of Temperature estimation of zone 1
-
-#     mae_z1=median_absolute_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
-# #    mape_z1= mean_absolute_percentage_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
-#     mse_z1=mean_squared_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
-#     r2_z1=(r2_score(yid1_test[1,0:t_2-t_1], y_tot1_test[1,0:t_2-t_1]));
-#
-#     print(r2_z1)
-#
+    print(r2_z1)
+    print("Mean Absolute Errors: ")    
+    print(mae_z1)
+    print("Mean Square Errors: ")
+    print(mse_z1)
 # ##    #Results of Temperature estimation of zone 2
 # #
 #     mae_z2=median_absolute_error(y_tot1_test[2,0:t_2-t_1],yid1_test[2,0:t_2-t_1]);
@@ -409,20 +424,7 @@ for p in range(1):
 #     print(r2_z4)
 #
 # ##
-#     print("Mean Absolute Errors: ")
-#     print(mae_core)
-#     print(mae_z1)
-#     print(mae_z2)
-#     print(mae_z3)
-#     print(mae_z4)
-#     #PLots of Temperature estimation of Core zone
-#     #
-#     print("Mean Square Errors: ")
-#     print(mse_core)
-#     print(mse_z1)
-#     print(mse_z2)
-#     print(mse_z3)
-#     print(mse_z4)
+
 
 #    y_values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13,14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,26]
 #    text_values = ["February1", "March1", "April1","May1", "June1", "July1", "August1","September1", "October1", "November1", "December1", "January2","February2", "March2", "April2","May2", "June2", "July2", "August2","September2", "October2", "November2", "December2", "January3"]
@@ -437,7 +439,7 @@ for p in range(1):
     print(f"C1 is {C1}")
     D1=sys_id1.D
     print(f"D1 is {D1}")
-    print(f"X1 is {sys_id1.x1}")
+#    print(f"X1 is {sys_id1.x1}")
 
     # GET ALL KALMAN GAINS
     K1=sys_id1.K
@@ -448,15 +450,15 @@ for p in range(1):
     KB1=sys_id1.B_K
 
     # #SAVE ALL MATRICES
-    np.save('output/matrix_A1.npy', A1)
-    np.save('output/matrix_B1.npy', B1)
-    np.save('output/matrix_C1.npy', C1)
-    np.save('output/matrix_D1.npy', D1)
-    np.save('output/sys_id1_x0.npy', sys_id1.x1)
+#    np.save('output/matrix_A1.npy', A1)
+#    np.save('output/matrix_B1.npy', B1)
+#    np.save('output/matrix_C1.npy', C1)
+#    np.save('output/matrix_D1.npy', D1)
+#    np.save('output/sys_id1_x0.npy', sys_id1.x1)
 
     # Save off the test data for use with the MPC problem. Only save of the variables
     # of interest, plus the time and datetime.
-    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
+#    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
 
     # #SAVE ALL KALMAN GAINS
     #np.save('matrix_K1.npy', K1)
@@ -481,6 +483,7 @@ for p in range(1):
     plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
+    plt.ylim([5, 35])
     plt.show()
 
 #    plt.text(1, 10, "R2=",r2_core,size=18)
@@ -632,4 +635,3 @@ for p in range(1):
 #np.savetxt("moving_model.csv", metrics, header="MAE, MAPE, MSE, R2",delimiter=",")
 
 # GET ALL MATRICES
-
