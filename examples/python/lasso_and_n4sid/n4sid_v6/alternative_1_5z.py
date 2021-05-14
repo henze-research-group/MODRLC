@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Feb 12 18:25:17 2021
-
 @author: joseleiva
 """
 from __future__ import division
@@ -14,7 +13,7 @@ from sklearn.metrics import median_absolute_error
 #from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 import datetime
-
+import matplotlib.dates as mdates
 
 from past.utils import old_div
 
@@ -32,10 +31,11 @@ from sippy import functionset as fset
 from sippy import functionsetSIM as fsetSIM
 import pandas as pd
 import matplotlib.pyplot as plt
-
+plt.style.use('science')
 # Not sure how to get this to work. Document the command line call if you can.
 # plt.style.use('science')
-
+#def gap(a):
+#    return a + 86460
 data_file = "SOM3N4SID_clean3.csv"
 if not os.path.exists(data_file):
     print("*************** Input data file does not exist! *****************")
@@ -44,56 +44,62 @@ if not os.path.exists(data_file):
     exit(1)
 
 data = pd.read_csv(data_file)  # dataset from January to January 12 months
-df=pd.DataFrame(data)
+df = pd.DataFrame(data)
 df.mean()
-df=df.fillna(df.mean())
+df = df.fillna(df.mean())
 
 # Sample at 300 seconds
 df = df.loc[df['Time'] % 300.0 == 0]
+#print ()
+#print ('Check')
+#print(df[['Core_T','P1_T']])
 
 # Create a date time column based on Jan 1, 2019 data (no leapyear)
 basetime = 1546300800  # 1/1/2019 00:00:00 (epoch time in seconds)
+#df[df['Time'] > 31449540] = df[df['Time'] > 31449540].apply(gap)
 df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce')
-print(df)
+print(df['P1_T'])
+
+# Set when you want to start the test data (actual data start). The
+# 2020 year is a misnomer and is really just the same weather data ran twice (TODO: verify this)
+#   ** The dates below are from the original period, when shifting to 2020/1/1, the model doesn't hold
+#   ** up nearly as well.
+#   ** [Train Data Set] Start: 2019-01-31 02:20:00 End: 2019-12-28 04:35:00
+#   ** [Test Data Set] Start: 2019-12-28 04:40:00 End: 2020-01-27 06:55:00
+# test_date_start = datetime.datetime(2019, 12, 28, 4, 40, 0)
+# test_date_end = datetime.datetime(2020, 1, 27, 6, 55, 0)
+# train_date_start = datetime.datetime(2019, 1, 31, 2, 20, 0)
+
+test_date_start = datetime.datetime(2020, 1, 4, 0, 0, 0)
+test_date_end = test_date_start + datetime.timedelta(days=4)
+train_date_start = test_date_start - datetime.timedelta(days=26)
 
 #MODEL 1 of N4SID: FIRST 4 MONTHS OF THE DATASET (JAN-FEB-MARCH-)
-m=df.shape[0]
 
-# I'd recommend updating this to use the new datetime column to constrain the time
-# It will make it much easier to track what the actual time is. Example is on the next line below.
-# df = df[(df['datetime'] < datetime.datetime(2019, 1, 31, 23, 59, 59))]
-
-starting_month=1; # 1=JANUARY, 2=FEBRUARY, 3=MARCH..., 12= DECEMBER #
-months_offset=1+(starting_month-1);
-#week_number=0;
-
-offset=((months_offset)*4.3);
-
-#47095
-k=11*4.3; #number of weeks of data for the estimationand training the N4SID
-f=1*4.3; # number of estimated weeks with the N4SID algorithm
-
-w_y=2*52;  # Number of weeks during the year
-j=int((w_y-k-offset)/(f));
+# The methods below are no long
+# m=df.shape[0]
+# starting_month=1; # 1=JANUARY, 2=FEBRUARY, 3=MARCH..., 12= DECEMBER #
+# months_offset=1+(starting_month-1);
+# week_number=0;
+# offset=((months_offset)*4.3);
+# k=11*4.3; #number of weeks of data for the estimationand training the N4SID
+# f=1*4.3; # number of estimated weeks with the N4SID algorithm
+# w_y=2*52;  # Number of weeks during the year
+# j=int((w_y-k-offset)/(f));
 
 for p in range(1):
-    i=p;
-    print("Model number: ",i)
-    t_0=int(i*4.3*m/w_y)+int(offset*m/w_y);
-    t_1=t_0+int(m*k/w_y);
-    t_2=t_1+int(m*f/w_y);
+    print("Model number: ", p)
+    # t_0 = int(i*4.3*m/w_y)+int(offset*m/w_y)
+    # t_1 = t_0+int(m*k/w_y)
+    # t_2 = t_1+int(m*f/w_y)
 
-    df1=df.iloc[t_0:t_1];
-    # print(t_0)
-    # print(f"t_1 starts at {t_1} with {df.iloc[t_1]}")
-    # print(t_2)
+    df1 = df[(df['datetime'] >= train_date_start) & (df['datetime'] < test_date_start)]
+    # df1=df.iloc[t_0:t_1];
+    print(f"[Train Data Set] Start: {df1.iloc[0]['datetime']} End: {df1.iloc[-1]['datetime']}")
 
-    df1_test =df.iloc[t_1:t_2];
-#
-    df1=df1.fillna(df1.mean())
-    df1_test=df1_test.fillna(df1_test.mean())
-#    print(df1)
-#    print(df1_test)
+    df1_test = df[(df['datetime'] >= test_date_start) & (df['datetime'] < test_date_end )]
+    # df1_test =df.iloc[t_1:t_2]
+    print(f"[Test Data Set] Start: {df1_test.iloc[0]['datetime']} End: {df1_test.iloc[-1]['datetime']}")
 
     # Save off the training and test dataset for 100 records to allow for easy inspection
     # starting at t_1.
@@ -103,10 +109,10 @@ for p in range(1):
     dfsmall.to_csv('SOM3N4SID_clean3_test_downsampled.csv')
 
     Time1 = np.array([df1['Time'].values.tolist()])
-    Time_months1=Time1/24/3600/30;
+    Time_months1 = Time1/24/3600/30
 ##
     Time1_test = np.array([df1_test['Time'].values.tolist()])
-    Time_months1_test=Time1_test/24/3600/30;
+    Time_months1_test = Time1_test/24/3600/30
 
 ## Definition of the Inputs Vector. Training dataset
 
@@ -273,16 +279,21 @@ for p in range(1):
     #
 #
     method = 'N4SID'
-    sys_id1 = system_identification(y_tot1, U_1, method, SS_fixed_order=5) #IC='AICc')
+    sys_id1 = system_identification(y_tot1, U_1, method, SS_fixed_order=4) #IC='AICc')
 
     #print(sys_id1)
     #SS_fixed_order=7
     #    SS_fixed_order=5
-    ##sys_id1.x0=np.array([[-2.48],[-0.08]])
+    sys_id1.x2=np.array([[-2.85783809],  [0.14914303],  [0.19680084], [-0.12422081]])
+
+
+
+
+
 
 
     # xid1_train, yid1_train = fsetSIM.SS_lsim_process_form(sys_id1.A, sys_id1.B, sys_id1.C, sys_id1.D, U_1,sys_id1.x0)
-    xid1_train, yid1_train = fsetSIM.SS_lsim_predictor_form(sys_id1.A_K, sys_id1.B_K, sys_id1.C, sys_id1.D, sys_id1.K, y_tot1, U_1, sys_id1.x0)
+    xid1_train, yid1_train = fsetSIM.SS_lsim_predictor_form(sys_id1.A_K, sys_id1.B_K, sys_id1.C, sys_id1.D, sys_id1.K, y_tot1, U_1, sys_id1.x2)
     #    print(xid1_train,yid1_train)
     #
     #
@@ -291,9 +302,9 @@ for p in range(1):
     b=xid1_train[1,len(xid1_train[0])-1];
     c=xid1_train[2,len(xid1_train[0])-1];
     d=xid1_train[3,len(xid1_train[0])-1];
-    e=xid1_train[4,len(xid1_train[0])-1];
-    # f=xid1_train[5,len(xid1_train[0])-1];
-    # g=xid1_train[6,len(xid1_train[0])-1];
+#    e=xid1_train[4,len(xid1_train[0])-1];
+#    f=xid1_train[5,len(xid1_train[0])-1];
+#    g=xid1_train[6,len(xid1_train[0])-1];
 #    h=xid1_train[7,len(xid1_train[0])-1];
 #    i=xid1_train[8,len(xid1_train[0])-1];
 #    l=xid1_train[9,len(xid1_train[0])-1];
@@ -307,15 +318,15 @@ for p in range(1):
     ## TRY ORDER=2
 #    sys_id1.x1=np.array([[a],[b]])
     ## TRY ORDER=3
-    # sys_id1.x1=np.array([[a],[b],[c]])
+#    sys_id1.x1=np.array([[a],[b],[c]])
     ## TRY ORDER=4
-#    sys_id1.x1=np.array([[a],[b],[c],[d]])
+    sys_id1.x1=np.array([[a],[b],[c],[d]])
     ## TRY ORDER=5
-    sys_id1.x1=np.array([[a],[b],[c],[d],[e]])
-    ## TRY ORDER=6
+#    sys_id1.x1=np.array([[a],[b],[c],[d],[e]])
+#    ## TRY ORDER=6
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f]])
     ## TRY ORDER=7
-    # sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g]]);
+#    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g]]);
     ## TRY ORDER=8
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g],[h]])
     ## TRY ORDER=9
@@ -360,23 +371,29 @@ for p in range(1):
     ##Calculate the metrics
     #Results of Temperature estimation of core zone
 
-    mae_core=median_absolute_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1]);
-#    mape_core= mean_absolute_percentage_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1]);
-    mse_core=mean_squared_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1]);
-    r2_core=r2_score(yid1_test[0,0:t_2-t_1], y_tot1_test[0,0:t_2-t_1]);
+#    mae_core=median_absolute_error(y_tot1_test[0],yid1_test[0])
+#   # mape_core= mean_absolute_percentage_error(y_tot1_test[0,0:t_2-t_1],yid1_test[0,0:t_2-t_1])
+#    mse_core=mean_squared_error(y_tot1_test[0],yid1_test[0])
+#    r2_core=r2_score(yid1_test[0], y_tot1_test[0])
+#    print("Determination Coefficient: ")
+#    print(r2_core)
+#    print("Mean Absolute Errors: ")
+#    print(mae_core)
+#    print("Mean Square Errors: ")
+#    print(mse_core)
+
+#    Results of Temperature estimation of zone 1
+
+    mae_z1=median_absolute_error(y_tot1_test[0],yid1_test[0]);
+ #    mape_z1= mean_absolute_percentage_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
+    mse_z1=mean_squared_error(y_tot1_test[0],yid1_test[0]);
+    r2_z1=(r2_score(yid1_test[0], y_tot1_test[0]));
     print("Determination Coefficient: ")
-    print(r2_core)
-
-
-#    #Results of Temperature estimation of zone 1
-
-#     mae_z1=median_absolute_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
-# #    mape_z1= mean_absolute_percentage_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
-#     mse_z1=mean_squared_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
-#     r2_z1=(r2_score(yid1_test[1,0:t_2-t_1], y_tot1_test[1,0:t_2-t_1]));
-#
-#     print(r2_z1)
-#
+    print(r2_z1)
+    print("Mean Absolute Errors: ")    
+    print(mae_z1)
+    print("Mean Square Errors: ")
+    print(mse_z1)
 # ##    #Results of Temperature estimation of zone 2
 # #
 #     mae_z2=median_absolute_error(y_tot1_test[2,0:t_2-t_1],yid1_test[2,0:t_2-t_1]);
@@ -408,20 +425,7 @@ for p in range(1):
 #     print(r2_z4)
 #
 # ##
-#     print("Mean Absolute Errors: ")
-#     print(mae_core)
-#     print(mae_z1)
-#     print(mae_z2)
-#     print(mae_z3)
-#     print(mae_z4)
-#     #PLots of Temperature estimation of Core zone
-#     #
-#     print("Mean Square Errors: ")
-#     print(mse_core)
-#     print(mse_z1)
-#     print(mse_z2)
-#     print(mse_z3)
-#     print(mse_z4)
+
 
 #    y_values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13,14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,26]
 #    text_values = ["February1", "March1", "April1","May1", "June1", "July1", "August1","September1", "October1", "November1", "December1", "January2","February2", "March2", "April2","May2", "June2", "July2", "August2","September2", "October2", "November2", "December2", "January3"]
@@ -436,25 +440,26 @@ for p in range(1):
     print(f"C1 is {C1}")
     D1=sys_id1.D
     print(f"D1 is {D1}")
-    print(f"X1 is {sys_id1.x1}")
+#    print(f"X1 is {sys_id1.x1}")
 
     # GET ALL KALMAN GAINS
     K1=sys_id1.K
+    print(f"Kalman Gain is {K1}")
 
     # GET ALL KALMAN MATRICES A_K AND B_K
     KA1=sys_id1.A_K
     KB1=sys_id1.B_K
 
     # #SAVE ALL MATRICES
-    np.save('output/matrix_A1.npy', A1)
-    np.save('output/matrix_B1.npy', B1)
-    np.save('output/matrix_C1.npy', C1)
-    np.save('output/matrix_D1.npy', D1)
-    np.save('output/sys_id1_x0.npy', sys_id1.x1)
+#    np.save('output/matrix_A1.npy', A1)
+#    np.save('output/matrix_B1.npy', B1)
+#    np.save('output/matrix_C1.npy', C1)
+#    np.save('output/matrix_D1.npy', D1)
+#    np.save('output/sys_id1_x0.npy', sys_id1.x1)
 
     # Save off the test data for use with the MPC problem. Only save of the variables
-    # of interest, plus the datetime.
-    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
+    # of interest, plus the time and datetime.
+#    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
 
     # #SAVE ALL KALMAN GAINS
     #np.save('matrix_K1.npy', K1)
@@ -464,16 +469,27 @@ for p in range(1):
     #np.save('matrix_AK1.npy', KB1)
 
     plt.figure()
-    plt.plot(Time_months1_test[0,0:t_2-t_1], y_tot1_test[0,0:t_2-t_1]-273.15,linewidth=3, color='forestgreen')
-    plt.plot(Time_months1_test[0,0:t_2-t_1], yid1_test[0,0:t_2-t_1]-273.15, linestyle='dashed',linewidth=1.5, color='lightgreen')
-    plt.plot(Time_months1[0,2:t_1-t_0], y_tot1[0,2:t_1-t_0]-273.15,linewidth=3, color='steelblue')
-    plt.plot(Time_months1[0,2:t_1-t_0], yid1_train[0,2:t_1-t_0]-273.15, linestyle='dashed',linewidth=1.5, color='cyan')
-    plt.ylabel("Indoor Air Temperature (ºC)",size=16)
+    # Time_months1_test, Time_months1, y_tot1_test, and yid1... are list of lists (array of array, so grab [0])
+    plt.plot(df1_test['datetime'], y_tot1_test[0]-273.15, linewidth=3, color='forestgreen')
+    plt.plot(df1_test['datetime'], yid1_test[0]-273.15, linestyle='dashed',linewidth=1.5, color='lightgreen')
+    plt.plot(df1['datetime'], y_tot1[0]-273.15,linewidth=3, color='steelblue')
+    plt.plot(df1['datetime'], yid1_train[0]-273.15, linestyle='dashed',linewidth=1.5, color='orange')
+    # Specify the format - %b gives us Jan, Feb...
+    fmt = mdates.DateFormatter('%b')
+    ax = plt.gca().xaxis
+    ax.set_major_locator(mdates.MonthLocator())
+    ax.set_major_formatter(fmt)
+    ax.set_minor_locator(mdates.DayLocator(interval=7))
+    ax.set_minor_formatter(mdates.DateFormatter('%d'))
+    plt.title("Comparison of original data and the output of the N4SID model. PERIMETER ZONE 1",size=20)
+    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])        
+    plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
+    plt.ylim([5, 35])
     plt.show()
-#    #
-##    plt.text(1, 10, "R2=",r2_core,size=18)
+
+#    plt.text(1, 10, "R2=",r2_core,size=18)
 #    plt.yticks(size=16)
 #    plt.xticks(size=10)
 #    plt.title("Comparison of original data and the output of the N4SID model. CORE ZONE",size=20)
@@ -482,7 +498,34 @@ for p in range(1):
 ##    labels = ("January", "February", "March", "April","May")
 ##    plt.xticks(positions, labels)
 #    plt.ylim([15, 27])
+    # #SAVE ALL MATRICES 
+# 
+    np.save('matrix_A1.npy', A1)
 
+    np.save('matrix_B1.npy', B1)
+
+    np.save('matrix_C1.npy', C1)
+
+    np.save('matrix_D1.npy', D1)
+#
+#
+# #SAVE ALL KALMAN GAINS 
+# 
+#  
+    np.save('matrix_K1.npy', K1)
+#
+#
+# #SAVE ALL KALMAN MATRICES A_K B_K 
+# 
+#  
+    np.save('matrix_AK1.npy', KA1)
+
+    np.save('matrix_BK1.npy', KB1)
+
+# #SAVE THE INITIAL STATE FOR THE TESTING SCRIPT
+    x1=sys_id1.x1
+    np.save('x1.npy', x1)
+    
 ##
 #    plt.figure()
 #    plt.plot(Time_months1[0], U1[7],linewidth=3, color='darkorange')
@@ -586,7 +629,7 @@ for p in range(1):
 ##    plt.xticks(positions, labels)
 #    plt.ylim([15, 27])
 #    plt.show()
-    f=int(1*4.3);
+#     f=int(1*4.3);
 #
 # MODELS FINISHED. NOW THE METRICS AND MATRICES ARE SAVED
 
@@ -622,4 +665,3 @@ for p in range(1):
 #np.savetxt("moving_model.csv", metrics, header="MAE, MAPE, MSE, R2",delimiter=",")
 
 # GET ALL MATRICES
-
