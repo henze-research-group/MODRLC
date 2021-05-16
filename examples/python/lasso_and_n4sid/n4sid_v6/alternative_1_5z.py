@@ -119,7 +119,7 @@ for p in range(1):
     # Order matters! --- Make sure to add the variable names to the 'list_of_var_colnames' so
     # that the resulting dataframe/csv file can be read into the dompc world with ease.
     list_of_vars = [
-        'T_OA', 'HgloHor', 'P1_OccN', 'P1_IntGaiTot', 'P1_HeaPow', 'P1_FanPow', 'P1_OAVol',
+        'T_OA', 'HgloHor1', 'P1_OccN', 'P1_IntGaiTot', 'P1_HeaPow', 'P1_FanPow', 'P1_OAVol',
     ]
     U1 = [df1[x].values.tolist() for x in list_of_vars]
 
@@ -525,7 +525,8 @@ for p in range(1):
 # #SAVE THE INITIAL STATE FOR THE TESTING SCRIPT
     x1=sys_id1.x1
     np.save('x1.npy', x1)
-    
+    y0= y_tot1_test[:,0]
+    np.save('y_initial.npy', y0)    
 ##
 #    plt.figure()
 #    plt.plot(Time_months1[0], U1[7],linewidth=3, color='darkorange')
