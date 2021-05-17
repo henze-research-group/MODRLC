@@ -10,12 +10,9 @@ from __future__ import division
 import os
 from sklearn.metrics import r2_score
 from sklearn.metrics import median_absolute_error
-#from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 import datetime
 import matplotlib.dates as mdates
-
-from past.utils import old_div
 
 # Checking path to access other files
 try:
@@ -25,20 +22,16 @@ except ImportError:
 
     sys.path.append(os.pardir)
     from sippy import *
-import matplotlib.pyplot as plt
 import numpy as np
-from sippy import functionset as fset
 from sippy import functionsetSIM as fsetSIM
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.style.use('science')
-# Not sure how to get this to work. Document the command line call if you can.
-# plt.style.use('science')
 
-data_file = "SOM3N4SID_clean3.csv"
+data_file = "SOM3N4SID_clean3_v2.csv"
 if not os.path.exists(data_file):
     print("*************** Input data file does not exist! *****************")
-    print("Download from here: https://drive.google.com/open?id=1rEErpNNYGF4dKV2alRqC6h5-3TLFRadx")
+    print("Download from here: https://drive.google.com/open?id=1Bkl0lqUO57Ft-yoFbLtZYS4kK5-F0b94")
     print(f"Unzip (`7z x {data_file}.7z) and place resulting CSV into the same folder as this file.")
     exit(1)
 
@@ -282,7 +275,7 @@ for p in range(1):
                          [0.117847],
                          [0.751528],
                          [-0.365441],
-                         
+
                          ))
 
 
@@ -389,7 +382,7 @@ for p in range(1):
     r2_z1=(r2_score(yid1_test[0], y_tot1_test[0]));
     print("Determination Coefficient: ")
     print(r2_z1)
-    print("Mean Absolute Errors: ")    
+    print("Mean Absolute Errors: ")
     print(mae_z1)
     print("Mean Square Errors: ")
     print(mse_z1)
