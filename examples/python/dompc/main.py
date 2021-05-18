@@ -40,9 +40,9 @@ np.random.seed(99)
 # e = np.ones([model.n_x, 1])
 # These default x0's are from a random interval in the simulation.
 mp = ModelParameters()
-print(mp.x0)
 x0 = np.vstack((mp.x0,
-                np.array([[293], [0]])))
+                mp.additional_x_states_inits))
+
 print(f"X0 is now this: {x0}")
 
 # x0 = np.array([
@@ -136,6 +136,9 @@ plt.ion()
 Run MPC main loop:
 """
 
+# Save off the model order, which is just the state of the A matrix
+x_state_var_cnt = mp.a.shape[0]
+
 # 288 5-minute intervals per day
 for k in range(288 * 2):
     # for k in range(10):
@@ -149,16 +152,16 @@ for k in range(288 * 2):
         # we are running with no model mismatch, just pass the data back
         x0 = estimator.make_step(y_measured)
     else:
-        y_pred = mp.c @ x0[0:4]
+        y_pred = mp.c @ x0[0:x_state_var_cnt]
 
         x_next = copy.copy(x0)
-        x_next[0:4] = x0[0:4] + mp.K * (y_measured - y_pred)
+        x_next[0:x_state_var_cnt] = x0[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
         x0 = np.vstack((
-            x_next[0:4],
-                np.array([
-                    [y_measured],
-                    u0[0]
-                ])))
+            x_next[0:x_state_var_cnt],
+            np.array([
+                [y_measured],
+                u0[0]
+            ])))
         print(x0)
 
     if show_animation:
