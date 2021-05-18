@@ -63,4 +63,4 @@ def template_simulator(model):
 
     simulator.setup()
 
-    return simulator
+    return simulator, client

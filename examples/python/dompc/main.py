@@ -23,7 +23,7 @@ Get configured do-mpc modules:
 """
 model = template_model()
 mpc = template_mpc(model)
-simulator = template_simulator(model)
+simulator, boptest_client = template_simulator(model)
 
 # Choose one of these estimators
 # estimator = template_mhe(model)
@@ -145,19 +145,21 @@ for k in range(288 * 2):
     u0 = mpc.make_step(x0)
     y_measured = simulator.make_step(u0)
 
-    y_pred = mp.c @ x0[0:5]
+    if boptest_client is None:
+        # we are running with no model mismatch, just pass the data back
+        x0 = estimator.make_step(y_measured)
+    else:
+        y_pred = mp.c @ x0[0:4]
 
-    x_next = copy.copy(x0)
-    x_next[0:5] = x0[0:5] + mp.K * (y_measured - y_pred)
-    x0 = np.vstack((
-        x_next[0:5],
-            np.array([
-                [y_measured],
-                u0[0]
-            ])))
-    print(x0)
-
-    # x0 = estimator.make_step(y_next)
+        x_next = copy.copy(x0)
+        x_next[0:4] = x0[0:4] + mp.K * (y_measured - y_pred)
+        x0 = np.vstack((
+            x_next[0:4],
+                np.array([
+                    [y_measured],
+                    u0[0]
+                ])))
+        print(x0)
 
     if show_animation:
         # graphics.plot_results(t_ind=k)
