@@ -29,7 +29,7 @@ def template_mhe(model):
 
     # P_x is the weighting matrix, which is the size of the X order
     #   + 1 to handle the indoor temperature state, prev indoor temperature state, and prev prev
-    P_x = 1e-4 * np.eye(mp.a.shape[1] + 1)
+    P_x = 1e-4 * np.eye(mp.a.shape[0] + mp.additional_x_states_inits.shape[0])
     # P_p = model.p['P_p']
 
     # no error weighting in the measurement

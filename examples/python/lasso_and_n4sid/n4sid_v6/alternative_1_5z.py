@@ -6,16 +6,15 @@ Created on Tue Feb 12 18:25:17 2021
 """
 from __future__ import division
 
-#Import all the metrics to evaluate the accuracy of the N4SID Algorithm with the selected order
-import os
-from sklearn.metrics import r2_score
-from sklearn.metrics import median_absolute_error
-#from sklearn.metrics import mean_absolute_percentage_error
-from sklearn.metrics import mean_squared_error
 import datetime
-import matplotlib.dates as mdates
+# Import all the metrics to evaluate the accuracy of the N4SID Algorithm with the selected order
+import os
 
-from past.utils import old_div
+import matplotlib.dates as mdates
+# from sklearn.metrics import mean_absolute_percentage_error
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import median_absolute_error
+from sklearn.metrics import r2_score
 
 # Checking path to access other files
 try:
@@ -25,23 +24,21 @@ except ImportError:
 
     sys.path.append(os.pardir)
     from sippy import *
-import matplotlib.pyplot as plt
 import numpy as np
-from sippy import functionset as fset
 from sippy import functionsetSIM as fsetSIM
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.style.use('science')
-# Not sure how to get this to work. Document the command line call if you can.
-# plt.style.use('science')
-#def gap(a):
-#    return a + 86460
-data_file = "SOM3N4SID_clean3.csv"
+
+data_file = "SOM3N4SID_clean3_v2.csv"
 if not os.path.exists(data_file):
     print("*************** Input data file does not exist! *****************")
-    print("Download from here: https://drive.google.com/open?id=1rEErpNNYGF4dKV2alRqC6h5-3TLFRadx")
+    print("Download from here: https://drive.google.com/open?id=1Bkl0lqUO57Ft-yoFbLtZYS4kK5-F0b94")
     print(f"Unzip (`7z x {data_file}.7z) and place resulting CSV into the same folder as this file.")
     exit(1)
+
+# ensure that the output dir exists
+os.makedirs('output', exist_ok=True)
 
 data = pd.read_csv(data_file)  # dataset from January to January 12 months
 df = pd.DataFrame(data)
@@ -50,13 +47,9 @@ df = df.fillna(df.mean())
 
 # Sample at 300 seconds
 df = df.loc[df['Time'] % 300.0 == 0]
-#print ()
-#print ('Check')
-#print(df[['Core_T','P1_T']])
 
 # Create a date time column based on Jan 1, 2019 data (no leapyear)
 basetime = 1546300800  # 1/1/2019 00:00:00 (epoch time in seconds)
-#df[df['Time'] > 31449540] = df[df['Time'] > 31449540].apply(gap)
 df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce')
 print(df['P1_T'])
 
@@ -108,13 +101,13 @@ for p in range(1):
     dfsmall = df1_test.iloc[0:100]
     dfsmall.to_csv('SOM3N4SID_clean3_test_downsampled.csv')
 
-    Time1 = np.array([df1['Time'].values.tolist()])
-    Time_months1 = Time1/24/3600/30
-##
-    Time1_test = np.array([df1_test['Time'].values.tolist()])
-    Time_months1_test = Time1_test/24/3600/30
+    # Time1 = np.array([df1['Time'].values.tolist()])
+    # Time_months1 = Time1/24/3600/30
+    #
+    # Time1_test = np.array([df1_test['Time'].values.tolist()])
+    # Time_months1_test = Time1_test/24/3600/30
 
-## Definition of the Inputs Vector. Training dataset
+    ## Definition of the Inputs Vector. Training dataset
 
     # Order matters! --- Make sure to add the variable names to the 'list_of_var_colnames' so
     # that the resulting dataframe/csv file can be read into the dompc world with ease.
@@ -164,16 +157,16 @@ for p in range(1):
     #     # df1['P4_OccN'].values.tolist()
     #
     #     ]
-#    ,df1['HgloHor'].values.tolist(),df1['P1_IntGaiTot'].values.tolist(),df1['P1_OccN'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P1_CooSet'].values.tolist()
-#    ,df1['HgloHor'].values.tolist(),df1['P1_IntGaiTot'].values.tolist(),df1['P1_OccN'].values.tolist()
-#    df1['Core_T_prev'].values.tolist(),df1['P1_T_prev'].values.tolist(),df1['P2_T_prev'].values.tolist(),df1['P3_T_prev'].values.tolist(),df1['P4_T_prev'].values.tolist(),
-#U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['Wea_TWetBul'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist()]
+    #    ,df1['HgloHor'].values.tolist(),df1['P1_IntGaiTot'].values.tolist(),df1['P1_OccN'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P1_CooSet'].values.tolist()
+    #    ,df1['HgloHor'].values.tolist(),df1['P1_IntGaiTot'].values.tolist(),df1['P1_OccN'].values.tolist()
+    #    df1['Core_T_prev'].values.tolist(),df1['P1_T_prev'].values.tolist(),df1['P2_T_prev'].values.tolist(),df1['P3_T_prev'].values.tolist(),df1['P4_T_prev'].values.tolist(),
+    #U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['Wea_TWetBul'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist()]
 
-#    U1 = [df1['Core_T_before2'].values.tolist(),df1['P1_T_before2'].values.tolist(),df1['P2_T_before2'].values.tolist(),df1['P3_T_before2'].values.tolist(),df1['P4_T_before2'].values.tolist(),df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['Wea_TWetBul'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist(),df1['Cor_MisGai'].values.tolist(),df1['P1_MisGai'].values.tolist(),df1['P2_MisGai'].values.tolist(),df1['P3_MisGai'].values.tolist(),df1['P4_MisGai'].values.tolist(),df1['Core_TotIntGai'].values.tolist(),df1['P1_TotIntGai'].values.tolist(),df1['P2_TotIntGai'].values.tolist(),df1['P3_TotIntGai'].values.tolist(),df1['P4_TotIntGai'].values.tolist()]
-#    U1 = [df1['Wea_HgloHor'].values.tolist(),df1['OA_T'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist()]
-#    U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['hour'].values.tolist(),df1['day'].values.tolist(),df1['Core_HeaPow'].values.tolist(),df1['P1_HeaPow'].values.tolist(),df1['P2_HeaPow'].values.tolist(),df1['P3_HeaPow'].values.tolist(),df1['P4_HeaPow'].values.tolist(),df1['Core_CooPow'].values.tolist(),df1['P1_CooPow'].values.tolist(),df1['P2_CooPow'].values.tolist(),df1['P3_CooPow'].values.tolist(),df1['P4_CooPow'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist(),df1['Cor_MisGai'].values.tolist(),df1['P1_MisGai'].values.tolist(),df1['P2_MisGai'].values.tolist(),df1['P3_MisGai'].values.tolist(),df1['P4_MisGai'].values.tolist(),df1['Core_LigGai'].values.tolist(),df1['P1_LigGai'].values.tolist(),df1['P2_LigGai'].values.tolist(),df1['P3_LigGai'].values.tolist(),df1['P4_LigGai'].values.tolist()]
-            #    U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['hour'].values.tolist(),df1['day'].values.tolist(),df1['Wea_TWetBul'].values.tolist(),df1['Core_HeaPow'].values.tolist(),df1['P1_HeaPow'].values.tolist(),df1['P2_HeaPow'].values.tolist(),df1['P3_HeaPow'].values.tolist(),df1['P4_HeaPow'].values.tolist(),df1['Core_CooPow'].values.tolist(),df1['P1_CooPow'].values.tolist(),df1['P2_CooPow'].values.tolist(),df1['P3_CooPow'].values.tolist(),df1['P4_CooPow'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_OAVFR'].values.tolist(),df1['P1_OAVFR'].values.tolist(),df1['P2_OAVFR'].values.tolist(),df1['P3_OAVFR'].values.tolist(),df1['P4_OAVFR'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist(),df1['Cor_MisGai'].values.tolist(),df1['P1_MisGai'].values.tolist(),df1['P2_MisGai'].values.tolist(),df1['P3_MisGai'].values.tolist(),df1['P4_MisGai'].values.tolist(),df1['Core_LigGai'].values.tolist(),df1['P1_LigGai'].values.tolist(),df1['P2_LigGai'].values.tolist(),df1['P3_LigGai'].values.tolist(),df1['P4_LigGai'].values.tolist()]
-     #    U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['hour'].values.tolist(),df1['day'].values.tolist()]
+    #    U1 = [df1['Core_T_before2'].values.tolist(),df1['P1_T_before2'].values.tolist(),df1['P2_T_before2'].values.tolist(),df1['P3_T_before2'].values.tolist(),df1['P4_T_before2'].values.tolist(),df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['Wea_TWetBul'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist(),df1['Cor_MisGai'].values.tolist(),df1['P1_MisGai'].values.tolist(),df1['P2_MisGai'].values.tolist(),df1['P3_MisGai'].values.tolist(),df1['P4_MisGai'].values.tolist(),df1['Core_TotIntGai'].values.tolist(),df1['P1_TotIntGai'].values.tolist(),df1['P2_TotIntGai'].values.tolist(),df1['P3_TotIntGai'].values.tolist(),df1['P4_TotIntGai'].values.tolist()]
+    #    U1 = [df1['Wea_HgloHor'].values.tolist(),df1['OA_T'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist()]
+    #    U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['hour'].values.tolist(),df1['day'].values.tolist(),df1['Core_HeaPow'].values.tolist(),df1['P1_HeaPow'].values.tolist(),df1['P2_HeaPow'].values.tolist(),df1['P3_HeaPow'].values.tolist(),df1['P4_HeaPow'].values.tolist(),df1['Core_CooPow'].values.tolist(),df1['P1_CooPow'].values.tolist(),df1['P2_CooPow'].values.tolist(),df1['P3_CooPow'].values.tolist(),df1['P4_CooPow'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_HeaSet'].values.tolist(),df1['P1_HeaSet'].values.tolist(),df1['P2_HeaSet'].values.tolist(),df1['P3_HeaSet'].values.tolist(),df1['P4_HeaSet'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist(),df1['Cor_MisGai'].values.tolist(),df1['P1_MisGai'].values.tolist(),df1['P2_MisGai'].values.tolist(),df1['P3_MisGai'].values.tolist(),df1['P4_MisGai'].values.tolist(),df1['Core_LigGai'].values.tolist(),df1['P1_LigGai'].values.tolist(),df1['P2_LigGai'].values.tolist(),df1['P3_LigGai'].values.tolist(),df1['P4_LigGai'].values.tolist()]
+    #    U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['hour'].values.tolist(),df1['day'].values.tolist(),df1['Wea_TWetBul'].values.tolist(),df1['Core_HeaPow'].values.tolist(),df1['P1_HeaPow'].values.tolist(),df1['P2_HeaPow'].values.tolist(),df1['P3_HeaPow'].values.tolist(),df1['P4_HeaPow'].values.tolist(),df1['Core_CooPow'].values.tolist(),df1['P1_CooPow'].values.tolist(),df1['P2_CooPow'].values.tolist(),df1['P3_CooPow'].values.tolist(),df1['P4_CooPow'].values.tolist(),df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),df1['Core_OAVFR'].values.tolist(),df1['P1_OAVFR'].values.tolist(),df1['P2_OAVFR'].values.tolist(),df1['P3_OAVFR'].values.tolist(),df1['P4_OAVFR'].values.tolist(),df1['Core_CooSet'].values.tolist(),df1['P1_CooSet'].values.tolist(),df1['P2_CooSet'].values.tolist(),df1['P3_CooSet'].values.tolist(),df1['P4_CooSet'].values.tolist(),df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist(),df1['Cor_MisGai'].values.tolist(),df1['P1_MisGai'].values.tolist(),df1['P2_MisGai'].values.tolist(),df1['P3_MisGai'].values.tolist(),df1['P4_MisGai'].values.tolist(),df1['Core_LigGai'].values.tolist(),df1['P1_LigGai'].values.tolist(),df1['P2_LigGai'].values.tolist(),df1['P3_LigGai'].values.tolist(),df1['P4_LigGai'].values.tolist()]
+    #    U1 = [df1['OA_T'].values.tolist(),df1['Wea_HgloHor'].values.tolist(),df1['hour'].values.tolist(),df1['day'].values.tolist()]
     #df1['Core_T_before2'].values.tolist(),df1['P1_T_before2'].values.tolist(),df1['P2_T_before2'].values.tolist(),df1['P3_T_before2'].values.tolist(),df1['P4_T_before2'].values.tolist(),
     #    U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['Wea_TWetBul'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist()]
     #,df1['Core_T_before'].values.tolist(),df1['P1_T_before'].values.tolist(),df1['P2_T_before'].values.tolist(),df1['P3_T_before'].values.tolist(),df1['P4_T_before'].values.tolist()
@@ -185,7 +178,7 @@ for p in range(1):
     #  ,df1['Core_VFRSet'].values.tolist(),df1['P1_VFRSet'].values.tolist(),df1['P2_VFRSet'].values.tolist(),df1['P3_VFRSet'].values.tolist(),df1['P4_VFRSet'].values.tolist()
     #,df1['Core_OAVFR'].values.tolist(),df1['P1_OAVFR'].values.tolist(),df1['P2_OAVFR'].values.tolist(),df1['P3_OAVFR'].values.tolist(),df1['P4_OAVFR'].values.tolist()
     #,df1['Core_FanPow'].values.tolist(),df1['P1_FanPow'].values.tolist(),df1['P2_FanPow'].values.tolist(),df1['P3_FanPow'].values.tolist(),df1['P4_FanPow'].values.tolist(),
-#
+    #
     U1_test = [df1_test[x].values.tolist() for x in list_of_vars]
 
     # U1_test = [
@@ -227,33 +220,33 @@ for p in range(1):
     #
     #     ]
 
-#    ,df1_test['HgloHor'].values.tolist(),df1_test['P1_IntGaiTot'].values.tolist(),df1_test['P1_OccN'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist()
-## Definition of the Inputs Vector. Testing dataset
-#    df1_test['Core_T_prev'].values.tolist(),df1_test['P1_T_prev'].values.tolist(),df1_test['P2_T_prev'].values.tolist(),df1_test['P3_T_prev'].values.tolist(),df1_test['P4_T_prev'].values.tolist(),
-#U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_LigGai'].values.tolist(),df1_test['P1_LigGai'].values.tolist(),df1_test['P2_LigGai'].values.tolist(),df1_test['P3_LigGai'].values.tolist(),df1_test['P4_LigGai'].values.tolist()]
-#    U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Wea_TWetBul'].values.tolist(),df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_OAVFR'].values.tolist(),df1_test['P1_OAVFR'].values.tolist(),df1_test['P2_OAVFR'].values.tolist(),df1_test['P3_OAVFR'].values.tolist(),df1_test['P4_OAVFR'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_LigGai'].values.tolist(),df1_test['P1_LigGai'].values.tolist(),df1_test['P2_LigGai'].values.tolist(),df1_test['P3_LigGai'].values.tolist(),df1_test['P4_LigGai'].values.tolist()]
-#    U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Core_TotIntGai'].values.tolist(),df1_test['P1_TotIntGai'].values.tolist(),df1_test['P2_TotIntGai'].values.tolist(),df1_test['P3_TotIntGai'].values.tolist(),df1_test['P4_TotIntGai'].values.tolist(),df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_SupVFR'].values.tolist(),df1_test['P1_SupVFR'].values.tolist(),df1_test['P2_SupVFR'].values.tolist(),df1_test['P3_SupVFR'].values.tolist(),df1_test['P4_SupVFR'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist()]
-#    U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist()]
-#    U1_test = [df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['Wea_TWetBul'].values.tolist(),df1_test['Core_QconFlow'].values.tolist(),df1_test['P1_QconFlow'].values.tolist(),df1_test['P2_QconFlow'].values.tolist(),df1_test['P3_QconFlow'].values.tolist(),df1_test['P4_QconFlow'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Core_TotIntGai'].values.tolist(),df1_test['P1_TotIntGai'].values.tolist(),df1_test['P2_TotIntGai'].values.tolist(),df1_test['P3_TotIntGai'].values.tolist(),df1_test['P4_TotIntGai'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_OAVFR'].values.tolist(),df1_test['P1_OAVFR'].values.tolist(),df1_test['P2_OAVFR'].values.tolist(),df1_test['P3_OAVFR'].values.tolist(),df1_test['P4_OAVFR'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_SupVFR'].values.tolist(),df1_test['P1_SupVFR'].values.tolist(),df1_test['P2_SupVFR'].values.tolist(),df1_test['P3_SupVFR'].values.tolist(),df1_test['P4_SupVFR'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Core_DamSet'].values.tolist(),df1_test['P1_DamSet'].values.tolist(),df1_test['P2_DamSet'].values.tolist(),df1_test['P3_DamSet'].values.tolist(),df1_test['P4_DamSet'].values.tolist(),df1_test['Core_LigGai'].values.tolist(),df1_test['P1_LigGai'].values.tolist(),df1_test['P2_LigGai'].values.tolist(),df1_test['P3_LigGai'].values.tolist(),df1_test['P4_LigGai'].values.tolist()]
-#    U1_test = [df1_test['Core_T_before2'].values.tolist(),df1_test['P1_T_before2'].values.tolist(),df1_test['P2_T_before2'].values.tolist(),df1_test['P3_T_before2'].values.tolist(),df1_test['P4_T_before2'].values.tolist(),df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['Wea_TWetBul'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_TotIntGai'].values.tolist(),df1_test['P1_TotIntGai'].values.tolist(),df1_test['P2_TotIntGai'].values.tolist(),df1_test['P3_TotIntGai'].values.tolist(),df1_test['P4_TotIntGai'].values.tolist()]
+    #    ,df1_test['HgloHor'].values.tolist(),df1_test['P1_IntGaiTot'].values.tolist(),df1_test['P1_OccN'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist()
+    ## Definition of the Inputs Vector. Testing dataset
+    #    df1_test['Core_T_prev'].values.tolist(),df1_test['P1_T_prev'].values.tolist(),df1_test['P2_T_prev'].values.tolist(),df1_test['P3_T_prev'].values.tolist(),df1_test['P4_T_prev'].values.tolist(),
+    #U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_LigGai'].values.tolist(),df1_test['P1_LigGai'].values.tolist(),df1_test['P2_LigGai'].values.tolist(),df1_test['P3_LigGai'].values.tolist(),df1_test['P4_LigGai'].values.tolist()]
+    #    U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Wea_TWetBul'].values.tolist(),df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_OAVFR'].values.tolist(),df1_test['P1_OAVFR'].values.tolist(),df1_test['P2_OAVFR'].values.tolist(),df1_test['P3_OAVFR'].values.tolist(),df1_test['P4_OAVFR'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_LigGai'].values.tolist(),df1_test['P1_LigGai'].values.tolist(),df1_test['P2_LigGai'].values.tolist(),df1_test['P3_LigGai'].values.tolist(),df1_test['P4_LigGai'].values.tolist()]
+    #    U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Core_TotIntGai'].values.tolist(),df1_test['P1_TotIntGai'].values.tolist(),df1_test['P2_TotIntGai'].values.tolist(),df1_test['P3_TotIntGai'].values.tolist(),df1_test['P4_TotIntGai'].values.tolist(),df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_SupVFR'].values.tolist(),df1_test['P1_SupVFR'].values.tolist(),df1_test['P2_SupVFR'].values.tolist(),df1_test['P3_SupVFR'].values.tolist(),df1_test['P4_SupVFR'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist()]
+    #    U1_test = [df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist()]
+    #    U1_test = [df1_test['Core_HeaPow'].values.tolist(),df1_test['P1_HeaPow'].values.tolist(),df1_test['P2_HeaPow'].values.tolist(),df1_test['P3_HeaPow'].values.tolist(),df1_test['P4_HeaPow'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['Wea_TWetBul'].values.tolist(),df1_test['Core_QconFlow'].values.tolist(),df1_test['P1_QconFlow'].values.tolist(),df1_test['P2_QconFlow'].values.tolist(),df1_test['P3_QconFlow'].values.tolist(),df1_test['P4_QconFlow'].values.tolist(),df1_test['hour'].values.tolist(),df1_test['day'].values.tolist(),df1_test['Core_TotIntGai'].values.tolist(),df1_test['P1_TotIntGai'].values.tolist(),df1_test['P2_TotIntGai'].values.tolist(),df1_test['P3_TotIntGai'].values.tolist(),df1_test['P4_TotIntGai'].values.tolist(),df1_test['Core_CooPow'].values.tolist(),df1_test['P1_CooPow'].values.tolist(),df1_test['P2_CooPow'].values.tolist(),df1_test['P3_CooPow'].values.tolist(),df1_test['P4_CooPow'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_OAVFR'].values.tolist(),df1_test['P1_OAVFR'].values.tolist(),df1_test['P2_OAVFR'].values.tolist(),df1_test['P3_OAVFR'].values.tolist(),df1_test['P4_OAVFR'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_SupVFR'].values.tolist(),df1_test['P1_SupVFR'].values.tolist(),df1_test['P2_SupVFR'].values.tolist(),df1_test['P3_SupVFR'].values.tolist(),df1_test['P4_SupVFR'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Core_DamSet'].values.tolist(),df1_test['P1_DamSet'].values.tolist(),df1_test['P2_DamSet'].values.tolist(),df1_test['P3_DamSet'].values.tolist(),df1_test['P4_DamSet'].values.tolist(),df1_test['Core_LigGai'].values.tolist(),df1_test['P1_LigGai'].values.tolist(),df1_test['P2_LigGai'].values.tolist(),df1_test['P3_LigGai'].values.tolist(),df1_test['P4_LigGai'].values.tolist()]
+    #    U1_test = [df1_test['Core_T_before2'].values.tolist(),df1_test['P1_T_before2'].values.tolist(),df1_test['P2_T_before2'].values.tolist(),df1_test['P3_T_before2'].values.tolist(),df1_test['P4_T_before2'].values.tolist(),df1_test['OA_T'].values.tolist(),df1_test['Wea_HgloHor'].values.tolist(),df1_test['Wea_TWetBul'].values.tolist(),df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist(),df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist(),df1_test['Core_CooSet'].values.tolist(),df1_test['P1_CooSet'].values.tolist(),df1_test['P2_CooSet'].values.tolist(),df1_test['P3_CooSet'].values.tolist(),df1_test['P4_CooSet'].values.tolist(),df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist(),df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist(),df1_test['Core_TotIntGai'].values.tolist(),df1_test['P1_TotIntGai'].values.tolist(),df1_test['P2_TotIntGai'].values.tolist(),df1_test['P3_TotIntGai'].values.tolist(),df1_test['P4_TotIntGai'].values.tolist()]
 
-#Wea_HgloHor
+    #Wea_HgloHor
 
-#    df1_test['Core_T_before2'].values.tolist(),df1_test['P1_T_before2'].values.tolist(),df1_test['P2_T_before2'].values.tolist(),df1_test['P3_T_before2'].values.tolist(),df1_test['P4_T_before2'].values.tolist(),
+    #    df1_test['Core_T_before2'].values.tolist(),df1_test['P1_T_before2'].values.tolist(),df1_test['P2_T_before2'].values.tolist(),df1_test['P3_T_before2'].values.tolist(),df1_test['P4_T_before2'].values.tolist(),
     #,df1_test['Core_T_before'].values.tolist(),df1_test['P1_T_before'].values.tolist(),df1_test['P2_T_before'].values.tolist(),df1_test['P3_T_before'].values.tolist(),df1_test['P4_T_before'].values.tolist()
     #,df1_test['hour'].values.tolist(),df1_test['day'].values.tolist()
     #,df1_test['Core_RelHum'].values.tolist(),df1_test['P1_RelHum'].values.tolist(),df1_test['P2_RelHum'].values.tolist(),df1_test['P3_RelHum'].values.tolist(),df1_test['P4_RelHum'].values.tolist()
     #,df1_test['Core_TotIntGai'].values.tolist(),df1_test['P1_TotIntGai'].values.tolist(),df1_test['P2_TotIntGai'].values.tolist(),df1_test['P3_TotIntGai'].values.tolist(),df1_test['P4_TotIntGai'].values.tolist()
- #,df1_test['Core_OAVFR'].values.tolist(),df1_test['P1_OAVFR'].values.tolist(),df1_test['P2_OAVFR'].values.tolist(),df1_test['P3_OAVFR'].values.tolist(),df1_test['P4_OAVFR'].values.tolist()
-#,df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist()
-#,df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist()
-#,df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist()
-#,df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist()
+    #,df1_test['Core_OAVFR'].values.tolist(),df1_test['P1_OAVFR'].values.tolist(),df1_test['P2_OAVFR'].values.tolist(),df1_test['P3_OAVFR'].values.tolist(),df1_test['P4_OAVFR'].values.tolist()
+    #,df1_test['Core_FanPow'].values.tolist(),df1_test['P1_FanPow'].values.tolist(),df1_test['P2_FanPow'].values.tolist(),df1_test['P3_FanPow'].values.tolist(),df1_test['P4_FanPow'].values.tolist()
+    #,df1_test['Core_HeaSet'].values.tolist(),df1_test['P1_HeaSet'].values.tolist(),df1_test['P2_HeaSet'].values.tolist(),df1_test['P3_HeaSet'].values.tolist(),df1_test['P4_HeaSet'].values.tolist()
+    #,df1_test['Core_VFRSet'].values.tolist(),df1_test['P1_VFRSet'].values.tolist(),df1_test['P2_VFRSet'].values.tolist(),df1_test['P3_VFRSet'].values.tolist(),df1_test['P4_VFRSet'].values.tolist()
+    #,df1_test['Cor_MisGai'].values.tolist(),df1_test['P1_MisGai'].values.tolist(),df1_test['P2_MisGai'].values.tolist(),df1_test['P3_MisGai'].values.tolist(),df1_test['P4_MisGai'].values.tolist()
 
 
     U_1=np.array(U1);
     U_1_test=np.array(U1_test);
-##
+    ##
     y_tot1= [
         # df1['Core_T'].values.tolist(),
         df1['P1_T'].values.tolist(),
@@ -262,8 +255,8 @@ for p in range(1):
         # df1['P4_T'].values.tolist()
     ]
     y_tot1=np.array(y_tot1)
-##df1['senTRoom_y|K'].values.tolist(),df1['senTRoom1_y|K'].values.tolist(), df1['senTRoom2_y|K'].values.tolist(), df1['senTRoom3_y|K'].values.tolist(),df1['senTRoom4_y|K'].values.tolist()
-##
+    ##df1['senTRoom_y|K'].values.tolist(),df1['senTRoom1_y|K'].values.tolist(), df1['senTRoom2_y|K'].values.tolist(), df1['senTRoom3_y|K'].values.tolist(),df1['senTRoom4_y|K'].values.tolist()
+    ##
     y_tot1_test= [
         # df1_test['Core_T'].values.tolist(),
         df1_test['P1_T'].values.tolist(),
@@ -277,7 +270,7 @@ for p in range(1):
     ###System identification
 
     #
-#
+    #
     method = 'N4SID'
     sys_id1 = system_identification(y_tot1, U_1, method, SS_fixed_order=4) #IC='AICc')
 
@@ -312,7 +305,6 @@ for p in range(1):
 #    o=xid1_train[11,len(xid1_train[0])-1];
 #    q=xid1_train[12,len(xid1_train[0])-1];
 
-
 #    # TRY ORDER=1
 #    sys_id1.x1=np.array([[a]])
     ## TRY ORDER=2
@@ -323,7 +315,7 @@ for p in range(1):
     sys_id1.x1=np.array([[a],[b],[c],[d]])
     ## TRY ORDER=5
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e]])
-#    ## TRY ORDER=6
+    ## TRY ORDER=6
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f]])
     ## TRY ORDER=7
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g]]);
@@ -339,11 +331,18 @@ for p in range(1):
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g],[h],[i],[l],[n],[o]])
     ## TRY ORDER=13
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g],[h],[i],[l],[n],[o],[q]])
+    ## TRY ORDER=20
+    # sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20]])
+    ## TRY ORDER=30
+#    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20],[a21],[a22],[a23],[a24],[a25],[a26],[a27],[a28],[a29],[a30]])
+
+    ## TRY ORDER=35
+#    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20],[a21],[a22],[a23],[a24],[a25],[a26],[a27],[a28],[a29],[a30],[a31],[a32],[a33],[a34],[a35]])
 
 
     xid1_test, yid1_test = fsetSIM.SS_lsim_process_form(sys_id1.A, sys_id1.B, sys_id1.C, sys_id1.D, U_1_test, sys_id1.x1)
 
-#    print(xid1_test,yid1_test)
+    #    print(xid1_test,yid1_test)
 
 
 #    #Calculate and analyze the errors
@@ -384,13 +383,14 @@ for p in range(1):
 
 #    Results of Temperature estimation of zone 1
 
+    print("System Matrices\n")
     mae_z1=median_absolute_error(y_tot1_test[0],yid1_test[0]);
  #    mape_z1= mean_absolute_percentage_error(y_tot1_test[1,0:t_2-t_1],yid1_test[1,0:t_2-t_1]);
     mse_z1=mean_squared_error(y_tot1_test[0],yid1_test[0]);
     r2_z1=(r2_score(yid1_test[0], y_tot1_test[0]));
     print("Determination Coefficient: ")
     print(r2_z1)
-    print("Mean Absolute Errors: ")    
+    print("Mean Absolute Errors: ")
     print(mae_z1)
     print("Mean Square Errors: ")
     print(mse_z1)
@@ -440,7 +440,7 @@ for p in range(1):
     print(f"C1 is {C1}")
     D1=sys_id1.D
     print(f"D1 is {D1}")
-#    print(f"X1 is {sys_id1.x1}")
+    print(f"X1 is {sys_id1.x1}")
 
     # GET ALL KALMAN GAINS
     K1=sys_id1.K
@@ -450,19 +450,23 @@ for p in range(1):
     KA1=sys_id1.A_K
     KB1=sys_id1.B_K
 
+    y0 = y_tot1_test[:,0]
+
     # #SAVE ALL MATRICES
-#    np.save('output/matrix_A1.npy', A1)
-#    np.save('output/matrix_B1.npy', B1)
-#    np.save('output/matrix_C1.npy', C1)
-#    np.save('output/matrix_D1.npy', D1)
-#    np.save('output/sys_id1_x0.npy', sys_id1.x1)
+    np.save('output/matrix_A1.npy', A1)
+    np.save('output/matrix_B1.npy', B1)
+    np.save('output/matrix_C1.npy', C1)
+    np.save('output/matrix_D1.npy', D1)
+    np.save('output/sys_id1_x0.npy', sys_id1.x1)
+    np.save('output/y_initial.npy', y0)
 
     # Save off the test data for use with the MPC problem. Only save of the variables
     # of interest, plus the time and datetime.
-#    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
+    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
+
 
     # #SAVE ALL KALMAN GAINS
-    #np.save('matrix_K1.npy', K1)
+    np.save('output/kalman_gain_K.npy', K1)
 
     # #SAVE ALL KALMAN MATRICES A_K B_K
     #np.save('matrix_AK1.npy', KA1)
@@ -482,12 +486,13 @@ for p in range(1):
     ax.set_minor_locator(mdates.DayLocator(interval=7))
     ax.set_minor_formatter(mdates.DateFormatter('%d'))
     plt.title("Comparison of original data and the output of the N4SID model. PERIMETER ZONE 1",size=20)
-    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])        
+    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])
     plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
     plt.ylim([5, 35])
     plt.show()
+
 
 #    plt.text(1, 10, "R2=",r2_core,size=18)
 #    plt.yticks(size=16)
@@ -498,36 +503,7 @@ for p in range(1):
 ##    labels = ("January", "February", "March", "April","May")
 ##    plt.xticks(positions, labels)
 #    plt.ylim([15, 27])
-    # #SAVE ALL MATRICES 
-# 
-    np.save('matrix_A1.npy', A1)
 
-    np.save('matrix_B1.npy', B1)
-
-    np.save('matrix_C1.npy', C1)
-
-    np.save('matrix_D1.npy', D1)
-#
-#
-# #SAVE ALL KALMAN GAINS 
-# 
-#  
-    np.save('matrix_K1.npy', K1)
-#
-#
-# #SAVE ALL KALMAN MATRICES A_K B_K 
-# 
-#  
-    np.save('matrix_AK1.npy', KA1)
-
-    np.save('matrix_BK1.npy', KB1)
-
-# #SAVE THE INITIAL STATE FOR THE TESTING SCRIPT
-    x1=sys_id1.x1
-    np.save('x1.npy', x1)
-    y0= y_tot1_test[:,0]
-    np.save('y_initial.npy', y0)    
-##
 #    plt.figure()
 #    plt.plot(Time_months1[0], U1[7],linewidth=3, color='darkorange')
 #    plt.ylabel("Thermal Power (W)",size=12)
@@ -658,7 +634,7 @@ for p in range(1):
 #plt.xlabel("Percentage Errors (%)")
 #plt.show()
 
- #SAVE THE OUTPUTS OF THE BOTH MODELS
+#SAVE THE OUTPUTS OF THE BOTH MODELS
 
 
 #metrics=np.array([metrics_zcore, metrics_z1, metrics_z2, metrics_z3, metrics_z4])
