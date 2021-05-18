@@ -6,14 +6,10 @@ These are test versions
 
 ## v6
 
-single zone, 5-state model
+single zone, 4-state model
 starting date: Jan 4 00:00
 
-## v7
+## v7 - 5 Zones
 
-tbd
-
-## v8
-
-5 zone, 5-states/zone model
+5 zone, 4-states/zone model
 starting date: Jan 4 00:00

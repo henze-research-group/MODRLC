@@ -6,16 +6,15 @@ Created on Tue Feb 12 18:25:17 2021
 """
 from __future__ import division
 
-#Import all the metrics to evaluate the accuracy of the N4SID Algorithm with the selected order
-import os
-from sklearn.metrics import r2_score
-from sklearn.metrics import median_absolute_error
-#from sklearn.metrics import mean_absolute_percentage_error
-from sklearn.metrics import mean_squared_error
 import datetime
-import matplotlib.dates as mdates
+# Import all the metrics to evaluate the accuracy of the N4SID Algorithm with the selected order
+import os
 
-from past.utils import old_div
+import matplotlib.dates as mdates
+# from sklearn.metrics import mean_absolute_percentage_error
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import median_absolute_error
+from sklearn.metrics import r2_score
 
 # Checking path to access other files
 try:
@@ -25,22 +24,21 @@ except ImportError:
 
     sys.path.append(os.pardir)
     from sippy import *
-import matplotlib.pyplot as plt
 import numpy as np
-from sippy import functionset as fset
 from sippy import functionsetSIM as fsetSIM
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.style.use('science')
-# Not sure how to get this to work. Document the command line call if you can.
-# plt.style.use('science')
 
-data_file = "SOM3N4SID_clean3.csv"
+data_file = "SOM3N4SID_clean3_v2.csv"
 if not os.path.exists(data_file):
     print("*************** Input data file does not exist! *****************")
-    print("Download from here: https://drive.google.com/open?id=1rEErpNNYGF4dKV2alRqC6h5-3TLFRadx")
+    print("Download from here: https://drive.google.com/open?id=1Bkl0lqUO57Ft-yoFbLtZYS4kK5-F0b94")
     print(f"Unzip (`7z x {data_file}.7z) and place resulting CSV into the same folder as this file.")
     exit(1)
+
+# ensure that the output dir exists
+os.makedirs('output', exist_ok=True)
 
 data = pd.read_csv(data_file)  # dataset from January to January 12 months
 df = pd.DataFrame(data)
@@ -53,6 +51,7 @@ df = df.loc[df['Time'] % 300.0 == 0]
 # Create a date time column based on Jan 1, 2019 data (no leapyear)
 basetime = 1546300800  # 1/1/2019 00:00:00 (epoch time in seconds)
 df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce')
+print(df['P1_T'])
 
 # Set when you want to start the test data (actual data start). The
 # 2020 year is a misnomer and is really just the same weather data ran twice (TODO: verify this)
@@ -64,9 +63,9 @@ df['datetime'] = pd.to_datetime(basetime + df['Time'], unit='s', errors='coerce'
 # test_date_end = datetime.datetime(2020, 1, 27, 6, 55, 0)
 # train_date_start = datetime.datetime(2019, 1, 31, 2, 20, 0)
 
-test_date_start = datetime.datetime(2020, 1, 1, 0, 0, 0)
-test_date_end = test_date_start + datetime.timedelta(days=4)
-train_date_start = test_date_start - datetime.timedelta(days=70)
+test_date_start = datetime.datetime(2020, 1, 4, 0, 0, 0)
+test_date_end = test_date_start + datetime.timedelta(days=2)
+train_date_start = test_date_start - datetime.timedelta(days=22)
 
 #MODEL 1 of N4SID: FIRST 4 MONTHS OF THE DATASET (JAN-FEB-MARCH-)
 
@@ -113,7 +112,7 @@ for p in range(1):
     # Order matters! --- Make sure to add the variable names to the 'list_of_var_colnames' so
     # that the resulting dataframe/csv file can be read into the dompc world with ease.
     list_of_vars = [
-        'T_OA', 'HgloHor', 'Core_OccN', 'CORE_IntGaiTot', 'Core_HeaPow', 'Core_FanPow', 'Core_OAVol',
+        'T_OA', 'HgloHor1', 'Core_OccN', 'CORE_IntGaiTot', 'Core_HeaPow', 'Core_FanPow', 'Core_OAVol',
         'P1_OccN', 'P1_IntGaiTot', 'P1_HeaPow', 'P1_FanPow', 'P1_OAVol',
         'P2_OccN', 'P2_IntGaiTot', 'P2_HeaPow', 'P2_FanPow', 'P2_OAVol',
         'P3_OccN', 'P3_IntGaiTot', 'P3_HeaPow', 'P3_FanPow', 'P3_OAVol',
@@ -286,7 +285,7 @@ for p in range(1):
 #                         [0.117847],
 #                         [0.751528],
 #                         [-0.365441],
-#                         
+#
 #                         ))
 
 
@@ -337,7 +336,6 @@ for p in range(1):
 #    a34=xid1_train[33,len(xid1_train[0])-1];
 #    a35=xid1_train[34,len(xid1_train[0])-1];
 
-
 #    # TRY ORDER=1
 #    sys_id1.x1=np.array([[a]])
     ## TRY ORDER=2
@@ -348,7 +346,7 @@ for p in range(1):
 #    sys_id1.x1=np.array([[a],[b],[c],[d]])
     ## TRY ORDER=5
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e]])
-#    ## TRY ORDER=6
+    ## TRY ORDER=6
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f]])
     ## TRY ORDER=7
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g]]);
@@ -364,17 +362,14 @@ for p in range(1):
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g],[h],[i],[l],[n],[o]])
     ## TRY ORDER=13
 #    sys_id1.x1=np.array([[a],[b],[c],[d],[e],[f],[g],[h],[i],[l],[n],[o],[q]])
-    
     ## TRY ORDER=20
-    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20]])  
-        
-  
-       ## TRY ORDER=30
-#    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20],[a21],[a22],[a23],[a24],[a25],[a26],[a27],[a28],[a29],[a30]])  
-  
+    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20]])
+    ## TRY ORDER=30
+#    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20],[a21],[a22],[a23],[a24],[a25],[a26],[a27],[a28],[a29],[a30]])
+
     ## TRY ORDER=35
-#    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20],[a21],[a22],[a23],[a24],[a25],[a26],[a27],[a28],[a29],[a30],[a31],[a32],[a33],[a34],[a35]])  
-    
+#    sys_id1.x1=np.array([[a1],[a2],[a3],[a4],[a5],[a6],[a7],[a8],[a9],[a10],[a11],[a12],[a13],[a14],[a15],[a16],[a17],[a18],[a19],[a20],[a21],[a22],[a23],[a24],[a25],[a26],[a27],[a28],[a29],[a30],[a31],[a32],[a33],[a34],[a35]])
+
 
     xid1_test, yid1_test = fsetSIM.SS_lsim_process_form(sys_id1.A, sys_id1.B, sys_id1.C, sys_id1.D, U_1_test, sys_id1.x1)
 
@@ -417,67 +412,7 @@ for p in range(1):
 #    print("Mean Square Errors: ")
 #    print(mse_core)
 
-    #Results of Temperature estimation of core zone
-    
-    mae_core=median_absolute_error(y_tot1_test[0],yid1_test[0]);
-#    mape_core= mean_absolute_percentage_error(y_tot1_test[0],yid1_test[0]);
-    mse_core=mean_squared_error(y_tot1_test[0],yid1_test[0]);
-    r2_core=r2_score(yid1_test[0], y_tot1_test[0]);
-    print(f"Determination Coefficient Core Zone: {r2_core}")
-    
-    
-#    #Results of Temperature estimation of zone 1
-    
-    mae_z1=median_absolute_error(y_tot1_test[1],yid1_test[1]);
-#    mape_z1= mean_absolute_percentage_error(y_tot1_test[1],yid1_test[1]);
-    mse_z1=mean_squared_error(y_tot1_test[1],yid1_test[1]);
-    r2_z1=(r2_score(yid1_test[1], y_tot1_test[1]));
-    
-    print(f"Determination Coefficient Perimeter Zone 1: {r2_z1}")
-    
-##    #Results of Temperature estimation of zone 2
-#    
-    mae_z2=median_absolute_error(y_tot1_test[2],yid1_test[2]);
-#    mape_z2= mean_absolute_percentage_error(y_tot1_test[2],yid1_test[2]);
-    mse_z2=mean_squared_error(y_tot1_test[2],yid1_test[2]);
-    r2_z2=(r2_score(yid1_test[2], y_tot1_test[2]));
-    
-    print(f"Determination Coefficient Perimeter Zone 2: {r2_z2}")
-#    
-#    
-##    #Results of Temperature estimation of zone 3
-##    
-#    
-    mae_z3=median_absolute_error(y_tot1_test[3],yid1_test[3]);
-#    mape_z3= mean_absolute_percentage_error(y_tot1_test[3],yid1_test[3]);
-    mse_z3=mean_squared_error(y_tot1_test[3],yid1_test[3]);
-    r2_z3=(r2_score(yid1_test[3], y_tot1_test[3]));
-    
-    print(f"Determination Coefficient Perimeter Zone 3: {r2_z3}")
-#    
-##    #Results of Temperature estimation of zone 4
-##    
-    
-    mae_z4=median_absolute_error(y_tot1_test[4],yid1_test[4]);
-#    mape_z4= mean_absolute_percentage_error(y_tot1_test[4],yid1_test[4]);
-    mse_z4=mean_squared_error(y_tot1_test[4],yid1_test[4]);
-    r2_z4=(r2_score(yid1_test[4], y_tot1_test[4]));
-    
-    print(f"Determination Coefficient Perimeter Zone 4: {r2_z4}")
-    
-##  
-    print(f"Mean Absolute Error Perimeter Core Zone : {mae_core} ")
-    print(f"Mean Absolute Error Perimeter Zone 1: {mae_z1} ")
-    print(f"Mean Absolute Error Perimeter Zone 2: {mae_z2} ")
-    print(f"Mean Absolute Error Perimeter Zone 3: {mae_z3} ")
-    print(f"Mean Absolute Error Perimeter Zone 4: {mae_z4} ")# ##    #Results of Temperature estimation of zone 2
-    
-    print(f"Mean Square Error Perimeter Core Zone : {mse_core} ")
-    print(f"Mean Square Error Perimeter Zone 1: {mse_z1} ")
-    print(f"Mean Square Error Perimeter Zone 2: {mse_z2} ")
-    print(f"Mean Square Error Perimeter Zone 3: {mse_z3} ")
-    print(f"Mean Square Error Perimeter Zone 4: {mse_z4} ")
-    
+
     print("System Matrices\n")
 # #
 #     mae_z2=median_absolute_error(y_tot1_test[2,0:t_2-t_1],yid1_test[2,0:t_2-t_1]);
@@ -517,14 +452,14 @@ for p in range(1):
 
     # SAVE ALL THE RESULTS HERE BEFORE PLOTTING!
     A1=sys_id1.A
-#    print(f"A1 is {A1}")
+    print(f"A1 is {A1}")
     B1=sys_id1.B
-#    print(f"B1 is {B1}")
+    print(f"B1 is {B1}")
     C1=sys_id1.C
-#    print(f"C1 is {C1}")
+    print(f"C1 is {C1}")
     D1=sys_id1.D
-#    print(f"D1 is {D1}")
-#    print(f"X1 is {sys_id1.x1}")
+    print(f"D1 is {D1}")
+    print(f"X1 is {sys_id1.x1}")
 
     # GET ALL KALMAN GAINS
     K1=sys_id1.K
@@ -534,19 +469,23 @@ for p in range(1):
     KA1=sys_id1.A_K
     KB1=sys_id1.B_K
 
+    y0 = y_tot1_test[:,0]
+
     # #SAVE ALL MATRICES
-#    np.save('output/matrix_A1.npy', A1)
-#    np.save('output/matrix_B1.npy', B1)
-#    np.save('output/matrix_C1.npy', C1)
-#    np.save('output/matrix_D1.npy', D1)
-#    np.save('output/sys_id1_x0.npy', sys_id1.x1)
+    np.save('output/matrix_A1.npy', A1)
+    np.save('output/matrix_B1.npy', B1)
+    np.save('output/matrix_C1.npy', C1)
+    np.save('output/matrix_D1.npy', D1)
+    np.save('output/sys_id1_x0.npy', sys_id1.x1)
+    np.save('output/y_initial.npy', y0)
 
     # Save off the test data for use with the MPC problem. Only save of the variables
     # of interest, plus the time and datetime.
-#    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
+    df1_test[['Time', 'datetime'] + list_of_vars].to_csv('output/u1test.csv')
+
 
     # #SAVE ALL KALMAN GAINS
-    #np.save('matrix_K1.npy', K1)
+    np.save('output/kalman_gain_K.npy', K1)
 
     # #SAVE ALL KALMAN MATRICES A_K B_K
     #np.save('matrix_AK1.npy', KA1)
@@ -572,7 +511,7 @@ for p in range(1):
     plt.xlabel("Time (months)",size=10)
     plt.ylim([5, 35])
     plt.show()
-    
+
     plt.figure()
     # Time_months1_test, Time_months1, y_tot1_test, and yid1... are list of lists (array of array, so grab [0])
     plt.plot(df1_test['datetime'], y_tot1_test[1]-273.15, linewidth=3, color='forestgreen')
@@ -587,13 +526,13 @@ for p in range(1):
     ax.set_minor_locator(mdates.DayLocator(interval=7))
     ax.set_minor_formatter(mdates.DateFormatter('%d'))
     plt.title("Comparison of original data and the output of the N4SID model. PERIMETER ZONE 1",size=20)
-    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])    
+    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])
     plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
     plt.ylim([5, 35])
     plt.show()
-    
+
     plt.figure()
     # Time_months1_test, Time_months1, y_tot1_test, and yid1... are list of lists (array of array, so grab [0])
     plt.plot(df1_test['datetime'], y_tot1_test[2]-273.15, linewidth=3, color='forestgreen')
@@ -608,13 +547,13 @@ for p in range(1):
     ax.set_minor_locator(mdates.DayLocator(interval=7))
     ax.set_minor_formatter(mdates.DateFormatter('%d'))
     plt.title("Comparison of original data and the output of the N4SID model. PERIMETER ZONE 2",size=20)
-    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])    
+    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])
     plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
     plt.ylim([5, 35])
-    plt.show()    
-    
+    plt.show()
+
     plt.figure()
     # Time_months1_test, Time_months1, y_tot1_test, and yid1... are list of lists (array of array, so grab [0])
     plt.plot(df1_test['datetime'], y_tot1_test[3]-273.15, linewidth=3, color='forestgreen')
@@ -629,13 +568,13 @@ for p in range(1):
     ax.set_minor_locator(mdates.DayLocator(interval=7))
     ax.set_minor_formatter(mdates.DateFormatter('%d'))
     plt.title("Comparison of original data and the output of the N4SID model. PERIMETER ZONE 3",size=20)
-    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])        
+    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])
     plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
     plt.ylim([5, 35])
-    plt.show()    
-    
+    plt.show()
+
     plt.figure()
     # Time_months1_test, Time_months1, y_tot1_test, and yid1... are list of lists (array of array, so grab [0])
     plt.plot(df1_test['datetime'], y_tot1_test[4]-273.15, linewidth=3, color='forestgreen')
@@ -650,13 +589,74 @@ for p in range(1):
     ax.set_minor_locator(mdates.DayLocator(interval=7))
     ax.set_minor_formatter(mdates.DateFormatter('%d'))
     plt.title("Comparison of original data and the output of the N4SID model. PERIMETER ZONE 4",size=20)
-    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])        
+    plt.legend(['Original system Testing', 'Identified system Testing, ' + method,'Original System Training',  'Identified system Training, ' + method])
     plt.ylabel("Indoor Air Temperature (ºC)", size=16)
     plt.grid()
     plt.xlabel("Time (months)",size=10)
     plt.ylim([5, 35])
-    plt.show()        
-    
+    plt.show()
+
+    #Results of Temperature estimation of core zone
+
+    mae_core=median_absolute_error(y_tot1_test[0],yid1_test[0]);
+#    mape_core= mean_absolute_percentage_error(y_tot1_test[0],yid1_test[0]);
+    mse_core=mean_squared_error(y_tot1_test[0],yid1_test[0]);
+    r2_core=r2_score(yid1_test[0], y_tot1_test[0]);
+    print(f"Determination Coefficient Core Zone: {r2_core}")
+
+
+#    #Results of Temperature estimation of zone 1
+
+    mae_z1=median_absolute_error(y_tot1_test[1],yid1_test[1]);
+#    mape_z1= mean_absolute_percentage_error(y_tot1_test[1],yid1_test[1]);
+    mse_z1=mean_squared_error(y_tot1_test[1],yid1_test[1]);
+    r2_z1=(r2_score(yid1_test[1], y_tot1_test[1]));
+
+    print(f"Determination Coefficient Perimeter Zone 1: {r2_z1}")
+
+##    #Results of Temperature estimation of zone 2
+#
+    mae_z2=median_absolute_error(y_tot1_test[2],yid1_test[2]);
+#    mape_z2= mean_absolute_percentage_error(y_tot1_test[2],yid1_test[2]);
+    mse_z2=mean_squared_error(y_tot1_test[2],yid1_test[2]);
+    r2_z2=(r2_score(yid1_test[2], y_tot1_test[2]));
+
+    print(f"Determination Coefficient Perimeter Zone 2: {r2_z2}")
+#
+#
+##    #Results of Temperature estimation of zone 3
+##
+#
+    mae_z3=median_absolute_error(y_tot1_test[3],yid1_test[3]);
+#    mape_z3= mean_absolute_percentage_error(y_tot1_test[3],yid1_test[3]);
+    mse_z3=mean_squared_error(y_tot1_test[3],yid1_test[3]);
+    r2_z3=(r2_score(yid1_test[3], y_tot1_test[3]));
+
+    print(f"Determination Coefficient Perimeter Zone 3: {r2_z3}")
+#
+##    #Results of Temperature estimation of zone 4
+##
+
+    mae_z4=median_absolute_error(y_tot1_test[4],yid1_test[4]);
+#    mape_z4= mean_absolute_percentage_error(y_tot1_test[4],yid1_test[4]);
+    mse_z4=mean_squared_error(y_tot1_test[4],yid1_test[4]);
+    r2_z4=(r2_score(yid1_test[4], y_tot1_test[4]));
+
+    print(f"Determination Coefficient Perimeter Zone 4: {r2_z4}")
+
+##
+    print(f"Mean Absolute Error Perimeter Core Zone : {mae_core} ")
+    print(f"Mean Absolute Error Perimeter Zone 1: {mae_z1} ")
+    print(f"Mean Absolute Error Perimeter Zone 2: {mae_z2} ")
+    print(f"Mean Absolute Error Perimeter Zone 3: {mae_z3} ")
+    print(f"Mean Absolute Error Perimeter Zone 4: {mae_z4} ")# ##    #Results of Temperature estimation of zone 2
+
+    print(f"Mean Square Error Perimeter Core Zone : {mse_core} ")
+    print(f"Mean Square Error Perimeter Zone 1: {mse_z1} ")
+    print(f"Mean Square Error Perimeter Zone 2: {mse_z2} ")
+    print(f"Mean Square Error Perimeter Zone 3: {mse_z3} ")
+    print(f"Mean Square Error Perimeter Zone 4: {mse_z4} ")
+
 #    plt.text(1, 10, "R2=",r2_core,size=18)
 #    plt.yticks(size=16)
 #    plt.xticks(size=10)
