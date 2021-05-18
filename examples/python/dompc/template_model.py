@@ -107,7 +107,7 @@ def template_model():
     energy_cost = total_power * elec_unit_cost
     demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
     # cost_function = discomfort + energy_cost + demand_cost
-    cost_function = cf_heating_power * elec_cost + 10000 * discomfort
+    cost_function = cf_heating_power * elec_cost + 100 * discomfort
     model.set_expression(expr_name='cost', expr=cost_function)
     model.setup()
 

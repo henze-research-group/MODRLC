@@ -17,11 +17,13 @@ def template_simulator(model):
     # Check if BOPTEST is up and running, if not, then default to just using the state-space
     # equations.
 
+    mp = ModelParameters()
     try:
         client = BoptestClient('http://localhost:5000')
         if client.name() is not None:
             print("BOPTEST is configured to act as simulator")
-            client.set_step(step=300)
+            client.set_step(step=mp.time_step)
+            client.initialize(start_time=mp.start_time)
         else:
             print("Defaulting to simulator=model")
             client = None
@@ -35,9 +37,6 @@ def template_simulator(model):
     else:
         simulator = BoptestSimulator(model)
 
-    mp = ModelParameters()
-
-    # simulator.set_param(t_step=0.5)
     # We are running the MPC model at t=300 seconds (5 min).
     simulator.set_param(t_step=mp.time_step)
 

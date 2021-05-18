@@ -168,6 +168,7 @@ class ModelParameters:
         self.time_step = 300
         # TODO: This should be one day once things are working.
         self.n_horizon = 96 #  8 hours ahead  -- 1 hour is 12 steps in the horizon
+        self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
 
         self.tvp_template = None
         self.tvp_template_mhe = None

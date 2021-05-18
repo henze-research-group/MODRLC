@@ -121,9 +121,9 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         # map do-mpc to u
         u = {
             "oveHCSet1_u": float(self.sim_p_num['_u']) / 6000,
-            "oveHCSet1_activate": 1,
-            "oveVFRSet1_u": 0.7,
-            "oveVFRSet1_activate": 1
+            # "oveHCSet1_activate": 1,
+            # "oveVFRSet1_u": 0.45,
+            # "oveVFRSet1_activate": 1
         }
         return u
 
