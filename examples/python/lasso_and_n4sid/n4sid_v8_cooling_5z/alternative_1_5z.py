@@ -70,7 +70,7 @@ print(df['P1_T'])
 # test_date_end = datetime.datetime(2020, 1, 27, 6, 55, 0)
 # train_date_start = datetime.datetime(2019, 1, 31, 2, 20, 0)
 
-test_date_start = datetime.datetime(2020, 7, 6, 0, 0, 0)
+test_date_start = datetime.datetime(2019, 7, 7, 0, 0, 0)
 test_date_end = test_date_start + datetime.timedelta(days=4)
 train_date_start = test_date_start - datetime.timedelta(days=14)
 
