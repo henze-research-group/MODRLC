@@ -71,8 +71,8 @@ print(df['P1_T'])
 # train_date_start = datetime.datetime(2019, 1, 31, 2, 20, 0)
 
 test_date_start = datetime.datetime(2019, 7, 7, 0, 0, 0)
-test_date_end = test_date_start + datetime.timedelta(days=4)
-train_date_start = test_date_start - datetime.timedelta(days=14)
+test_date_end = test_date_start + datetime.timedelta(days=3)
+train_date_start = test_date_start - datetime.timedelta(days=68)
 
 #MODEL 1 of N4SID: FIRST 4 MONTHS OF THE DATASET (JAN-FEB-MARCH-)
 
@@ -119,11 +119,11 @@ for p in range(1):
     # Order matters! --- Make sure to add the variable names to the 'list_of_var_colnames' so
     # that the resulting dataframe/csv file can be read into the dompc world with ease.
     list_of_vars = [
-            'T_OA', 'HgloHor1', 'CORE_IntGaiTot', 'Core_CooPow', 'Core_FanPow', 'Core_OAVol',
-             'P1_IntGaiTot', 'P1_CooPow', 'P1_FanPow', 'P1_OAVol',
-             'P2_IntGaiTot', 'P2_CooPow', 'P2_FanPow', 'P2_OAVol',
-             'P3_IntGaiTot', 'P3_CooPow', 'P3_FanPow', 'P3_OAVol',
-             'P4_IntGaiTot', 'P4_CooPow', 'P4_FanPow', 'P4_OAVol',
+            'T_OA', 'HgloHor1', 'CORE_IntGaiTot', 'Core_CooPow', 'Core_OAVol','Core_FanVol',
+             'P1_IntGaiTot', 'P1_CooPow',  'P1_OAVol','P1_FanVol',
+             'P2_IntGaiTot', 'P2_CooPow',  'P2_OAVol','P2_FanVol',
+             'P3_IntGaiTot', 'P3_CooPow',  'P3_OAVol','P3_FanVol',
+             'P4_IntGaiTot', 'P4_CooPow',  'P4_OAVol','P4_FanVol',
         
 #'T_OA', 'HgloHor1', 'Core_OccN', 'CORE_IntGaiTot', 'Core_CooPow', 'Core_FanPow', 'Core_OAVol',
 #'P1_OccN', 'P1_IntGaiTot', 'P1_CooPow', 'P1_FanPow', 'P1_OAVol',
@@ -771,6 +771,30 @@ for p in range(1):
     y0= y_tot1_test[:,0]
     np.save('y_initial.npy', y0)    
 ##
+    
+    
+    plt.figure()
+    # Time_months1_test, Time_months1, y_tot1_test, and yid1... are list of lists (array of array, so grab [0])
+    plt.plot(df1_test['datetime'], U_1_test[3]-273.15, linewidth=3, color='red')
+    plt.plot(df1['datetime'], U_1[3]-273.15,linewidth=1.5, color='orange')
+    # Specify the format - %b gives us Jan, Feb...
+    fmt = mdates.DateFormatter('%b')
+    ax = plt.gca().xaxis
+    ax.set_major_locator(mdates.MonthLocator())
+    ax.set_major_formatter(fmt)
+    ax.set_minor_locator(mdates.DayLocator(interval=7))
+    ax.set_minor_formatter(mdates.DateFormatter('%d'))
+    plt.title("Input of the N4SID model. CORE ZONE Cooling power",size=20)
+    plt.legend(['Cooling power during Testing','OCooling power during Training'])        
+    plt.ylabel("Cooling power (W)", size=16)
+    plt.grid()
+    plt.xlabel("Time (months)",size=10)
+#    plt.ylim([5, 35])
+    plt.show() 
+    
+    
+    
+    
 #    plt.figure()
 #    plt.plot(Time_months1[0], U1[7],linewidth=3, color='darkorange')
 #    plt.ylabel("Thermal Power (W)",size=12)
