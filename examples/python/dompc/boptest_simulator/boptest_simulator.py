@@ -2,6 +2,7 @@
 # implemented to replace this with BOPTEST.
 # Author: Nicholas Long <nllong>
 
+import sys
 #
 #   This file is part of do-mpc
 #
@@ -24,11 +25,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with do-mpc.  If not, see <http://www.gnu.org/licenses/>.
 from pathlib import Path
-import sys
-import json
 
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'boptest_client'))
-from boptest_client import BoptestClient
 
 from casadi.tools import *
 from do_mpc.data import Data
@@ -113,18 +111,95 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         self._t0 = np.array([0])
         self.data.init_storage()
 
-    def _calculate_u(self, heating_power ):
+    def _default_u(self):
+        return {
+            'oveZero_u': 0,
+            'oveZero_activate': 1,
+            'oveZero1_u': 0,
+            'oveZero1_activate': 1,
+            'oveZero2_u': 0,
+            'oveZero2_activate': 1,
+            'oveZero3_u': 0,
+            'oveZero3_activate': 1,
+            'oveZero4_u': 0,
+            'oveZero4_activate': 1,
+
+            'oveHCSet_u': 0,
+            'oveHCSet_activate': 0,
+            'oveHCSet1_u': 0,
+            'oveHCSet1_activate': 0,
+            'oveHCSet2_u': 0,
+            'oveHCSet2_activate': 0,
+            'oveHCSet3_u': 0,
+            'oveHCSet3_activate': 0,
+            'oveHCSet4_u': 0,
+            'oveHCSet4_activate': 0,
+
+            'oveCC_u': 0,
+            'oveCC_activate': 0,
+            'oveCC1_u': 0,
+            'oveCC1_activate': 0,
+            'oveCC2_u': 0,
+            'oveCC2_activate': 0,
+            'oveCC3_u': 0,
+            'oveCC3_activate': 0,
+            'oveCC4_u': 0,
+            'oveCC4_activate': 0,
+
+            'oveDSet_u': 1,
+            'oveDSet_activate': 1,
+            'oveDSet1_u': 1,
+            'oveDSet1_activate': 1,
+            'oveDSet2_u': 1,
+            'oveDSet2_activate': 1,
+            'oveDSet3_u': 1,
+            'oveDSet3_activate': 1,
+            'oveDSet4_u': 1,
+            'oveDSet4_activate': 1,
+
+            'oveVFRSet_u': 0.08,
+            'oveVFRSet_activate': 1,
+            'oveVFRSet1_u': 0.08,
+            'oveVFRSet1_activate': 1,
+            'oveVFRSet2_u': 0.08,
+            'oveVFRSet2_activate': 1,
+            'oveVFRSet3_u': 0.08,
+            'oveVFRSet3_activate': 1,
+            'oveVFRSet4_u': 0.08,
+            'oveVFRSet4_activate': 1,
+
+            'oveHeaSet_u': 273.15 + 21,
+            'oveHeaSet_activate': 0,
+            'oveHeaSet1_u': 287.15,
+            'oveHeaSet1_activate': 0,  # do not enable this
+            'oveHeaSet2_u': 273.15 + 21,
+            'oveHeaSet2_activate': 0,
+            'oveHeaSet3_u': 273.15 + 21,
+            'oveHeaSet3_activate': 0,
+            'oveHeaSet4_u': 273.15 + 21,
+            'oveHeaSet4_activate': 0,
+
+            'oveCooSet_u': 273.15 + 24,
+            'oveCooSet_activate': 0,
+            'oveCooSet1_u': 273.15 + 24,
+            'oveCooSet1_activate': 0,
+            'oveCooSet2_u': 273.15 + 24,
+            'oveCooSet2_activate': 0,
+            'oveCooSet3_u': 273.15 + 24,
+            'oveCooSet3_activate': 0,
+            'oveCooSet4_u': 273.15 + 24,
+            'oveCooSet4_activate': 0
+        }
+
+    def _calculate_u(self, heating_power):
         """Take the _u vector from do-mpc and configure it to run with the BOPTEST
         """
         # do-mpc vector is
         print(f"do-mpc vector is: {float(self.sim_p_num['_u'])}")
         # map do-mpc to u
-        u = {
-            "oveHCSet1_u": float(self.sim_p_num['_u']) / 6000,
-            # "oveHCSet1_activate": 1,
-            # "oveVFRSet1_u": 0.45,
-            # "oveVFRSet1_activate": 1
-        }
+        u = self._default_u()
+        u['oveHCSet1_u'] = float(self.sim_p_num['_u']) / 6000
+        u['oveHCSet1_activate'] = 1
         return u
 
     def _check_validity(self):
@@ -554,35 +629,39 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             # previous y_next in order to match structures:
             old_y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
 
-            #determine what this looks like in BOPTEST-land
             y_next = self.client.advance(control_u=self._calculate_u(None))
             t_room = y_next['senTRoom1_y']
+            print(f"t_room is {t_room}; ssid model t_room is {old_y_next}")
+
+            self.data.update(_x=x0)
+            self.data.update(_u=u0)
+            self.data.update(_z=z0)
+            self.data.update(_tvp=tvp0)
+            self.data.update(_p=p0)
+            self.data.update(_aux=aux0)
+            self.data.update(_time=t0)
+
+            self._x0.master = x_next
+            self._z0.master = z0
+            self._u0.master = u0
+            self._t0 = self._t0 + self.t_step
+
             return t_room
-            print(f"t_room is {t_room}")
-            # with MHE, old_y_next is a single value (for now)
-            # old_y_next[0] = t_room
-            # without MHE
-            old_y_next[9] = t_room
-            y_next = old_y_next
-            # print(f"y_next is: {json.dumps(y_next, indent=2)}")
-            # print(f"old_y_next is: {json.dumps(old_y_next, indent=2)}")
-            # need to merge the y_next with the do-mpc style structure
-            # y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
         else:
             # Call measurement function
             y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
 
-        self.data.update(_x=x0)
-        self.data.update(_u=u0)
-        self.data.update(_z=z0)
-        self.data.update(_tvp=tvp0)
-        self.data.update(_p=p0)
-        self.data.update(_aux=aux0)
-        self.data.update(_time=t0)
+            self.data.update(_x=x0)
+            self.data.update(_u=u0)
+            self.data.update(_z=z0)
+            self.data.update(_tvp=tvp0)
+            self.data.update(_p=p0)
+            self.data.update(_aux=aux0)
+            self.data.update(_time=t0)
 
-        self._x0.master = x_next
-        self._z0.master = z0
-        self._u0.master = u0
-        self._t0 = self._t0 + self.t_step
+            self._x0.master = x_next
+            self._z0.master = z0
+            self._u0.master = u0
+            self._t0 = self._t0 + self.t_step
 
-        return y_next.full()
+            return y_next.full()
