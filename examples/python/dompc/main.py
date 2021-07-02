@@ -142,9 +142,7 @@ x_state_var_cnt = mp.a.shape[0]
 # 288 5-minute intervals per day
 for k in range(288 * 2):
     # for k in range(10):
-    print(f"{k}: {x0}")
-    # This works with BOPTEST only. TODO: Need to configure both the
-    # StateEstimator feedback in addition to this method.
+    # print(f"{k}: {x0}")
     u0 = mpc.make_step(x0)
     y_measured = simulator.make_step(u0)
 
@@ -162,7 +160,7 @@ for k in range(288 * 2):
                 [y_measured],
                 u0[0]
             ])))
-        print(x0)
+        # print(x0)
 
     if show_animation:
         # graphics.plot_results(t_ind=k)
