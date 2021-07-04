@@ -177,7 +177,7 @@ for k in range(288 * 2):
         # sim_plot.reset_axes()
 
         plt.show()
-        plt.pause(0.01)
+        plt.pause(0.005)
         # plt.pause(30)
 
 print(f"Finished. Store results is set to {store_results}")
