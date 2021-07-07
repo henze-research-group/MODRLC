@@ -56,8 +56,8 @@ class ModelParameters:
         # print(f"D: {self.d.shape}")
 
         # Additional states
-        #                                      Initial T, Initial Heating Power
-        self.additional_x_states_inits = np.array([[293], [0]])
+        #   --  Initial T, Initial Heating Power, Initial OA Ventilation
+        self.additional_x_states_inits = np.array([[293], [0], [0.08]])
         # The min_x is +/- 10 for the number of rows of A which is the # of states
         self.min_x = np.array([[-5]] * self.a.shape[0])
         self.max_x = - self.min_x
@@ -72,7 +72,8 @@ class ModelParameters:
         self.min_cooling = 0
         self.max_cooling = 0
         self.min_heating = 0
-        self.max_heating = 6000
+        self.max_heating = 13000
+        self.heating_gain = 0.5
         self.min_fan_power = 0
         self.max_fan_power = 500
 
@@ -133,13 +134,13 @@ class ModelParameters:
             "data_column_name": "P1_FanPow",
             "local_var_name": "P1_FanPow",
         })
-        self.variables.append({
-            "type": "tvp",
-            "data_source": "u1test",
-            "var_name": "OAVent",
-            "data_column_name": "P1_OAVol",
-            "local_var_name": "oa_vent",
-        })
+        # self.variables.append({
+        #     "type": "tvp",
+        #     "data_source": "u1test",
+        #     "var_name": "OAVent",
+        #     "data_column_name": "P1_OAVol",
+        #     "local_var_name": "oa_vent",
+        # })
 
         # tvp_setpoint_data
         self.variables.append({

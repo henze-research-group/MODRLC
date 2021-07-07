@@ -75,7 +75,7 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=8, ncols=1, sharex=True, figsize=(10, 12))
+fig, ax = plt.subplots(nrows=8, ncols=1, sharex=True, figsize=(8, 10))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
@@ -102,7 +102,8 @@ mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
 
 axis += 1
 ax[axis].set_title('Outside Air (m3/s)')
-mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
+# mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
+mpc_plot.add_line('_x', 'oa_vent_new', ax[axis])
 
 axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
@@ -144,7 +145,7 @@ for k in range(288 * 2):
     # for k in range(10):
     # print(f"{k}: {x0}")
     u0 = mpc.make_step(x0)
-    y_measured = simulator.make_step(u0)
+    y_measured, oa_room = simulator.make_step(u0)
 
     if boptest_client is None:
         # we are running with no model mismatch, just pass the data back
@@ -158,7 +159,8 @@ for k in range(288 * 2):
             x_next[0:x_state_var_cnt],
             np.array([
                 [y_measured],
-                u0[0]
+                u0[0],
+                [oa_room],
             ])))
         # print(x0)
 

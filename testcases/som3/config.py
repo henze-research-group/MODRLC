@@ -4,6 +4,7 @@ This file is used to configure the test case.
 
 """
 
+
 def get_config():
     '''Returns the configuration structure for the test case.
 
@@ -21,11 +22,12 @@ def get_config():
     '''
 
     config = {
-    # Enter configuration information
-    'fmupath'  : 'models/wrapped.fmu',
-    'step'     : 60,
-    'horizon'  : 86400,
-    'interval' : 3600
+        # Enter configuration information
+        'fmupath': 'models/wrapped.fmu',
+        'step': 60,
+        'horizon': 86400,
+        'interval': 3600,
+        'scenario': {'electricity_price': 'constant'}
     }
 
     return config

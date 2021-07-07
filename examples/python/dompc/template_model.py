@@ -19,6 +19,7 @@ def template_model():
     # additional state for indoor temperature -- mainly for plotting right now
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
     cf_heating_power = model.set_variable(var_type='_x', var_name='cf_heating_power', shape=(1, 1))
+    oa_vent_new = model.set_variable(var_type='_x', var_name='oa_vent_new', shape=(1, 1))
 
     # TVP Variables
     for var in mp.variables:
@@ -58,6 +59,9 @@ def template_model():
     peak_demand = model.set_expression('peak_demand', fmax(total_power, peak_demand))
     # min_heating_power = model.set_expression('min_heating_power', heating_power)
 
+    # caclulate the OA vent to be a setting if the heating is on.
+    model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.08, 0.11))
+
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
     u_array = vertcat(
@@ -65,9 +69,9 @@ def template_model():
         h_glo_hor,
         occupancy_ratio,  # number of occupants
         P1_IntGaiTot,  # internal gains convective flow
-        heating_power,
+        heating_power * mp.heating_gain,  # send the ROM a portion of the heating power (something to do with the ROM has a lower value of heating than the actual model).
         P1_FanPow,
-        oa_vent     # OA volumetric flow
+        oa_vent_new  # 0.08 - 0.11     # OA volumetric flow
     )
 
     # LTI equations
@@ -107,7 +111,7 @@ def template_model():
     energy_cost = total_power * elec_unit_cost
     demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
     # cost_function = discomfort + energy_cost + demand_cost
-    cost_function = cf_heating_power * elec_cost + 100000 * discomfort
+    cost_function = cf_heating_power * elec_cost + 1E6 * discomfort
     model.set_expression(expr_name='cost', expr=cost_function)
     model.setup()
 

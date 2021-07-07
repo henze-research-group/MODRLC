@@ -198,7 +198,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         print(f"do-mpc vector is: {float(self.sim_p_num['_u'])}")
         # map do-mpc to u
         u = self._default_u()
-        u['oveHCSet1_u'] = float(self.sim_p_num['_u']) / 6000
+        # NL -- make the heating value appear larger to the simulation to overcome some balance issues
+        u['oveHCSet1_u'] = float(self.sim_p_num['_u']) / 6500
         u['oveHCSet1_activate'] = 1
         return u
 
@@ -631,7 +632,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
             y_next = self.client.advance(control_u=self._calculate_u(None))
             t_room = y_next['senTRoom1_y']
-            print(f"t_room is {t_room}; ssid model t_room is {old_y_next}")
+            oa_room = y_next['senOAVol1_y']
+            print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
 
             self.data.update(_x=x0)
             self.data.update(_u=u0)
@@ -646,7 +648,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             self._u0.master = u0
             self._t0 = self._t0 + self.t_step
 
-            return t_room
+            return [t_room, oa_room]
         else:
             # Call measurement function
             y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
