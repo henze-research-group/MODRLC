@@ -134,13 +134,13 @@ class ModelParameters:
             "data_column_name": "P1_FanPow",
             "local_var_name": "P1_FanPow",
         })
-        # self.variables.append({
-        #     "type": "tvp",
-        #     "data_source": "u1test",
-        #     "var_name": "OAVent",
-        #     "data_column_name": "P1_OAVol",
-        #     "local_var_name": "oa_vent",
-        # })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "u1test",
+            "var_name": "OAVent",
+            "data_column_name": "P1_OAVol",
+            "local_var_name": "oa_vent",
+        })
 
         # tvp_setpoint_data
         self.variables.append({
@@ -161,8 +161,8 @@ class ModelParameters:
             "type": "tvp",
             "data_source": "u1test_tvps",
             "var_name": "ElecCost",
-            "data_column_name": "elec_cost",
-            "local_var_name": "elec_cost",
+            "data_column_name": "elec_cost_multiplier",
+            "local_var_name": "elec_cost_multiplier",
         })
 
         # running configuration

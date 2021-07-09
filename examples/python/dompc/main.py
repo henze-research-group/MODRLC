@@ -145,12 +145,16 @@ for k in range(288 * 2):
     # for k in range(10):
     # print(f"{k}: {x0}")
     u0 = mpc.make_step(x0)
-    y_measured, oa_room = simulator.make_step(u0)
 
     if boptest_client is None:
+        # When not using boptest, then the y_measures is all the states, no need to pull
+        # out other states
+        y_measured = simulator.make_step(u0)
         # we are running with no model mismatch, just pass the data back
         x0 = estimator.make_step(y_measured)
     else:
+        y_measured, oa_room = simulator.make_step(u0)
+
         y_pred = mp.c @ x0[0:x_state_var_cnt]
 
         x_next = copy.copy(x0)
@@ -161,7 +165,8 @@ for k in range(288 * 2):
                 [y_measured],
                 u0[0],
                 [oa_room],
-            ])))
+            ])
+        ))
         # print(x0)
 
     if show_animation:

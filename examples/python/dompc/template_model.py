@@ -21,6 +21,8 @@ def template_model():
     cf_heating_power = model.set_variable(var_type='_x', var_name='cf_heating_power', shape=(1, 1))
     oa_vent_new = model.set_variable(var_type='_x', var_name='oa_vent_new', shape=(1, 1))
 
+    # try setting
+    # mod.HVAC.oveDamSet.activate.y
     # TVP Variables
     for var in mp.variables:
         if var["type"] == "tvp":
@@ -59,8 +61,9 @@ def template_model():
     peak_demand = model.set_expression('peak_demand', fmax(total_power, peak_demand))
     # min_heating_power = model.set_expression('min_heating_power', heating_power)
 
-    # caclulate the OA vent to be a setting if the heating is on.
-    model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.08, 0.11))
+    # calculate the OA vent to be a setting if the heating is on.
+    model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.061, 0.11))
+    # model.set_rhs("oa_vent_new", oa_vent)
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
@@ -71,6 +74,8 @@ def template_model():
         P1_IntGaiTot,  # internal gains convective flow
         heating_power * mp.heating_gain,  # send the ROM a portion of the heating power (something to do with the ROM has a lower value of heating than the actual model).
         P1_FanPow,
+        # oa_vent is from the tvp file (which is directly from the spawn results u1test)
+        # oa_vent
         oa_vent_new  # 0.08 - 0.11     # OA volumetric flow
     )
 
@@ -111,7 +116,7 @@ def template_model():
     energy_cost = total_power * elec_unit_cost
     demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
     # cost_function = discomfort + energy_cost + demand_cost
-    cost_function = cf_heating_power * elec_cost + 1E6 * discomfort
+    cost_function = cf_heating_power * elec_cost_multiplier + 1E6 * discomfort
     model.set_expression(expr_name='cost', expr=cost_function)
     model.setup()
 

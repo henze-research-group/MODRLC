@@ -113,16 +113,16 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
     def _default_u(self):
         return {
-            'oveZero_u': 0,
-            'oveZero_activate': 1,
-            'oveZero1_u': 0,
-            'oveZero1_activate': 1,
-            'oveZero2_u': 0,
-            'oveZero2_activate': 1,
-            'oveZero3_u': 0,
-            'oveZero3_activate': 1,
-            'oveZero4_u': 0,
-            'oveZero4_activate': 1,
+            # 'oveZero_u': 0,
+            # 'oveZero_activate': 1,
+            # 'oveZero1_u': 0,
+            # 'oveZero1_activate': 1,
+            # 'oveZero2_u': 0,
+            # 'oveZero2_activate': 1,
+            # 'oveZero3_u': 0,
+            # 'oveZero3_activate': 1,
+            # 'oveZero4_u': 0,
+            # 'oveZero4_activate': 1,
 
             'oveHCSet_u': 0,
             'oveHCSet_activate': 0,
@@ -147,26 +147,26 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             'oveCC4_activate': 0,
 
             'oveDSet_u': 1,
-            'oveDSet_activate': 1,
+            'oveDSet_activate': 0,
             'oveDSet1_u': 1,
-            'oveDSet1_activate': 1,
+            'oveDSet1_activate': 0,
             'oveDSet2_u': 1,
-            'oveDSet2_activate': 1,
+            'oveDSet2_activate': 0,
             'oveDSet3_u': 1,
-            'oveDSet3_activate': 1,
+            'oveDSet3_activate': 0,
             'oveDSet4_u': 1,
-            'oveDSet4_activate': 1,
+            'oveDSet4_activate': 0,
 
             'oveVFRSet_u': 0.08,
-            'oveVFRSet_activate': 1,
+            'oveVFRSet_activate': 0,
             'oveVFRSet1_u': 0.08,
-            'oveVFRSet1_activate': 1,
+            'oveVFRSet1_activate': 0,
             'oveVFRSet2_u': 0.08,
-            'oveVFRSet2_activate': 1,
+            'oveVFRSet2_activate': 0,
             'oveVFRSet3_u': 0.08,
-            'oveVFRSet3_activate': 1,
+            'oveVFRSet3_activate': 0,
             'oveVFRSet4_u': 0.08,
-            'oveVFRSet4_activate': 1,
+            'oveVFRSet4_activate': 90,
 
             'oveHeaSet_u': 273.15 + 21,
             'oveHeaSet_activate': 0,
@@ -199,8 +199,12 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         # map do-mpc to u
         u = self._default_u()
         # NL -- make the heating value appear larger to the simulation to overcome some balance issues
+        #       sim_p_num['_u'] will be between 0 and heating_max (typ 13000). So oveHCSet1_u can be
+        #       greater than 1.
         u['oveHCSet1_u'] = float(self.sim_p_num['_u']) / 6500
         u['oveHCSet1_activate'] = 1
+
+        print(f"Setting power to {u['oveHCSet1_u']}")
         return u
 
     def _check_validity(self):
@@ -633,6 +637,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             y_next = self.client.advance(control_u=self._calculate_u(None))
             t_room = y_next['senTRoom1_y']
             oa_room = y_next['senOAVol1_y']
+            # oa_room = 0.11
             print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
 
             self.data.update(_x=x0)
