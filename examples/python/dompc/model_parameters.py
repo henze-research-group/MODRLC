@@ -18,7 +18,7 @@ class ModelParameters:
             self.b = np.load(p / 'output' / 'matrix_B1.npy')
             self.c = np.load(p / 'output' / 'matrix_C1.npy')
             self.d = np.load(p / 'output' / 'matrix_D1.npy')
-            self.K= np.load(p / 'output' / 'kalman_gain_K.npy')
+            self.K = np.load(p / 'output' / 'kalman_gain_K.npy')
             self.x0 = np.load(p / 'output' / 'sys_id1_x0.npy')
 
             # TODO: need to write a check to make sure these files exist.. someday
@@ -56,8 +56,8 @@ class ModelParameters:
         # print(f"D: {self.d.shape}")
 
         # Additional states
-        #   --  Initial T, Initial Heating Power, Initial OA Ventilation
-        self.additional_x_states_inits = np.array([[293], [0], [0.08]])
+        #   --  Initial T Zn1, Initial Heating Power Zn1, Initial OA Ventilation Zn1
+        self.additional_x_states_inits = np.array([[293], [0], [0.061]])
         # The min_x is +/- 10 for the number of rows of A which is the # of states
         self.min_x = np.array([[-5]] * self.a.shape[0])
         self.max_x = - self.min_x
@@ -72,8 +72,10 @@ class ModelParameters:
         self.min_cooling = 0
         self.max_cooling = 0
         self.min_heating = 0
-        self.max_heating = 13000
-        self.heating_gain = 0.5
+        self.max_heating = 11316.80
+        self.heating_gain = 0.43  # 1 - (6500/11316.8)
+        # self.min_oa_damp_1 = 0.25
+        # self.max_oa_damp_1 = 1
         self.min_fan_power = 0
         self.max_fan_power = 500
 
@@ -169,7 +171,17 @@ class ModelParameters:
         self.time_step = 300
         # TODO: This should be one day once things are working.
         self.n_horizon = 96 #  8 hours ahead  -- 1 hour is 12 steps in the horizon
-        self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
+
+        # Revert to this start time when generating final datset
+        # self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
+        # self.start_time_offset = 0
+
+        # start closer to when occupancy with start
+        # 280800 == 1/4/20 06:00
+        self.start_time = 280800
+        # if the datafiles are not starting at the same time as `start_time` then pass in an offest to
+        # jump to the right index. Start_time - first row of data time (in seconds)
+        self.start_time_offset = 280800 - 259200
 
         self.tvp_template = None
         self.tvp_template_mhe = None
@@ -179,7 +191,7 @@ class ModelParameters:
         if self.tvp_template is None:
             raise Exception("Need to set tvp_template in the ModelParameters instance.")
 
-        ind = int(t_now / self.time_step)
+        ind = int((self.start_time_offset + t_now) / self.time_step)
 
         # populate all of the time varying parameters
         for var in self.variables:
@@ -203,7 +215,8 @@ class ModelParameters:
         if self.tvp_template_mhe is None:
             raise Exception("Need to set tvp_template_mhe in the ModelParameters instance.")
 
-        ind = int(t_now / self.time_step)
+        ind = int((self.start_time_offset + t_now) / self.time_step)
+        print(f"Here is the index {ind}")
 
         # populate all of the time varying parameters
         for var in self.variables:
@@ -227,7 +240,8 @@ class ModelParameters:
         if self.tvp_template_simulator is None:
             raise Exception("Need to set tvp_template_simulator in the ModelParameters instance.")
 
-        ind = int(t_now / self.time_step)
+        ind = int((self.start_time_offset + t_now) / self.time_step)
+        print(f"Here is the index {ind}")
 
         # populate all of the time varying parameters
         for var in self.variables:
@@ -245,6 +259,8 @@ class ModelParameters:
 
             # For the simulator case only return a single value
             self.tvp_template_simulator[var["var_name"]] = loaded_data[0]
+
+            # print(f"Verifying timestamp of {data_source['datetime'].values[ind]}")
 
         return self.tvp_template_simulator
 

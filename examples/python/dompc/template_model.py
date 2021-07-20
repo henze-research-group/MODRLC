@@ -62,7 +62,9 @@ def template_model():
     # min_heating_power = model.set_expression('min_heating_power', heating_power)
 
     # calculate the OA vent to be a setting if the heating is on.
-    model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.061, 0.11))
+    # if damper is open all the time, then it will have 0.037 m3/s
+    model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.03, 0.15))
+    # model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.061, 0.11))
     # model.set_rhs("oa_vent_new", oa_vent)
 
     # In some editors, the variables will not show as being known, this is because of the
@@ -72,9 +74,10 @@ def template_model():
         h_glo_hor,
         occupancy_ratio,  # number of occupants
         P1_IntGaiTot,  # internal gains convective flow
-        heating_power * mp.heating_gain,  # send the ROM a portion of the heating power (something to do with the ROM has a lower value of heating than the actual model).
+        heating_power, # * mp.heating_gain,  # send the ROM a portion of the heating power (something to do with the ROM has a lower value of heating than the actual model).
         P1_FanPow,
-        # oa_vent is from the tvp file (which is directly from the spawn results u1test)
+        # oa_vent is from the tvp file (which is directly from the spawn results u1test). oa_vent_new is calculated
+        # from the heating_power
         # oa_vent
         oa_vent_new  # 0.08 - 0.11     # OA volumetric flow
     )
