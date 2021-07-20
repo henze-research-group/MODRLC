@@ -216,7 +216,6 @@ class ModelParameters:
             raise Exception("Need to set tvp_template_mhe in the ModelParameters instance.")
 
         ind = int((self.start_time_offset + t_now) / self.time_step)
-        print(f"Here is the index {ind}")
 
         # populate all of the time varying parameters
         for var in self.variables:
@@ -241,7 +240,6 @@ class ModelParameters:
             raise Exception("Need to set tvp_template_simulator in the ModelParameters instance.")
 
         ind = int((self.start_time_offset + t_now) / self.time_step)
-        print(f"Here is the index {ind}")
 
         # populate all of the time varying parameters
         for var in self.variables:
