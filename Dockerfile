@@ -18,13 +18,13 @@ WORKDIR $HOME
 RUN mkdir $HOME/MODELICAPATH && mkdir git && \
     cd git && \
     git lfs install && \
-    git clone https://github.com/ibpsa/modelica-ibpsa.git && \
-    git clone https://github.com/open-ideas/IDEAS.git && \
-    git clone https://github.com/kbenne/modelica-buildings.git && \
-    cd modelica-buildings && git checkout issue2054_self_contained_spawn &&  cd .. && \
-    ln -s $HOME/git/IDEAS/IDEAS $HOME/MODELICAPATH/IDEAS && \
+    #git clone https://github.com/ibpsa/modelica-ibpsa.git && \
+    #git clone https://github.com/open-ideas/IDEAS.git && \
+    git clone https://github.com/lbl-srg/modelica-buildings.git && \
+    #cd modelica-buildings && git checkout issue2054_self_contained_spawn &&  cd .. && \
+    #ln -s $HOME/git/IDEAS/IDEAS $HOME/MODELICAPATH/IDEAS && \
     ln -s $HOME/git/modelica-buildings/Buildings $HOME/MODELICAPATH/Buildings && \
-    ln -s $HOME/git/modelica-ibpsa/IBPSA $HOME/MODELICAPATH/IBPSA && \
+    #ln -s $HOME/git/modelica-ibpsa/IBPSA $HOME/MODELICAPATH/IBPSA && \
     ln -s $ROOT_DIR/JModelica/ThirdParty/MSL/Modelica $HOME/MODELICAPATH/Modelica && \
     ln -s $ROOT_DIR/JModelica/ThirdParty/MSL/ModelicaServices $HOME/MODELICAPATH/ModelicaServices
 ENV MODELICAPATH $HOME/MODELICAPATH
