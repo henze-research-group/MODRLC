@@ -1201,8 +1201,7 @@ end controller;
         dp_nominal=dp_nominal,
         energyDynamics=Modelica.Fluid.Types.Dynamics.FixedInitial,
       T_start=Medium.T_default,
-      computeReevaporation=true,
-        dxCoo(wetCoi(TADP(min=233.15), appDewPt(TADP(min=233.15, nominal=273.15 + 2)))))
+      computeReevaporation=true)
                         "Single Speed DX cooling coil"
         annotation (Placement(transformation(extent={{-48,-208},{10,-150}})));
 
@@ -1408,8 +1407,8 @@ end controller;
     Buildings.Controls.OBC.CDL.Continuous.PID conPID(controllerType=Buildings.Controls.OBC.CDL.Types.SimpleController.P,
         k=20)
       annotation (Placement(transformation(extent={{-80,176},{-60,196}})));
-    Buildings.Controls.OBC.CDL.Logical.TrueFalseHold truFalHol(trueHoldDuration
-        =1800)
+    Buildings.Controls.OBC.CDL.Logical.TrueFalseHold truFalHol(trueHoldDuration=
+         1800)
       annotation (Placement(transformation(extent={{-282,176},{-262,196}})));
     equation
 
@@ -1864,8 +1863,7 @@ Buildings.Utilities.IO.SignalExchange.Read senTemRoom4(
   Buildings.Controls.OBC.CDL.Continuous.Add add2
     annotation (Placement(transformation(extent={{-176,176},{-156,196}})));
 Buildings.Utilities.IO.SignalExchange.Read senHouDec(
-    y(
-      min=0,
+    y(min=0,
       max=24,
       unit="1"),
     description="Time",
@@ -2325,7 +2323,7 @@ Add sensors
 Test")}),
     uses(Buildings(version="8.0.0"), Modelica(version="3.2.3")),
     experiment(
-      StopTime=1604800,
+      StopTime=31536000,
       Interval=60,
       __Dymola_Algorithm="Dassl"));
 end SpawnRefSmallOfficeBuilding;

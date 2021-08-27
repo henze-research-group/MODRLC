@@ -54,6 +54,7 @@ model wrapped "Wrapped model"
 	Modelica.Blocks.Interfaces.BooleanInput PSZACcontroller_oveHeaPer3_activate "Activation for Perimeter zone 3 heating coil override";
 	// Out read
 	Modelica.Blocks.Interfaces.RealOutput senTemRoom4_y(unit="K") = mod.senTemRoom4.y "Perimeter zone 4 temperature";
+	Modelica.Blocks.Interfaces.RealOutput senHouDec_y(unit="1") = mod.senHouDec.y "Time";
 	Modelica.Blocks.Interfaces.RealOutput senTemRoom1_y(unit="K") = mod.senTemRoom1.y "Perimeter zone 1 temperature";
 	Modelica.Blocks.Interfaces.RealOutput senTemRoom2_y(unit="K") = mod.senTemRoom2.y "Perimeter zone 2 temperature";
 	Modelica.Blocks.Interfaces.RealOutput senTemRoom3_y(unit="K") = mod.senTemRoom3.y "Perimeter zone 3 temperature";
@@ -78,8 +79,8 @@ model wrapped "Wrapped model"
 	Modelica.Blocks.Interfaces.RealOutput senFanPow2_y(unit="W") = mod.senFanPow2.y "P2 Fan Power demand";
 	Modelica.Blocks.Interfaces.RealOutput senFanPow4_y(unit="W") = mod.senFanPow4.y "P4 Fan Power demand";
 	Modelica.Blocks.Interfaces.RealOutput senTemRoom_y(unit="K") = mod.senTemRoom.y "Core temperature";
-	Modelica.Blocks.Interfaces.RealOutput senTemOA_y(unit="K") = mod.senTemOA.y "OA Temperature";
 	Modelica.Blocks.Interfaces.RealOutput senFanPow_y(unit="W") = mod.senFanPow.y "Core Fan Power demand";
+	Modelica.Blocks.Interfaces.RealOutput senTemOA_y(unit="K") = mod.senTemOA.y "OA Temperature";
 	// Original model
 	SpawnRefSmallOfficeBuilding mod(
 		PSZACcontroller.oveHeaPer1(uExt(y=PSZACcontroller_oveHeaPer1_u),activate(y=PSZACcontroller_oveHeaPer1_activate)),
