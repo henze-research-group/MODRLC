@@ -196,13 +196,15 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         """
         # do-mpc vector is
         print(f"do-mpc vector is: {float(self.sim_p_num['_u'])}")
+
         # map do-mpc to u
         u = self._default_u()
         # NL -- make the heating value appear larger to the simulation to overcome some balance issues
         #       sim_p_num['_u'] will be between 0 and heating_max (typ 13000). So oveHCSet1_u can be
         #       greater than 1.
-        u['oveHCSet1_u'] = float(self.sim_p_num['_u']) / 11316.80
-        u['oveHCSet1_activate'] = 1
+        # u['PSZACcontroller_oveHeaPer1_u'] = max(0.05, float(self.sim_p_num['_u']))   #  / 11316.80
+        u['PSZACcontroller_oveHeaPer1_u'] = float(self.sim_p_num['_u'])   #  / 11316.80
+        u['PSZACcontroller_oveHeaPer1_activate'] = 1
 
         print(f"Setting power to {u['oveHCSet1_u']}")
         return u
@@ -634,10 +636,11 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             # previous y_next in order to match structures:
             old_y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
 
+            # also grab heating power to plot (senHeaPow1_y)
             y_next = self.client.advance(control_u=self._calculate_u(None))
-            t_room = y_next['senTRoom1_y']
-            oa_room = y_next['senOAVol1_y']
-            print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
+            t_room = y_next['senTemRoom1_y']
+            # oa_room = y_next['senOAVol1_y']
+            # print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
 
             self.data.update(_x=x0)
             self.data.update(_u=u0)
@@ -652,7 +655,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             self._u0.master = u0
             self._t0 = self._t0 + self.t_step
 
-            return [t_room, oa_room]
+            # return [t_room, oa_room]
+            return t_room
         else:
             # Call measurement function
             y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)

@@ -19,7 +19,7 @@ def template_model():
     # additional state for indoor temperature -- mainly for plotting right now
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
     cf_heating_power = model.set_variable(var_type='_x', var_name='cf_heating_power', shape=(1, 1))
-    oa_vent_new = model.set_variable(var_type='_x', var_name='oa_vent_new', shape=(1, 1))
+    # oa_vent_new = model.set_variable(var_type='_x', var_name='oa_vent_new', shape=(1, 1))
 
     # try setting
     # mod.HVAC.oveDamSet.activate.y
@@ -63,23 +63,23 @@ def template_model():
 
     # calculate the OA vent to be a setting if the heating is on.
     # if damper is open all the time, then it will have 0.037 m3/s
-    model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.03, 0.15))
+    # model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.03, 0.15))
     # model.set_rhs("oa_vent_new", if_else(heating_power <= 500, 0.061, 0.11))
     # model.set_rhs("oa_vent_new", oa_vent)
 
     # In some editors, the variables will not show as being known, this is because of the
     # globals()[] method above to dynamically create all the variables.
     u_array = vertcat(
+        heating_power, # * mp.heating_gain,  # send the ROM a portion of the heating power (something to do with the ROM has a lower value of heating than the actual model).
         t_dry_bulb,
         h_glo_hor,
+        oa_vent,  # 0.08 - 0.11     # OA volumetric flow
         occupancy_ratio,  # number of occupants
-        P1_IntGaiTot,  # internal gains convective flow
-        heating_power, # * mp.heating_gain,  # send the ROM a portion of the heating power (something to do with the ROM has a lower value of heating than the actual model).
-        P1_FanPow,
+        # P1_IntGaiTot,  # internal gains convective flow
+        # P1_FanPow,
         # oa_vent is from the tvp file (which is directly from the spawn results u1test). oa_vent_new is calculated
         # from the heating_power
         # oa_vent
-        oa_vent_new  # 0.08 - 0.11     # OA volumetric flow
     )
 
     # LTI equations
@@ -87,16 +87,9 @@ def template_model():
     y_modeled = mp.c @ _x + mp.d @ u_array
     model.set_rhs('x', x_next)
 
-    # when moving to MHE, then need to set the y_meas function, even though it will come
-    # from BOPTEST. (if using BOPTEST)
-    # model.set_meas("t_indoor", y_modeled, meas_noise=False)
-    model.set_rhs("t_indoor", y_modeled[0][0])
+    model.set_rhs("t_indoor", y_modeled[0][0] + 273.15)
     model.set_rhs("cf_heating_power", heating_power)
     # This is needed just to provide an optimization variable.
-
-    # Store the previous indoor temperature - this will be used when we add T(t-1) to the x vector.
-    # model.set_rhs("t_indoor_1", t_indoor)
-    # model.set_rhs("t_indoor_2", t_indoor_1)
 
     # Economic MPC
     # Each term is multiplier * max(value - threshold, 0) ** order
@@ -119,7 +112,7 @@ def template_model():
     energy_cost = total_power * elec_unit_cost
     demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
     # cost_function = discomfort + energy_cost + demand_cost
-    cost_function = cf_heating_power * elec_cost_multiplier + 1E6 * discomfort
+    cost_function = cf_heating_power * elec_cost_multiplier + discomfort
     model.set_expression(expr_name='cost', expr=cost_function)
     model.setup()
 

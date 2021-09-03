@@ -42,7 +42,7 @@ USER developer
 WORKDIR $HOME
 
 # Copy the weather files over to the previous location since upgrading to MBL 8.0.0
-RUN mkdir /home/developer/MODELICAPATH/Buildings/Resources/Data/ThermalZones/EnergyPlus/Examples
+RUN mkdir -p /home/developer/MODELICAPATH/Buildings/Resources/Data/ThermalZones/EnergyPlus/Examples
 RUN cp -r /home/developer/MODELICAPATH/Buildings/Resources/Data/ThermalZones/EnergyPlus/Validation/* /home/developer/MODELICAPATH/Buildings/Resources/Data/ThermalZones/EnergyPlus/Examples
 
 RUN pip install --user flask-restful pandas

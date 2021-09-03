@@ -11,15 +11,29 @@ class ModelParameters:
 
     def __init__(self):
         # Load in the N4SID matrices
-        p = Path('.').resolve().parent / 'lasso_and_n4sid' / 'n4sid_v6'
+        p = Path('.').resolve().parent / 'lasso_and_n4sid' / 'n4sid_v10'
         if p.exists():
             # States are room temperatures, <to flesh out>
             self.a = np.load(p / 'output' / 'matrix_A1.npy')
+            print(self.a)
             self.b = np.load(p / 'output' / 'matrix_B1.npy')
+            print("B Matrix")
+            print(self.b.shape)
+            print(self.b)
             self.c = np.load(p / 'output' / 'matrix_C1.npy')
-            self.d = np.load(p / 'output' / 'matrix_D1.npy')
+            # D array is zeroed out for the length of the inputs in _u
+            self.d = np.array([[0, 0, 0, 0, 0]])
+            print("D Matrix")
+            print(self.d.shape)
+            print(self.d)
             self.K = np.load(p / 'output' / 'kalman_gain_K.npy')
-            self.x0 = np.load(p / 'output' / 'sys_id1_x0.npy')
+            # use the last column of the data per Thibault's comment
+            self.x0 = np.transpose([np.load(p / 'output' / 'sys_id1_x0.npy')[:,1]])
+
+            print("x0")
+            print(self.x0.shape)
+            print(self.x0)
+            print("finished loading matrices")
 
             # TODO: need to write a check to make sure these files exist.. someday
             # if not tvp_file.exists():
@@ -56,10 +70,12 @@ class ModelParameters:
         # print(f"D: {self.d.shape}")
 
         # Additional states
+        #   --  Initial T Zn1, Initial Heating Power Zn1
+        self.additional_x_states_inits = np.array([[293], [0]])
         #   --  Initial T Zn1, Initial Heating Power Zn1, Initial OA Ventilation Zn1
-        self.additional_x_states_inits = np.array([[293], [0], [0.061]])
+        # self.additional_x_states_inits = np.array([[293], [0], [0.061]])
         # The min_x is +/- 10 for the number of rows of A which is the # of states
-        self.min_x = np.array([[-5]] * self.a.shape[0])
+        self.min_x = np.array([[-30]] * self.a.shape[0])
         self.max_x = - self.min_x
 
         # Indoor temperature bounds
@@ -72,12 +88,11 @@ class ModelParameters:
         self.min_cooling = 0
         self.max_cooling = 0
         self.min_heating = 0
-        self.max_heating = 11316.80
-        self.heating_gain = 0.43  # 1 - (6500/11316.8)
+        self.max_heating = 1
         # self.min_oa_damp_1 = 0.25
         # self.max_oa_damp_1 = 1
         self.min_fan_power = 0
-        self.max_fan_power = 500
+        self.max_fan_power = 1
 
         # state space u values
         # u[0]  = 't_dry_bulb'
@@ -129,13 +144,13 @@ class ModelParameters:
         #     "data_column_name": "P1_HeaPow",
         #     "local_var_name": "P1_HeaPow",
         # })
-        self.variables.append({
-            "type": "tvp",
-            "data_source": "u1test",
-            "var_name": "P1_FanPow",
-            "data_column_name": "P1_FanPow",
-            "local_var_name": "P1_FanPow",
-        })
+        # self.variables.append({
+        #     "type": "tvp",
+        #     "data_source": "u1test",
+        #     "var_name": "P1_FanPow",
+        #     "data_column_name": "P1_FanPow",
+        #     "local_var_name": "P1_FanPow",
+        # })
         self.variables.append({
             "type": "tvp",
             "data_source": "u1test",

@@ -51,7 +51,7 @@ def template_mpc(model):
 
     # set the penalty term
     # mpc.set_rterm(T_supply=1e-4, Q_flow=1e-4, fanP=1e-4, volSenSupV_flow=1e-4, volSenOAV_flow=1e-4, room_relHum=1e-4)
-    mpc.set_rterm(heating_power=1e-4)  # cooling_power=1e-4) fan_power=1e-4,
+    mpc.set_rterm(heating_power=1e-8)  # cooling_power=1e-4) fan_power=1e-4,
 
     mpc.bounds['lower', '_x', 'x'] = mp.min_x
     mpc.bounds['upper', '_x', 'x'] = mp.max_x

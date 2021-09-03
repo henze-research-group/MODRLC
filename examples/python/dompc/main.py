@@ -40,6 +40,9 @@ np.random.seed(99)
 # e = np.ones([model.n_x, 1])
 # These default x0's are from a random interval in the simulation.
 mp = ModelParameters()
+print("here")
+print(mp.x0)
+print(mp.additional_x_states_inits)
 x0 = np.vstack((mp.x0,
                 mp.additional_x_states_inits))
 
@@ -75,7 +78,7 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=8, ncols=1, sharex=True, figsize=(8, 10))
+fig, ax = plt.subplots(nrows=9, ncols=1, sharex=True, figsize=(8, 10))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
@@ -96,14 +99,14 @@ mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
 axis += 1
 ax[axis].set_title('Power Variables')
 mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
-mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
+# mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
 # mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
 
 axis += 1
 ax[axis].set_title('Outside Air (m3/s)')
 # mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
-mpc_plot.add_line('_x', 'oa_vent_new', ax[axis])
+mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
 
 axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
@@ -123,6 +126,10 @@ axis += 1
 ax[axis].set_title('Cost Function')
 mpc_plot.add_line('_aux', 'cost', ax[axis])
 
+axis += 1
+ax[axis].set_title('State Matrix X')
+mpc_plot.add_line('_x', 'x', ax[axis])
+
 # ax[4].set_title('Estimated parameters:')
 
 # mhe_plot.add_line('_y', 'y', ax[4])
@@ -139,12 +146,15 @@ Run MPC main loop:
 
 # Save off the model order, which is just the state of the A matrix
 x_state_var_cnt = mp.a.shape[0]
+# u0 = mpc.make_step(x0)
 
 # 288 5-minute intervals per day
 for k in range(288 * 2):
     # for k in range(10):
     # print(f"{k}: {x0}")
     u0 = mpc.make_step(x0)
+    if u0 > 0:
+        print('wait here')
 
     if boptest_client is None:
         # When not using boptest, then the y_measures is all the states, no need to pull
@@ -153,10 +163,11 @@ for k in range(288 * 2):
         # we are running with no model mismatch, just pass the data back
         x0 = estimator.make_step(y_measured)
     else:
-        y_measured, oa_room = simulator.make_step(u0)
+        # y_measured, oa_room = simulator.make_step(u0)
+        y_measured = simulator.make_step(u0)
 
-        y_pred = mp.c @ x0[0:x_state_var_cnt]
-
+        # Updating state vars using kalman gain
+        y_pred = mp.c @ x0[0:x_state_var_cnt] + 273
         x_next = copy.copy(x0)
         x_next[0:x_state_var_cnt] = x0[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
         x0 = np.vstack((
@@ -164,10 +175,13 @@ for k in range(288 * 2):
             np.array([
                 [y_measured],
                 u0[0],
-                [oa_room],
+                # [oa_room],
             ])
         ))
-        # print(x0)
+
+
+
+    # print(x0)
 
     if show_animation:
         # graphics.plot_results(t_ind=k)
