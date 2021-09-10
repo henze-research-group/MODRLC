@@ -205,8 +205,10 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         # u['PSZACcontroller_oveHeaPer1_u'] = max(0.05, float(self.sim_p_num['_u']))   #  / 11316.80
         u['PSZACcontroller_oveHeaPer1_u'] = float(self.sim_p_num['_u'])   #  / 11316.80
         u['PSZACcontroller_oveHeaPer1_activate'] = 1
+        u['PSZACcontroller_oveCooPer1_u'] = 0   #  / 11316.80
+        u['PSZACcontroller_oveCooPer1_activate'] = 1
 
-        print(f"Setting power to {u['oveHCSet1_u']}")
+        print(f"Setting power to {u['PSZACcontroller_oveHeaPer1_u']}")
         return u
 
     def _check_validity(self):
@@ -639,6 +641,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             # also grab heating power to plot (senHeaPow1_y)
             y_next = self.client.advance(control_u=self._calculate_u(None))
             t_room = y_next['senTemRoom1_y']
+            print("Cooling power:", y_next['senCCPow1_y'])
             # oa_room = y_next['senOAVol1_y']
             # print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
 
@@ -656,7 +659,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             self._t0 = self._t0 + self.t_step
 
             # return [t_room, oa_room]
-            return t_room
+            return t_room, x_next
         else:
             # Call measurement function
             y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)

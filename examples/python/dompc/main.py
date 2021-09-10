@@ -78,35 +78,35 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=9, ncols=1, sharex=True, figsize=(8, 10))
+fig, ax = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(8, 10))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
 axis = 0
-ax[axis].set_title('OA Temperature')
-mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
+#ax[axis].set_title('OA Temperature')
+#mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
 
-axis += 1
-ax[axis].set_title('Horizontal Global Irradiance')
-mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
+#axis += 1
+#ax[axis].set_title('Horizontal Global Irradiance')
+#mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
 
-axis += 1
-ax[axis].set_title('Occupancy Count')
-mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
+#axis += 1
+#ax[axis].set_title('Occupancy Count')
+#mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
 
 axis += 1
 ax[axis].set_title('Power Variables')
 mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
 # mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
 # mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
-mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
+#mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
 
-axis += 1
-ax[axis].set_title('Outside Air (m3/s)')
+#axis += 1
+#ax[axis].set_title('Outside Air (m3/s)')
 # mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
-mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
+#mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
 
 axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
@@ -126,9 +126,9 @@ axis += 1
 ax[axis].set_title('Cost Function')
 mpc_plot.add_line('_aux', 'cost', ax[axis])
 
-axis += 1
-ax[axis].set_title('State Matrix X')
-mpc_plot.add_line('_x', 'x', ax[axis])
+#axis += 1
+#ax[axis].set_title('State Matrix X')
+#mpc_plot.add_line('_x', 'x', ax[axis])
 
 # ax[4].set_title('Estimated parameters:')
 
@@ -146,16 +146,14 @@ Run MPC main loop:
 
 # Save off the model order, which is just the state of the A matrix
 x_state_var_cnt = mp.a.shape[0]
-# u0 = mpc.make_step(x0)
+u0 = np.array([[0]])
 
 # 288 5-minute intervals per day
 for k in range(288 * 2):
     # for k in range(10):
     # print(f"{k}: {x0}")
     u0 = mpc.make_step(x0)
-    if u0 > 0:
-        print('wait here')
-
+    
     if boptest_client is None:
         # When not using boptest, then the y_measures is all the states, no need to pull
         # out other states
@@ -164,12 +162,14 @@ for k in range(288 * 2):
         x0 = estimator.make_step(y_measured)
     else:
         # y_measured, oa_room = simulator.make_step(u0)
-        y_measured = simulator.make_step(u0)
-
+        y_measured, x_next = simulator.make_step(u0)
+	
         # Updating state vars using kalman gain
-        y_pred = mp.c @ x0[0:x_state_var_cnt] + 273
-        x_next = copy.copy(x0)
-        x_next[0:x_state_var_cnt] = x0[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
+        y_pred = mp.c @ x0[0:x_state_var_cnt] + 273.15
+        
+        
+        x_next[0:x_state_var_cnt] = x_next[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
+        
         x0 = np.vstack((
             x_next[0:x_state_var_cnt],
             np.array([
@@ -178,6 +178,7 @@ for k in range(288 * 2):
                 # [oa_room],
             ])
         ))
+        
 
 
 
