@@ -48,18 +48,6 @@ x0 = np.vstack((mp.x0,
 
 print(f"X0 is now this: {x0}")
 
-# x0 = np.array([
-#     [-3.92236858e-01], [-7.88940004e+00], [-5.34412096e+00], [2.21526326e-01], [2.70893994e-01], [1.47842629e-01], [-2.73510110e-02],
-#     [293], # indoor temperature
-# ])
-# x0 = np.array([[-0.8227],
-#                [-0.0350391],
-#                [-0.0059108],
-#                [293],  # indoor temp
-#                [293],  # prev indoor temp
-#                [293],  # prev prev indoor temp
-#                ])
-# x0 = np.random.uniform(-3 * e, 3 * e)  # Values between +3 and +3 for all states
 mpc.x0 = x0
 simulator.x0 = x0
 estimator.x0 = x0
@@ -85,8 +73,8 @@ mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
 axis = 0
-#ax[axis].set_title('OA Temperature')
-#mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
+ax[axis].set_title('OA Temperature')
+mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
 
 #axis += 1
 #ax[axis].set_title('Horizontal Global Irradiance')
@@ -99,6 +87,8 @@ axis = 0
 axis += 1
 ax[axis].set_title('Power Variables')
 mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+mpc_plot.add_line('_x', 'cf_heating_power', ax[axis], color='blue')
+mpc_plot.add_line('_x', 'heating_power_prev', ax[axis], color='green')
 # mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
 # mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
 #mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
@@ -151,9 +141,13 @@ u0 = np.array([[0]])
 # 288 5-minute intervals per day
 for k in range(288 * 2):
     # for k in range(10):
-    # print(f"{k}: {x0}")
+    print(f"{k}: {x0}")
+    # t
+
     u0 = mpc.make_step(x0)
-    
+    if u0[0] > 0.05:
+        print('i am here')
+
     if boptest_client is None:
         # When not using boptest, then the y_measures is all the states, no need to pull
         # out other states
@@ -163,22 +157,24 @@ for k in range(288 * 2):
     else:
         # y_measured, oa_room = simulator.make_step(u0)
         y_measured, x_next = simulator.make_step(u0)
-	
+        # t + 1
+
+        # the 7th element is the predicted temperature
+        y_pred = float(x_next[7])
         # Updating state vars using kalman gain
-        y_pred = mp.c @ x0[0:x_state_var_cnt] + 273.15
-        
-        
+        # y_pred = mp.c @ x_next[0:x_state_var_cnt] + 273.15
+
         x_next[0:x_state_var_cnt] = x_next[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
-        
+
         x0 = np.vstack((
             x_next[0:x_state_var_cnt],
             np.array([
-                [y_measured],
-                u0[0],
-                # [oa_room],
+                [y_measured], # this is of time = t + 1
+                u0[0],  # THIS IS of time = t
+                u0[0],  # what to do with this
             ])
         ))
-        
+
 
 
 
@@ -207,9 +203,9 @@ input('Press any key to exit.')
 
 # Store results:
 if store_results:
-    if not isinstance(estimator, do_mpc.estimator.StateFeedback):
-        filename = 'som3_mpc_mhe'
+    if boptest_client is not None:
+        filename = 'som3_mpc_boptest'
     else:
-        filename = 'som3_mpc_stateestimator'
+        filename = 'som3_mpc_statefeedback'
 
     do_mpc.data.save_results([mpc], filename)

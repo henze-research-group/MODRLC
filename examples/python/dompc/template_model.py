@@ -34,6 +34,8 @@ def template_model():
 
     # the control variables
     heating_power = model.set_variable(var_type='_u', var_name='heating_power', shape=(1, 1))
+    heating_power_prev = model.set_variable(var_type='_x', var_name='heating_power_prev', shape=(1, 1))
+    # heating_power_prev_prev = model.set_variable(var_type='_x', var_name='heating_power_prev_prev', shape=(1, 1))
     # fan_power = model.set_variable(var_tsype='_u', var_name='fan_power', shape=(1, 1))
     # oa_vent = model.set_variable(var_type='_u', var_name='oa_vent', shape=(1, 1))
     # cooling_power = model.set_variable(var_type='_u', var_name='cooling_power', shape=(1, 1))
@@ -89,6 +91,8 @@ def template_model():
 
     model.set_rhs("t_indoor", y_modeled[0][0] + 273.15)
     model.set_rhs("cf_heating_power", heating_power)
+    model.set_rhs("heating_power_prev", heating_power)
+    # model.set_rhs("heating_power_prev_prev", heating_power_prev)
     # This is needed just to provide an optimization variable.
 
     # Economic MPC

@@ -29,8 +29,6 @@ class ModelParameters:
             self.K = np.load(p / 'output' / 'kalman_gain_K.npy')
             # use the last column of the data per Thibault's comment
             self.x0 = np.transpose([np.load(p / 'output' / 'sys_id1_x0.npy')[:,1]])
-
-            print("x0")
             print(self.x0.shape)
             print(self.x0)
             print("finished loading matrices")
@@ -70,10 +68,9 @@ class ModelParameters:
         # print(f"D: {self.d.shape}")
 
         # Additional states
-        #   --  Initial T Zn1, Initial Heating Power Zn1
-        self.additional_x_states_inits = np.array([[293], [0]])
-        #   --  Initial T Zn1, Initial Heating Power Zn1, Initial OA Ventilation Zn1
-        # self.additional_x_states_inits = np.array([[293], [0], [0.061]])
+        #   --  Initial T Zn1, Initial Heating Power Zn1, Previous Heating Power Zn1
+        self.additional_x_states_inits = np.array([[293], [0], [0]])
+
         # The min_x is +/- 10 for the number of rows of A which is the # of states
         self.min_x = np.array([[-30]] * self.a.shape[0])
         self.max_x = - self.min_x
@@ -188,15 +185,15 @@ class ModelParameters:
         self.n_horizon = 96 #  8 hours ahead  -- 1 hour is 12 steps in the horizon
 
         # Revert to this start time when generating final datset
-        # self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
-        # self.start_time_offset = 0
+        self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
+        self.start_time_offset = 0
 
         # start closer to when occupancy with start
         # 280800 == 1/4/20 06:00
-        self.start_time = 280800
+        # self.start_time = 280800
         # if the datafiles are not starting at the same time as `start_time` then pass in an offest to
         # jump to the right index. Start_time - first row of data time (in seconds)
-        self.start_time_offset = 280800 - 259200
+        # self.start_time_offset = 280800 - 259200
 
         self.tvp_template = None
         self.tvp_template_mhe = None
