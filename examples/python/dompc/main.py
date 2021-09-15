@@ -1,6 +1,5 @@
 # This started from an example file provided by do-mpc
 
-import copy
 import matplotlib.pyplot as plt
 from casadi.tools import *
 
@@ -8,11 +7,17 @@ from model_parameters import ModelParameters
 
 sys.path.append('../')
 import do_mpc
+import datetime
 
+from pathlib import Path
 from template_model import template_model
 from template_mpc import template_mpc
 from template_simulator import template_simulator
 from template_mhe import template_mhe
+
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
+from historian import Historian, Conversions
+
 
 """ User settings: """
 show_animation = True
@@ -24,6 +29,11 @@ Get configured do-mpc modules:
 model = template_model()
 mpc = template_mpc(model)
 simulator, boptest_client = template_simulator(model)
+if boptest_client is not None:
+    result_filename = 'som3_mpc_boptest'
+else:
+    result_filename = 'som3_mpc_statefeedback'
+historian = Historian(time_step=5)
 
 # Choose one of these estimators
 # estimator = template_mhe(model)
@@ -102,7 +112,8 @@ axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
 mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
-mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
+mpc_plot.add_line('_x', 't_indoor', ax[axis], color='orange')
+sim_plot.add_line('_x', 't_indoor', ax[axis], color='green')
 
 axis += 1
 ax[axis].set_title('Electricity Cost Multiplier')
@@ -138,34 +149,47 @@ Run MPC main loop:
 x_state_var_cnt = mp.a.shape[0]
 u0 = np.array([[0]])
 
+# set up the historian data
+historian.add_point('timestamp', 'Time', None)
+historian.add_point('t_indoor_measured', 'degC', 'TRooAir_y', f_conversion=Conversions.deg_k_to_c)
+historian.add_point('t_indoor_predicted', 'degC', None, f_conversion=Conversions.deg_k_to_c)
+# historian.add_point('T1_Rad', 'degC', 'TRooRad_y')
+
 # 288 5-minute intervals per day
 for k in range(288 * 2):
     # for k in range(10):
+    current_time = mp.start_time_dt + datetime.timedelta(seconds=(k * 300))
+    historian.add_datum('timestamp', current_time.strftime("%Y/%m/%d %H:%M:%S"))
     print(f"{k}: {x0}")
-    # t
 
     u0 = mpc.make_step(x0)
-    if u0[0] > 0.05:
-        print('i am here')
+    # if u0[0] > 0.05:
+    #     print('i am here')
 
     if boptest_client is None:
         # When not using boptest, then the y_measures is all the states, no need to pull
         # out other states
         y_measured = simulator.make_step(u0)
+        historian.add_datum('t_indoor_measured', y_measured[7][0])
+
         # we are running with no model mismatch, just pass the data back
         x0 = estimator.make_step(y_measured)
+        historian.add_datum('t_indoor_predicted', x0[7][0])
     else:
         # y_measured, oa_room = simulator.make_step(u0)
         y_measured, x_next = simulator.make_step(u0)
         # t + 1
 
         # the 7th element is the predicted temperature
-        y_pred = float(x_next[7])
-        # Updating state vars using kalman gain
         # y_pred = mp.c @ x_next[0:x_state_var_cnt] + 273.15
+        y_pred = float(x_next[7])
 
+        # Store to the historian
+        historian.add_datum('t_indoor_measured', y_measured)
+        historian.add_datum('t_indoor_predicted', y_pred)
+
+        # Updating state vars using kalman gain
         x_next[0:x_state_var_cnt] = x_next[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
-
         x0 = np.vstack((
             x_next[0:x_state_var_cnt],
             np.array([
@@ -175,10 +199,8 @@ for k in range(288 * 2):
             ])
         ))
 
-
-
-
-    # print(x0)
+    # save the file every timestep so that you can tail it for a log
+    historian.save_csv('results', f'{result_filename}_historian.csv')
 
     if show_animation:
         # graphics.plot_results(t_ind=k)
@@ -203,9 +225,6 @@ input('Press any key to exit.')
 
 # Store results:
 if store_results:
-    if boptest_client is not None:
-        filename = 'som3_mpc_boptest'
-    else:
-        filename = 'som3_mpc_statefeedback'
+    do_mpc.data.save_results([mpc], result_filename)
+    historian.save_csv('results', f'{result_filename}_historian.csv')
 
-    do_mpc.data.save_results([mpc], filename)

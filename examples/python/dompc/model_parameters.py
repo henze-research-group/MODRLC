@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import casadi
+import datetime
 
 
 class ModelParameters:
@@ -186,6 +187,7 @@ class ModelParameters:
 
         # Revert to this start time when generating final datset
         self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
+        self.start_time_dt = datetime.datetime(2020, 1, 1, 0, 0, 0) + datetime.timedelta(seconds=self.start_time)  # datetime obj represenation of start time
         self.start_time_offset = 0
 
         # start closer to when occupancy with start
