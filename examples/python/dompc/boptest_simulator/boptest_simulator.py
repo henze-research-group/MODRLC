@@ -659,7 +659,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             self._t0 = self._t0 + self.t_step
 
             # return [t_room, oa_room]
-            return t_room, x_next
+            return t_room, x_next, x0
         else:
             # Call measurement function
             y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)

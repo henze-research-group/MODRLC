@@ -177,7 +177,7 @@ for k in range(288 * 2):
         historian.add_datum('t_indoor_predicted', x0[7][0])
     else:
         # y_measured, oa_room = simulator.make_step(u0)
-        y_measured, x_next = simulator.make_step(u0)
+        y_measured, x_next, x0 = simulator.make_step(u0)
         # t + 1
 
         # the 7th element is the predicted temperature
@@ -190,14 +190,14 @@ for k in range(288 * 2):
 
         # Updating state vars using kalman gain
         x_next[0:x_state_var_cnt] = x_next[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
-        x0 = np.vstack((
-            x_next[0:x_state_var_cnt],
-            np.array([
-                [y_measured], # this is of time = t + 1
-                u0[0],  # THIS IS of time = t
-                u0[0],  # what to do with this
-            ])
-        ))
+        #x0 = np.vstack((
+        #    x_next[0:x_state_var_cnt],
+        #    np.array([
+        #        [y_measured], # this is of time = t + 1
+        #        u0[0],  # THIS IS of time = t
+        #        u0[0],  # what to do with this
+        #    ])
+        #))
 
     # save the file every timestep so that you can tail it for a log
     historian.save_csv('results', f'{result_filename}_historian.csv')

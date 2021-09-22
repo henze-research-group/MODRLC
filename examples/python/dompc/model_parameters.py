@@ -51,7 +51,7 @@ class ModelParameters:
             # self.tvp_data = self.tvp_data.head(int(7000000 / 300))
             # self.tvp_data.to_csv('tmp_exogenous_data.csv')
 
-            p_data = p.resolve() / 'output' / 'u1test_tvps.xlsx'
+            p_data = p.resolve() / 'output' / 'u1test_tvps.xls'
             if not p_data.exists():
                 raise Exception(f"There is not time varying setpoint parameter file, make sure it exists {p_data}")
 
