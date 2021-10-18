@@ -112,13 +112,13 @@ def template_model():
     target_non_dr_limit = 10000
 
     w_power = 1
-    w_coc_increase = 2
     w_discomfort = 5
+    w_coc_increase = 2
 
     # tsetpoint_upper and tsetpoint_lower are defined in the model_parameters imports and vary with time
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
-    energy_cost = total_power * elec_unit_cost
-    demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
+    # energy_cost = total_power * elec_unit_cost
+    # demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
     # cost_function = discomfort + energy_cost + demand_cost
     cost_function = w_power * cf_heating_power * elec_cost_multiplier + \
                     w_discomfort * discomfort + \
