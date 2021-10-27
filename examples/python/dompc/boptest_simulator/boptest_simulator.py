@@ -678,3 +678,9 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             self._t0 = self._t0 + self.t_step
 
             return y_next.full()
+
+    def return_kpis(self):
+        if self.client:
+            return self.client.kpis()
+        else:
+            return None

@@ -8,6 +8,8 @@ from model_parameters import ModelParameters
 sys.path.append('../')
 import do_mpc
 import datetime
+import json
+import shutil
 
 from pathlib import Path
 from template_model import template_model
@@ -30,9 +32,15 @@ model = template_model()
 mpc = template_mpc(model)
 simulator, boptest_client = template_simulator(model)
 if boptest_client is not None:
-    result_filename = 'som3_mpc_boptest'
+    results_path = 'results/som3_mpc_boptest'
 else:
-    result_filename = 'som3_mpc_statefeedback'
+    results_path = 'results/som3_mpc_statefeedback'
+
+# delete the contents of the results path
+if os.path.exists(results_path):
+    shutil.rmtree(results_path)
+os.makedirs(results_path, exist_ok=True)
+
 historian = Historian(time_step=5)
 
 # Choose one of these estimators
@@ -113,7 +121,6 @@ ax[axis].set_title('Setpoints and Indoor Temperature')
 mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
 mpc_plot.add_line('_x', 't_indoor', ax[axis], color='orange')
-sim_plot.add_line('_x', 't_indoor', ax[axis], color='green')
 
 axis += 1
 ax[axis].set_title('Electricity Cost Multiplier')
@@ -153,10 +160,12 @@ u0 = np.array([[0]])
 historian.add_point('timestamp', 'Time', None)
 historian.add_point('t_indoor_measured', 'degC', 'TRooAir_y', f_conversion=Conversions.deg_k_to_c)
 historian.add_point('t_indoor_predicted', 'degC', None, f_conversion=Conversions.deg_k_to_c)
+historian.add_point('t_indoor_predicted_after_kalman', 'degC', None, f_conversion=None)
+
 # historian.add_point('T1_Rad', 'degC', 'TRooRad_y')
 
 # 288 5-minute intervals per day
-for k in range(288 * 2):
+for k in range(288 * 1):
     # for k in range(10):
     current_time = mp.start_time_dt + datetime.timedelta(seconds=(k * 300))
     historian.add_datum('timestamp', current_time.strftime("%Y/%m/%d %H:%M:%S"))
@@ -182,25 +191,29 @@ for k in range(288 * 2):
 
         # the 7th element is the predicted temperature
         # y_pred = mp.c @ x_next[0:x_state_var_cnt] + 273.15
-        y_pred = float(x_next[7])
+        y_pred = float(x0.master[7])
+
+        x_kalman = x0.master[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
+        y_kalman = mp.c @ x_kalman  # result is in Deg C, and the historian expected it as such.
 
         # Store to the historian
         historian.add_datum('t_indoor_measured', y_measured)
         historian.add_datum('t_indoor_predicted', y_pred)
+        historian.add_datum('t_indoor_predicted_after_kalman', y_kalman)
 
         # Updating state vars using kalman gain
-        x_next[0:x_state_var_cnt] = x_next[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
-        #x0 = np.vstack((
-        #    x_next[0:x_state_var_cnt],
+        # x0.master[0:x_state_var_cnt] = x0.master[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
+        # x0 = np.vstack((
+        #     x0.master[0:x_state_var_cnt],
         #    np.array([
         #        [y_measured], # this is of time = t + 1
         #        u0[0],  # THIS IS of time = t
         #        u0[0],  # what to do with this
         #    ])
-        #))
+        # ))
 
     # save the file every timestep so that you can tail it for a log
-    historian.save_csv('results', f'{result_filename}_historian.csv')
+    historian.save_csv(results_path, 'historian.csv')
 
     if show_animation:
         # graphics.plot_results(t_ind=k)
@@ -221,10 +234,24 @@ for k in range(288 * 2):
         # plt.pause(30)
 
 print(f"Finished. Store results is set to {store_results}")
-input('Press any key to exit.')
+input('Press any key to save the results and exit. (This will close the graph window as well.)')
 
 # Store results:
 if store_results:
-    do_mpc.data.save_results([mpc], result_filename)
-    historian.save_csv('results', f'{result_filename}_historian.csv')
+    # Fetch KPIs from BOPTEST
+    kpis = simulator.return_kpis()
+    json.dump(kpis, open(f'{results_path}/kpis.json', 'w'))
+
+    historian.save_csv(results_path, 'historian.csv')
+
+    do_mpc_temp_results = 'do_mpc_temp'
+    if os.path.exists(f'results/{do_mpc_temp_results}.pkl'):
+        os.remove(f'results/{do_mpc_temp_results}.pkl')
+
+    # do_mpc creates a results folder and puts the results there, so save off
+    # then move to the right location.
+    do_mpc.data.save_results([mpc], do_mpc_temp_results)
+    os.rename(f'results/{do_mpc_temp_results}.pkl', f'{results_path}/do_mpc_results.pkl')
+
+
 
