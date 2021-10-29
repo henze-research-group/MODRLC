@@ -1,4 +1,8 @@
-# This is just a stub. Need to decide how to use this or kalman filters.
+# This is just a stub. The use of MHE was not used and a Kalman filter was
+# added to the main.py.
+
+# Author: Nicholas Long <https://github.com/nllong>
+
 
 from casadi.tools import *
 

@@ -1,4 +1,5 @@
 # MPC configuration for SOM3 model using N4SID system model (planning model)
+
 from casadi.tools import *
 
 from template_model import ModelParameters
