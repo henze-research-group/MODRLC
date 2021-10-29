@@ -1,11 +1,15 @@
-import uuid
-import requests
+# Python client for communicating to BOPTEST Service branch.
+# This will eventually be replaced with a pip package and will live
+# here: https://github.com/ibpsa/project1-boptest-python-client
+
 import json
 import os
 import time
-from requests_toolbelt import MultipartEncoder
-from multiprocessing import Pool
+import uuid
 from collections import OrderedDict
+
+import requests
+from requests_toolbelt import MultipartEncoder
 
 
 class BoptestClient:
