@@ -655,17 +655,7 @@ class BoptestGymEnv(gym.Env):
         Reward: float
             Reward of last state-action-state' tuple
         
-        Notes
-        -----
-        This method is just a default method to compute reward. It can be 
-        overridden by defining a child from this class with
-        this same method name, i.e. `compute_reward`. If a custom reward 
-        is defined, it is strongly recommended to derive it using the KPIs
-        as returned from the BOPTEST framework, as it is done in this 
-        default `compute_reward` method. This ensures that all variables 
-        that may contribute to any KPI are properly accounted and 98
-        integrated.
-        
+
         '''
 
         # Compute BOPTEST core kpis
@@ -677,7 +667,7 @@ class BoptestGymEnv(gym.Env):
 
         kpi_dict = {}
 
-        customized_kpi_config = 'custom_kpi/custom_kpis_example_v2.config'
+        customized_kpi_config = 'custom_kpi/custom_kpis_example_gym.config'
 
         # Define customized KPI if any
         customizedkpis = []  # Initialize customzied kpi calculation list
