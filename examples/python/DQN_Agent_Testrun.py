@@ -4,14 +4,13 @@
 import requests
 import numpy as np;import pandas as pd
 import json,collections
-from DQN_Agent_Dey_v4 import DQN_Agent
+from RL_Agent.DQN_Agent_test import DQN_Agent
 
-from boptestGymEnv_DR_v2 import BoptestGymEnv,DiscretizedActionWrapper
+from boptestGymEnv import BoptestGymEnv
 import collections
 from collections import OrderedDict
 import math
 import random
-
 
 
 # ----------------------
@@ -24,28 +23,22 @@ import random
 import time
 # SETUP TEST CASE
 # ---------------
-url = 'http://127.0.0.1:5000'
 
-
-# ---------------
-#actions = [0.0 for ]
 start = time.time()
 
 # GET TEST INFORMATION
 # --------------------
 
-
 step = 300
 episode_length = 3600*24*1
-start_time=24*3600*186
-actions = ['oveCooSet_u','oveCooSet1_u','oveCooSet2_u','oveCooSet3_u','oveCooSet4_u']
-kpi_zones = ["0","1","2","3","4"]
-building_obs = ['senTRoom_y','senTRoom1_y','senTRoom2_y','senTRoom3_y','senTRoom4_y','senHouDec_y']
-dr_obs = [0,1.25]
+start_time=24*3600*3 # Specify the start time of the simulation 
+actions = ['oveCooSet1_u']
+kpi_zones = ["1"]
+building_obs = ['senTRoom1_y']
 forecast_obs = {}
 KPI_rewards = {
-    "ener_tot": {"hyper": -1, "power": 1},
-    "tdis_tot": {"hyper": -1, "power": 1},
+    "ener_tot": {"hyper": -30, "power": 1},
+    "tdis_tot": {"hyper": -50, "power": 1},
     "idis_tot": {"hyper": 0, "power": 1},
     "cost_tot": {"hyper": 0, "power": 1},
     "emis_tot": {"hyper": 0, "power": 1},
@@ -53,21 +46,14 @@ KPI_rewards = {
 # --------------------
 # --------------------
 
-# Define customized KPI if any
-
-customizedkpis=[] # Initialize customzied kpi calculation list
-
 env = BoptestGymEnv(max_episode_length=episode_length,
                                              Ts=step,
                                              start_time=start_time,
                                              actions=actions,
                                              building_obs=building_obs,
-                                             forecast_obs=forecast_obs,
-                                             dr_obs = dr_obs,
-                                             kpi_zones= kpi_zones,
-                                             dr_power_limit= 6000, # in watts
-                                             DR_event = True,
-                                             DR_time = [3600*14,3600*16],
+                                             forecast_obs=forecast_obs,                                             
+                                             kpi_zones= kpi_zones,                                            
+                                             DR_event = False,
                                              lower_obs_bounds=[286, 286, 286, 286, 286,  0,  0, 0],
                                              upper_obs_bounds=[303, 303, 303, 303, 303, 24,  1, 1],
                                              KPI_rewards=KPI_rewards,
@@ -109,7 +95,7 @@ else:
         done_m1 = mem_list_1.iloc[i][4]
         Agent_1.append_sample(state_m1, action_m1, reward_m1, next_state_m1, done_m1)
 
-    Agent_1.model_load_weights("data_dqn_dr/02_NN/DQN_0_" + str(last_ep) + ".h5")  # From 2nd episode
+    Agent_1.model_load_weights("data_dqn_test/02_NN/DQN_0_" + str(last_ep) + ".h5")  # From 2nd episode
 
 
 start = time.time()
@@ -154,28 +140,18 @@ for e in range(last_ep,last_ep+episodes):
     print ("State")
     print (state)
 
-    mean_temp = (state[0]+state[1]+state[2]+state[3]+state[4])/5
     state = np.array([mean_temp,state[5],state[6],state[7]]).astype(np.float32)
     print("Modified State")
     print(state)
 
-    state = np.reshape(state, [1, state_size])
-    dr_rand_start = random.uniform(13, 15)
-    dr_rand_end = dr_rand_start + random.uniform(1, 1.5)
-    DR_time = [3600 * dr_rand_start, 3600 * dr_rand_end]
-    env.set_DR_time(DR_time)
+    state = np.reshape(state, [1, state_size])    
     counter = 0
-
 
     for i in range(int(episode_length/step)):
         print("episode")
         print(e)
         print("Time Step")
-        print(step)
-        print("DR_Time")
-        print(dr_rand_start)
-        print("DR_End_time")
-        print(DR_time[1] / 3600)
+        print(step)       
 
         print("Agent Memory")
         print(len(Agent_1.memory))
@@ -186,100 +162,28 @@ for e in range(last_ep,last_ep+episodes):
         minutes = ((abs_time) % 3600) / 60
         days = math.floor(abs_time / (3600 * 24))
 
-
         building_states = env.get_building_states()
+        hou_min = building_states['senHouDec_y']        
 
-        hou_min = building_states['senHouDec_y']
-
-
-
-        if (hou_min >= dr_rand_start) & (hou_min < (dr_rand_end)):
-            print("First Condition")
-            w = [0.0, 0.5, 0.5]
-            env.change_dr_limit(6000)
-        else:
-            print("Second Condition")
-            w = [0.2, 0.7, 0.1]
-            env.change_dr_limit(24000)
-
-        print(w)
-
-
-
+        print (w)
         price = {'energy': 0.0589 * 100, 't_disc': 0.010112 * 100, 'dr_price': 7.89 / 1000 * 100}
-
-
-        occupancy = building_states['senOcc_y'] + building_states['senOcc1_y'] + building_states['senOcc2_y'] + \
-                    building_states['senOcc3_y'] + building_states['senOcc4_y']
-
-        # if (hours >= 0) & (hours < 6):
-        #     occupancy = 0
-        # elif (hours >= 6) & (hours < 8):
-        #     occupancy = 5.49
-        # elif (hours >= 8) & (hours < 12):
-        #     occupancy = 26.0775
-        # elif (hours >= 12) & (hours < 13):
-        #     occupancy = 13.725
-        # elif (hours >= 13) & (hours < 17):
-        #     occupancy = 26.0775
-        # elif (hours >= 17) & (hours < 18):
-        #     occupancy = 8.235
-        # elif (hours >= 18) & (hours < 20):
-        #     occupancy = 2.745
-        # elif (hours >= 20) & (hours < 24):
-        #     occupancy = 1.3725
-
-
+                
         print("Occupancy")
-        print(occupancy)
-
-        # w = [1,1,1]
-        KPI_rewards = {
-            "ener_tot": {"hyper": -price['energy'] * w[0], "power": 1},
-            "tdis_tot": {"hyper": -price['t_disc'] * w[1] * occupancy, "power": 1},
-            "idis_tot": {"hyper": 0, "power": 1},
-            "cost_tot": {"hyper": 0, "power": 1},
-            "emis_tot": {"hyper": 0, "power": 1},
-            "power_pen": {"hyper": -price['dr_price'] * w[2], "power": 1}}
+        print(occupancy)       
 
         env.change_rewards_weights(KPI_rewards)
 
         print('Days: {}, Hours: {} , Minutes: {}'.format(days,hou_min, minutes))
         raw_action_u1 = Agent_1.get_action(state)
         q_1 = Agent_1.target_predict_qvalue(state)
-
-        # if state[0][3]==1:
-        #     raw_action_u1 = 1
-
-
-        if abs(dr_rand_start - hou_min) < 1 * step / 3600:
-            raw_action_u1 = 0
-
-        print ("Mean temp")
-        print (mean_temp)
-
-
-        #
-        # if (hou_min<7.5)or(hou_min)>17:
-        #     if (mean_temp*(303-286)+286)<298:
-        #         print ("Overriding")
-        #         raw_action_u1=0
-        #
-        #
-        # if (hou_min>7.5)or(hou_min)<9.5:
-        #     if (mean_temp*(303-286)+286)>299:
-        #         print ("Overriding")
-        #         raw_action_u1=1
-
-
-
+        
         print("Raw Action")
         print(raw_action_u1)
 
         action_proc = [33 + 273.15, 19.5 + 273.15]
         act = (action_proc[raw_action_u1])
 
-        processed_act = [act, act, act, act, act]
+        processed_act = [act]
 
         print()
         print("Cooling Coil Setpoint Action")
@@ -291,11 +195,8 @@ for e in range(last_ep,last_ep+episodes):
         next_state, reward, done, info = env.step(processed_act)
         score += reward
 
-        mean_temp = (next_state[0] + next_state[1] + next_state[2] + next_state[3] + next_state[4])/5
-
         next_state = np.array([mean_temp, next_state[5], next_state[6], next_state[7]]).astype(np.float32)
         next_state = np.reshape(next_state, [1, state_size])
-
 
         individual_rewards = env.get_individual_rewards()
         print("Individual Rewards")
@@ -311,8 +212,7 @@ for e in range(last_ep,last_ep+episodes):
             round(building_states['senPowPer3_y'], 2),
             round(building_states['senPowPer4_y'], 2)))
 
-        t_pow = building_states['senPowCor_y'] + building_states['senPowPer1_y'] + building_states['senPowPer2_y'] + \
-                building_states['senPowPer3_y'] + building_states['senPowPer4_y']
+        
         print()
         print("Total Power of all Zones: {}".format(t_pow))
         print("Mean temp: {}".format(mean_temp))
@@ -320,7 +220,6 @@ for e in range(last_ep,last_ep+episodes):
 
         # Append samples
         Agent_1.append_sample(state, raw_action_u1, reward, next_state, done)
-
 
         if (counter%24*3)==0:
             # Train Models
@@ -465,15 +364,15 @@ for e in range(last_ep,last_ep+episodes):
     print(len(Agent_1.memory))
 
     KPI_df = pd.DataFrame.from_dict(KPI_hist)
-    KPI_df.to_csv("data_dqn_dr/01_KPI/dr_KPI_v2_" + str(e) + ".csv")
+    KPI_df.to_csv("data_dqn_test/01_KPI/dr_KPI_v2_" + str(e) + ".csv")
 
     df_m_1 = pd.DataFrame(mem_list_1, columns=['States', 'Action', 'Reward', 'Next_State', 'Done'])
-    df_m_1.to_csv("data_dqn_dr/04_Mem/dr_mem_data_v2_" + str(e) + ".csv")
+    df_m_1.to_csv("data_dqn_test/04_Mem/dr_mem_data_v2_" + str(e) + ".csv")
 
-    Agent_1.model_save_weights("data_dqn_dr/02_NN/dr_DQN_v2_" + str(e) + ".h5")
+    Agent_1.model_save_weights("data_dqn_test/02_NN/dr_DQN_v2_" + str(e) + ".h5")
 
     Historian_df = pd.DataFrame.from_dict(Historian)
-    Historian_df.to_csv("data_dqn_dr/dr_data_test_v2_" + str(e) + ".csv")
+    Historian_df.to_csv("data_dqn_test/dr_data_test_v2_" + str(e) + ".csv")
 
 
 print('\nTest case complete.')
@@ -485,7 +384,6 @@ print('\nTest case complete.')
 # Get result data
 
 res = requests.get('{0}/results'.format(url)).json()
-
 
 print("Agent Memory")
 print(len(Agent_1.memory))
