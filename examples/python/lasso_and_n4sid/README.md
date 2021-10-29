@@ -1,15 +1,16 @@
-The N4SID versions are as follows:
+# N4SID and Lasso Regression
 
-## v1-v5
+This directory contains the scripts to generate the metamodels
+needed for the MPC planning model and the RL training model. The
+metamodels run much faster than a full modelica simulation and
+allow for rapid exploration of the model parameter space.
 
-These are test versions
+## Running Instructions
 
-## v6
+The setup is self-contained and afeter installing the python 
+dependencies using Poetry `pip install poetry; poetry install`,
+the user can simply run the block below to retrain the metamodels.
 
-single zone, 4-state model
-starting date: Jan 4 00:00
-
-## v7 - 5 Zones
-
-5 zone, 4-states/zone model
-starting date: Jan 4 00:00
+```bash
+python run.py
+```
