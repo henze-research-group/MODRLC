@@ -1,6 +1,9 @@
 # This file is copied here from MPC as a template on what needs to be
-# implemented to replace this with BOPTEST.
-# Author: Nicholas Long <nllong>
+# implemented to replace this with BOPTEST. If changing the BOPTEST
+# model, then the customized sensors will need to be changed in the
+# code below.
+
+# Author: Nicholas Long <https://github.com/nllong>
 
 import sys
 #
@@ -26,6 +29,7 @@ import sys
 #   along with do-mpc.  If not, see <http://www.gnu.org/licenses/>.
 from pathlib import Path
 
+# Import the boptest_client to communicate with BOPTEST
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'boptest_client'))
 
 from casadi.tools import *
@@ -65,7 +69,7 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         :param model: Simulation model
         :type var_type: model class
 
-        :param client: Simulator API client (must implement specific APIs)
+        :param client: Simulator API client (must implement specific APIs) [e.g., BOPTEST]
         :type var_type: model class
 
         :return: None
@@ -621,13 +625,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
 
         # Different path if using BOPTEST
         if self.client:
-            # Can we just keep x_next as it is? Do we need to update this?
+            # x_next from the N4SID is the room temperatures for all zones
             x_next = self.simulate()
-            # x_next from BOPTEST is the room temperatures for all zones
-            # remove some of the u elements such as weather data (exogenous inputs)
-            # x_next = self.client.advance(self.sim_p_num['_u'])
-            # x_next_new = self.client.advance(self._calculate_u(None))
-            # print(x_next_new)
         else:
             x_next = self.simulate()
 
@@ -635,14 +634,13 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
         aux0 = self.sim_aux_num
 
         if self.client:
-            # previous y_next in order to match structures:
+            # previous y_next is run, but the results are not needed.
             old_y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
 
-            # also grab heating power to plot (senHeaPow1_y)
+            # Advance the BOPTEST simulation and return the y_next (senHeaPow1_y)
             y_next = self.client.advance(control_u=self._calculate_u(None))
             t_room = y_next['senTemRoom1_y']
             print("Cooling power:", y_next['senCCPow1_y'])
-            # oa_room = y_next['senOAVol1_y']
             # print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
 
             self.data.update(_x=x0)
@@ -658,7 +656,6 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             self._u0.master = u0
             self._t0 = self._t0 + self.t_step
 
-            # return [t_room, oa_room]
             return t_room, x_next, x0
         else:
             # Call measurement function

@@ -107,9 +107,6 @@ ax[axis].set_title('Power Variables')
 mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
 mpc_plot.add_line('_x', 'cf_heating_power', ax[axis], color='blue')
 mpc_plot.add_line('_x', 'heating_power_prev', ax[axis], color='green')
-# mpc_plot.add_line('_tvp', 'P1_FanPow', ax[axis], color='blue')
-# mpc_plot.add_line('_tvp', 'P1_HeaPow', ax[axis], color='red')
-#mpc_plot.add_line('_tvp', 'P1_IntGaiTot', ax[axis], color='green')
 
 #axis += 1
 #ax[axis].set_title('Outside Air (m3/s)')
@@ -126,21 +123,9 @@ axis += 1
 ax[axis].set_title('Electricity Cost Multiplier')
 mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
 
-# axis += 1
-# ax[axis].set_title('Total Power')
-# mpc_plot.add_line('_aux', 'total_power', ax[axis])
-
 axis += 1
 ax[axis].set_title('Cost Function')
 mpc_plot.add_line('_aux', 'cost', ax[axis])
-
-#axis += 1
-#ax[axis].set_title('State Matrix X')
-#mpc_plot.add_line('_x', 'x', ax[axis])
-
-# ax[4].set_title('Estimated parameters:')
-
-# mhe_plot.add_line('_y', 'y', ax[4])
 
 for ax_i in ax:
     ax_i.axvline(1.0)
@@ -201,17 +186,6 @@ for k in range(288 * 1):
         historian.add_datum('t_indoor_predicted', y_pred)
         historian.add_datum('t_indoor_predicted_after_kalman', y_kalman)
 
-        # Updating state vars using kalman gain
-        # x0.master[0:x_state_var_cnt] = x0.master[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
-        # x0 = np.vstack((
-        #     x0.master[0:x_state_var_cnt],
-        #    np.array([
-        #        [y_measured], # this is of time = t + 1
-        #        u0[0],  # THIS IS of time = t
-        #        u0[0],  # what to do with this
-        #    ])
-        # ))
-
     # save the file every timestep so that you can tail it for a log
     historian.save_csv(results_path, 'historian.csv')
 
@@ -222,7 +196,6 @@ for k in range(288 * 1):
         mpc_plot.plot_results(t_ind=k)
         mpc_plot.plot_predictions(t_ind=k)
         mpc_plot.reset_axes()
-        # ax[3].set_ylim(250, 310)
 
         # mhe_plot.plot_results()
         # sim_plot.plot_results()
