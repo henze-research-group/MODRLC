@@ -1,14 +1,12 @@
-import control
-import slycot
-import numpy as np
 import pandas as pd
-import math
-import matplotlib.pyplot as plt
 from itertools import combinations
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import sippy as sp
+from sippy.functionsetSIM import *
 from sklearn.metrics import r2_score, mean_squared_error, median_absolute_error
 
-from resources import sippy as sp
-from resources.sippy.functionsetSIM import *
 
 class Metamodel:
 
@@ -24,7 +22,7 @@ class Metamodel:
 
         return origdata
 
-    def set_identification_parameters(self, estimate, method = 'N4SID', training = 30, testing = 10, start_day = 0):
+    def set_identification_parameters(self, estimate, method='N4SID', training=30, testing=10, start_day=0):
         step = self.step
         self.estimate = estimate
         self.method = method
@@ -67,7 +65,8 @@ class Metamodel:
                     try:
                         training_bss = self.X_train[list(comb[j])].to_numpy().transpose()
                         testing_bss = self.X_test[list(comb[j])].to_numpy().transpose()
-                        sid = sp.system_identification(self.y_train, training_bss, self.method, IC='AICc', SS_D_required=False)
+                        sid = sp.system_identification(self.y_train, training_bss, self.method, IC='AICc',
+                                                       SS_D_required=False)
                         x, y = sp.functionsetSIM.SS_lsim_predictor_form(sid.A_K, sid.B_K, sid.C, sid.D, sid.K,
                                                                         np.array([self.y_train]), testing_bss)
                         x, y = sp.functionsetSIM.SS_lsim_process_form(sid.A, sid.B, sid.C, sid.D, testing_bss,
@@ -76,7 +75,7 @@ class Metamodel:
                     except Exception as e:
                         failed.append(comb[j])
                         continue
-        bestsubset =  list(max(metrics, key=metrics.get))
+        bestsubset = list(max(metrics, key=metrics.get))
         print("Best combination:", max(metrics, key=metrics.get), metrics[max(metrics, key=metrics.get)])
         return bestsubset
 
@@ -84,7 +83,7 @@ class Metamodel:
         # todo: add FSS
         return None
 
-    def extract(self, select = '', override = None):
+    def extract(self, select='', override=None):
 
         if select == 'bss':
             estimators = self.bss()
@@ -110,7 +109,6 @@ class Metamodel:
         for i in range(repeats):
             x_, y_ = sp.functionsetSIM.SS_lsim_process_form(sid.A, sid.B, sid.C, sid.D, X_test_sid, x[:, -2:])
 
-
         testaxis = np.arange(1, len(self.X_test[self.X_test.columns[0]]) + 1)
 
         plt.figure(figsize=(20, 10))
@@ -120,11 +118,14 @@ class Metamodel:
 
         return sid.A, sid.B, sid.C, sid.A_K, sid.B_K, sid.K, x_[:, -1]
 
+
 def toInt(a):
     return int(a)
 
+
 def toCelsius(a):
-  return a - 273.15
+    return a - 273.15
+
 
 def normalize_data(df):
     normalized_df = (df - df.min()) / (df.max() - df.min())

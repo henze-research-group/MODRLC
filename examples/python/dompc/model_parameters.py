@@ -12,7 +12,7 @@ class ModelParameters:
 
     def __init__(self):
         # Load in the N4SID matrices
-        p = Path('.').resolve().parent / 'lasso_and_n4sid' / 'n4sid_v10'
+        p = Path('.').resolve().parent / 'metamodeling' / 'output'
         if p.exists():
             # States are room temperatures, <to flesh out>
             self.a = np.load(p / 'output' / 'matrix_A1.npy')
@@ -61,7 +61,7 @@ class ModelParameters:
             # print(self.u1test['mod.building.weaBus.TDryBul'].values[0:100])
             # raise SystemExit()
         else:
-            raise Exception(f"lasso_and_n4sid path does not exist at {p}")
+            raise Exception(f"metamodeling path does not exist at {p}")
 
         # print(f"A: {self.a.shape}")
         # print(f"B: {self.b.shape}")
