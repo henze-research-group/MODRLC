@@ -4,7 +4,7 @@
 import requests
 import numpy as np;import pandas as pd
 import json,collections
-from RL_Agent.DQN_Agent_test import DQN_Agent
+from DQN_Agent_test import DQN_Agent
 from boptestGymEnv import BoptestGymEnv
 import collections
 from collections import OrderedDict
@@ -52,27 +52,27 @@ env = BoptestGymEnv(episode_length=episode_length,
                      building_obs=building_obs,
                      forecast_obs=forecast_obs,
                      kpi_zones= kpi_zones,
-                     password = None,
-                     lower_obs_bounds=[286, 286, 286, 286, 286,  0,  0, 0],
-                     upper_obs_bounds=[303, 303, 303, 303, 303, 24,  1, 1],
+                     password = None,  # put your own password
+                     lower_obs_bounds=[0,  286, 286, 286,     0],
+                     upper_obs_bounds=[24, 303, 303, 303,  1000],
                      KPI_rewards=KPI_rewards,
-                     n_obs = True,
-                     dr_all_time = True)
+                     n_obs = False)
 
 kpi_list = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']
 state_size = env.observation_space.shape[0]
 
+print ("State_size :{}".format(state_size))
+
 episodes= 6
 last_ep= 0
 
-Agent_1 = DQN_Agent(state_size, 2)
+Agent_1 = DQN_Agent(state_size, 4)
 
 # RUN TEST CASE - From 2nd episode
 # -------------
 
 mem_list_1 = []
-Historian = {key: [] for key in ['time', 'states', 'rewards', 'episodes', 'action_1',
-                                 'reward_energy','reward_tdisc','reward_power','senTemOA_y',
+Historian = {key: [] for key in ['time', 'states', 'rewards', 'episodes', 'action_1','senTemOA_y',
                                  'senTRoom_y','senTRoom1_y','senTRoom2_y','senTRoom3_y','senTRoom4_y',
                                  'Total_Pow_Dem_0','Total_Pow_Dem_1','Total_Pow_Dem_2','Total_Pow_Dem_3','Total_Pow_Dem_4',
                                  'Heating_Pow_Dem_0','Heating_Pow_Dem_1','Heating_Pow_Dem_2','Heating_Pow_Dem_3','Heating_Pow_Dem_4',
@@ -102,7 +102,6 @@ for e in range(last_ep,last_ep+episodes):
     print ("State")
     print (state)
 
-    state = np.array([mean_temp,state[5],state[6],state[7]]).astype(np.float32)
     print("Modified State")
     print(state)
 
@@ -149,7 +148,7 @@ for e in range(last_ep,last_ep+episodes):
         next_state, reward, done, info = env.step(processed_act)
         score += reward
 
-        next_state = np.array([mean_temp, next_state[5], next_state[6], next_state[7]]).astype(np.float32)
+
         next_state = np.reshape(next_state, [1, state_size])
 
         building_states = env.get_building_states()
@@ -164,9 +163,7 @@ for e in range(last_ep,last_ep+episodes):
 
         
         print()
-        print("Total Power of all Zones: {}".format(t_pow))
-        print("Mean temp: {}".format(mean_temp))
-
+        
 
         # Append samples
         Agent_1.append_sample(state, raw_action_u1, reward, next_state, done)
@@ -191,11 +188,11 @@ for e in range(last_ep,last_ep+episodes):
         print(next_state, reward, done, info)
 
         print("Room Temperature;  Zone 0: {}, Zone 1: {}, Zone 2: {}, Zone 3: {}, Zone 4: {}, OA Temp: {}".format(
-            building_states['senTRoom_y'],
-            building_states['senTRoom1_y'],
-            building_states['senTRoom2_y'],
-            building_states['senTRoom3_y'],
-            building_states['senTRoom4_y'],
+            building_states['senTemRoom_y'],
+            building_states['senTemRoom1_y'],
+            building_states['senTemRoom2_y'],
+            building_states['senTemRoom3_y'],
+            building_states['senTemRoom4_y'],
             building_states['senTemOA_y']))
 
 
@@ -261,15 +258,15 @@ for e in range(last_ep,last_ep+episodes):
     print(len(Agent_1.memory))
 
     KPI_df = pd.DataFrame.from_dict(KPI_hist)
-    KPI_df.to_csv("RL_data_test/RL_Agent/01_KPI/dr_KPI_v2_" + str(e) + ".csv")
+    KPI_df.to_csv("RL_Data_test/01_KPI/dr_KPI_v2_" + str(e) + ".csv")
 
     df_m_1 = pd.DataFrame(mem_list_1, columns=['States', 'Action', 'Reward', 'Next_State', 'Done'])
-    df_m_1.to_csv("RL_data_test/RL_Agent/04_Mem/dr_mem_data_v2_" + str(e) + ".csv")
+    df_m_1.to_csv("RL_Data_test/04_Mem/dr_mem_data_v2_" + str(e) + ".csv")
 
-    Agent_1.model_save_weights("RL_data_test/RL_Agent/02_NN/dr_DQN_v2_" + str(e) + ".h5")
+    Agent_1.model_save_weights("RL_Data_test/02_NN/dr_DQN_v2_" + str(e) + ".h5")
 
     Historian_df = pd.DataFrame.from_dict(Historian)
-    Historian_df.to_csv("RL_data_test/RL_Agent/dr_data_test_v2_" + str(e) + ".csv")
+    Historian_df.to_csv("RL_Data_test/RL_Agent/dr_data_test_v2_" + str(e) + ".csv")
 
 
 print('\nTest case complete.')

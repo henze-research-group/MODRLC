@@ -40,7 +40,7 @@ class BoptestGymEnv(gym.Env):
 
     def __init__(self, 
                  url                = 'http://127.0.0.1:5000',
-                 password           = None
+                 password           = None,
                  actions            = ['oveDSet_activate'],
                  building_obs       = ['senTRoom_y'],
                  forecast_obs       = {'TDryBul': [0, 4], 'winDir': [0], 'HGloHor': [0, 1]},
@@ -48,13 +48,13 @@ class BoptestGymEnv(gym.Env):
                  lower_obs_bounds   = None,
                  upper_obs_bounds   = None,
                  reward             = ['reward'],
-                 max_episode_length = 3*3600,
-                 n_obs              =True,
+                 episode_length     = 3*3600,
+                 n_obs              = True,
                  random_start_time  = False,
                  excluding_periods  = None,
                  forecasting_period = None,
                  DR_event           = False,
-                 DR_time            =[3600 * 14, 3600 * 16],
+                 DR_time            = [3600 * 14, 3600 * 16],
                  start_time         = 0,
                  warmup_period      = 0,
                  Ts                 = 900,
@@ -90,8 +90,8 @@ class BoptestGymEnv(gym.Env):
         reward: list
             List with string indicating the reward column name in a replay
             buffer of data in case the algorithm is going to use pretraining
-        max_episode_length: integer
-            Maximum duration of each episode in seconds
+        episode_length: integer
+            Duration of each episode in seconds
         random_start_time: boolean
             Set to True if desired to use a random start time for each episode
         excluding_periods: list of tuples
@@ -133,7 +133,7 @@ class BoptestGymEnv(gym.Env):
         self.forecast_obs           = forecast_obs
         self.lower_obs_bounds       = lower_obs_bounds
         self.upper_obs_bounds       = upper_obs_bounds
-        self.max_episode_length     = max_episode_length
+        self.episode_length         = episode_length
         self.random_start_time      = random_start_time
         self.excluding_periods      = excluding_periods
         self.start_time             = start_time
@@ -160,7 +160,7 @@ class BoptestGymEnv(gym.Env):
 
         
         # Avoid surpassing the end of the year during an episode
-        self.end_year_margin = self.max_episode_length
+        self.end_year_margin = self.episode_length
         
         #=============================================================
         # Get test information
@@ -283,7 +283,7 @@ class BoptestGymEnv(gym.Env):
         summary['GYM ENVIRONMENT INFORMATION']['Random start time'] = pformat(self.random_start_time)
         summary['GYM ENVIRONMENT INFORMATION']['Excluding periods (seconds from the beginning of the year)'] = pformat(self.excluding_periods)
         summary['GYM ENVIRONMENT INFORMATION']['Warmup period for each episode (seconds)'] = pformat(self.warmup_period)
-        summary['GYM ENVIRONMENT INFORMATION']['Maximum episode length (seconds)'] = pformat(self.max_episode_length)
+        summary['GYM ENVIRONMENT INFORMATION']['Maximum episode length (seconds)'] = pformat(self.episode_length)
         summary['GYM ENVIRONMENT INFORMATION']['Environment reward function (source code)'] = pformat(inspect.getsource(self.compute_reward))
         summary['GYM ENVIRONMENT INFORMATION']['Environment hierarchy'] = pformat(inspect.getmro(self.__class__))
         
@@ -344,7 +344,7 @@ class BoptestGymEnv(gym.Env):
             
             '''
             start_time = random.randint(0, 3.1536e+7-self.end_year_margin)
-            episode = (start_time, start_time+self.max_episode_length)
+            episode = (start_time, start_time+self.episode_length)
             if self.excluding_periods is not None:
                 for period in self.excluding_periods:
                     if episode[0] < period[1] and period[0] < episode[1]:
@@ -507,7 +507,7 @@ class BoptestGymEnv(gym.Env):
         reward = self.compute_reward()
         
         # Define whether we've finished the episode
-        done = res['time'] >= self.start_time + self.max_episode_length
+        done = res['time'] >= self.start_time + self.episode_length
         
         # Optionally we can pass additional info - here individual zone rewards are returned
         info = self.get_info()
@@ -720,16 +720,18 @@ class BoptestGymEnv(gym.Env):
         sel_kpi_ener = {x: power_dict[x] for x in sel_kpi_ener_keys}
 
         # print ("Debugging")
+        # print (kpi_tdis)
         # print (sel_kpi_tdis)
+        # print (power_dict)
         # print (sel_kpi_ener)
 
         R = []
 
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * sel_kpi_tdis['Temp_0_Dev'] + self.KPI_rewards['tdis_tot']["hyper"]*sel_kpi_ener['Average_power_0'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * sel_kpi_tdis['Temp_1_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * sel_kpi_ener['Average_power_1'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * sel_kpi_tdis['Temp_2_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * sel_kpi_ener['Average_power_2'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * sel_kpi_tdis['Temp_3_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * sel_kpi_ener['Average_power_3'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * sel_kpi_tdis['Temp_4_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * sel_kpi_ener['Average_power_4'])
+        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_0_Dev'] + self.KPI_rewards['tdis_tot']["hyper"]*power_dict['Average_power_0'])
+        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_1_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_1'])
+        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_2_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_2'])
+        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_3_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_3'])
+        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_4_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_4'])
 
         self.info['rewards_0'] = R[0]
         self.info['rewards_1'] = R[1]
@@ -753,7 +755,7 @@ class BoptestGymEnv(gym.Env):
         return reward
 
     def compute_done(self, res, reward=None):
-        done = res['time'] >= self.start_time + self.max_episode_length
+        done = res['time'] >= self.start_time + self.episode_length
         return done
 
     def get_observations(self, res):
