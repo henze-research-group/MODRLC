@@ -52,7 +52,7 @@ env = BoptestGymEnv(episode_length=episode_length,
                      building_obs=building_obs,
                      forecast_obs=forecast_obs,
                      kpi_zones= kpi_zones,
-                     password ='dbuass642yo',  # put your own password
+                     password =None,  # put your own password
                      lower_obs_bounds=[0,  286, 286, 286,     0],
                      upper_obs_bounds=[24, 303, 303, 303,  1000],
                      KPI_rewards=KPI_rewards,
