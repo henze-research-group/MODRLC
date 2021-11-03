@@ -52,7 +52,7 @@ env = BoptestGymEnv(episode_length=episode_length,
                      building_obs=building_obs,
                      forecast_obs=forecast_obs,
                      kpi_zones= kpi_zones,
-                     password = None,  # put your own password
+                     password ='dbuass642yo',  # put your own password
                      lower_obs_bounds=[0,  286, 286, 286,     0],
                      upper_obs_bounds=[24, 303, 303, 303,  1000],
                      KPI_rewards=KPI_rewards,
@@ -68,7 +68,7 @@ last_ep= 0
 
 Agent_1 = DQN_Agent(state_size, 4)
 
-# RUN TEST CASE - From 2nd episode
+# RUN TEST CASE -
 # -------------
 
 mem_list_1 = []
@@ -93,7 +93,7 @@ print('\nRunning controller script...')
 
 # Simulation Loop
 for e in range(last_ep,last_ep+episodes):
-    Agent_1.update_target_model()  # From 2nd episode
+    Agent_1.update_target_model()
     score = 0
     e = e + 1
     print('\nRunning controller script...')
@@ -129,12 +129,14 @@ for e in range(last_ep,last_ep+episodes):
         print('Days: {}, Hours: {} , Minutes: {}'.format(days,hou_min, minutes))
         raw_action_u1 = Agent_1.get_action(state)
         q_1 = Agent_1.target_predict_qvalue(state)
+
+        raw_action_u1 = 3
         
         print("Raw Action")
         print(raw_action_u1)
 
         action_proc= [0,0.1,0.15,0.25]
-        act = (action_proc[raw_action_u1])
+        act = action_proc[raw_action_u1]
 
         processed_act = [act]
 
@@ -266,7 +268,7 @@ for e in range(last_ep,last_ep+episodes):
     Agent_1.model_save_weights("RL_Data_test/02_NN/dr_DQN_v2_" + str(e) + ".h5")
 
     Historian_df = pd.DataFrame.from_dict(Historian)
-    Historian_df.to_csv("RL_Data_test/RL_Agent/dr_data_test_v2_" + str(e) + ".csv")
+    Historian_df.to_csv("RL_Data_test/dr_data_test_v2_" + str(e) + ".csv")
 
 
 print('\nTest case complete.')

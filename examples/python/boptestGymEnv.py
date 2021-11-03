@@ -454,8 +454,8 @@ class BoptestGymEnv(gym.Env):
             # Low-level damper control
              'PSZACcontroller_oveDamCor_u': 0,   # 0 to 0.5 m3/s
              'PSZACcontroller_oveDamCor_activate': 0,
-             'PSZACcontroller_oveDamP1_u': 0,
-             'PSZACcontroller_oveDamP1_activate': 0,
+             'PSZACcontroller_oveDamP1_u': 0.5,
+             'PSZACcontroller_oveDamP1_activate': 1,
              'PSZACcontroller_oveDamP2_u': 0,
              'PSZACcontroller_oveDamP2_activate': 0,
              'PSZACcontroller_oveDamP3_u': 0,
@@ -689,12 +689,12 @@ class BoptestGymEnv(gym.Env):
 
         hour = self.building_y['senHouDec_y']
 
-        if (hour >= 8) & (hour < 18):
+        if (hour >= 6) & (hour < 22):
             upp_setpoint = 297.15
             low_setpoint = 294.15
         else:
-            upp_setpoint = 300.15
-            low_setpoint = 291.15
+            upp_setpoint = 303.15
+            low_setpoint = 288.15
 
         Temp_keys = [x for x in kpi_dict.keys() if "Temp" in x]
         Power_keys = [x for x in kpi_dict.keys() if "power" in x]
