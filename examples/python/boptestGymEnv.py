@@ -1,13 +1,6 @@
-'''
-Created on Jun 4, 2020
-
-@author: Javier Arroyo & Sourav Dey
-
-'''
 
 import random
 import gym
-import copy
 import requests
 import numpy as np
 import pandas as pd
@@ -23,9 +16,6 @@ import time as _time
 from collections import OrderedDict
 from pprint import pformat
 from gym import spaces
-#from stable_baselines.common.env_checker import check_env
-#from stable_baselines.results_plotter import load_results, ts2xy
-#from stable_baselines.common.callbacks import BaseCallback
 
 
 class BoptestGymEnv(gym.Env):
@@ -44,12 +34,11 @@ class BoptestGymEnv(gym.Env):
                  actions            = ['oveDSet_activate'],
                  building_obs       = ['senTRoom_y'],
                  forecast_obs       = {'TDryBul': [0, 4], 'winDir': [0], 'HGloHor': [0, 1]},
-                 observations       = {'senTRoom_y':(280.,310.)},
                  lower_obs_bounds   = None,
                  upper_obs_bounds   = None,
                  reward             = ['reward'],
                  episode_length     = 3*3600,
-                 n_obs              = True,
+                 n_obs              = False,
                  random_start_time  = False,
                  excluding_periods  = None,
                  forecasting_period = None,
@@ -58,7 +47,7 @@ class BoptestGymEnv(gym.Env):
                  start_time         = 0,
                  warmup_period      = 0,
                  Ts                 = 900,
-                 occupancy_sch      = [8,18],
+                 occupancy_sch      = [6,20],
                  dr_obs             = [0, 1],
                  kpi_zones          = ['0','1','2','3','4'],
                  KPI_rewards        = {"ener_tot": {"hyper": -1, "power": 1},
@@ -68,67 +57,11 @@ class BoptestGymEnv(gym.Env):
                                        "emis_tot": {"hyper": 0, "power": 1}}):
 
 
-        '''
-        Parameters
-        ----------
-        url: string
-            Rest API url for communication with the BOPTEST interface
-        actions: list
-            List of strings indicating the action space. The bounds of 
-            each variable from the action space the are retrieved from 
-            the overwrite block attributes of the BOPTEST test case
-        observations: dictionary
-            Dictionary mapping observation keys to a tuple with the lower
-            and upper bound of each observation. Observation keys must 
-            belong either to the set of measurements or to the set of 
-            forecasting variables of the BOPTEST test case. Contrary to 
-            the actions, the expected minimum and maximum values of the 
-            measurement and forecasting variables are not provided from 
-            the BOPTEST framework, although they are still relevant here 
-            e.g. for normalization or discretization. Therefore, these 
-            bounds need to be provided by the user. 
-        reward: list
-            List with string indicating the reward column name in a replay
-            buffer of data in case the algorithm is going to use pretraining
-        episode_length: integer
-            Duration of each episode in seconds
-        random_start_time: boolean
-            Set to True if desired to use a random start time for each episode
-        excluding_periods: list of tuples
-            List where each element is a tuple indicating the start and 
-            end time of the periods that should not overlap with any 
-            episode used for training. Example:
-            excluding_periods = [(31*24*3600,  31*24*3600+14*24*3600),
-                                (304*24*3600, 304*24*3600+14*24*3600)]
-            This is only used when `random_start_time=True`
-        forecasting_period: integer, default is None
-            Number of seconds for the forecasting horizon. The observations
-            will be extended for each of the forecasting variables indicated
-            in the `observations` dictionary argument. Specifically, a number
-            of `int(self.forecasting_period/self.Ts)` observations per 
-            forecasting variable will be included in the observation space.
-            Each of these observations correspond to the foresighted 
-            variable `i` steps ahead from the actual observation time. 
-            Note that it's allowed to use `forecasting_period=0` when the
-            intention is to retrieve boundary condition data at the actual
-            observation time, useful e.g. for temperature setpoints or 
-            ambient temperature. 
-        start_time: integer
-            Initial fixed episode time in seconds from beginning of the 
-            year for each episode. Use in combination with 
-            `random_start_time=False` 
-        warmup_period: integer
-            Desired simulation period to initialize each episode 
-        Ts: integer
-            Sampling time in seconds
-            
-        '''
-        
+
         super(BoptestGymEnv,self).__init__()
         
         self.url                    = url
-        self.actions                = actions
-        self.observations           = list(observations.keys())
+        self.actions                = actions        
         self.building_obs           = building_obs
         self.forecast_obs           = forecast_obs
         self.lower_obs_bounds       = lower_obs_bounds
@@ -270,7 +203,7 @@ class BoptestGymEnv(gym.Env):
         summary['BOPTEST CASE INFORMATION']['All input variables'] = pformat(self.all_input_vars)
         summary['BOPTEST CASE INFORMATION']['Default simulation step (seconds)'] = pformat(self.step_def)
         summary['BOPTEST CASE INFORMATION']['Default forecasting parameters (seconds)'] = pformat(self.forecast_def)
-        #summary['BOPTEST CASE INFORMATION']['Default scenario'] = pformat(self.scenario_def)    # edit 01
+        
         
         summary['GYM ENVIRONMENT INFORMATION'] = OrderedDict()
         summary['GYM ENVIRONMENT INFORMATION']['Observation space'] = pformat(self.observation_space)
@@ -304,59 +237,9 @@ class BoptestGymEnv(gym.Env):
         with open('{}.json'.format(file_name), 'w') as outfile:  
             json.dump(summary, outfile) 
             
-    def load_summary(self, file_name='summary'):
-        '''
-        Loads an environment summary from a `.json` file. 
-        
-        Parameters
-        ----------
-        file_name: string
-            File in `.json` format from where the summary is to be loaded
-        
-        Returns
-        -------
-        summary: OrderedDict
-            A summary of an environment
-            
-        '''
-        
-        with open(file_name+'.json', 'r') as f:
-            summary = json.load(f, object_pairs_hook=OrderedDict)
-        
-        return summary
+  
 
-    def reset(self):
-        '''
-
-        Returns
-        -------
-        observations: numpy array
-            Reformatted observations that include measurements and 
-            predictions (if any) at the end of the initialization. 
-         
-        '''        
-        
-        def find_start_time():
-            '''Recursive method to find a random start time out of 
-            `excluding_periods`. An episode and an excluding_period that
-            are just touching each other are not considered as being 
-            overlapped. 
-            
-            '''
-            start_time = random.randint(0, 3.1536e+7-self.end_year_margin)
-            episode = (start_time, start_time+self.episode_length)
-            if self.excluding_periods is not None:
-                for period in self.excluding_periods:
-                    if episode[0] < period[1] and period[0] < episode[1]:
-                        # There is overlapping between episode and this period
-                        # Try to find a good starting time again
-                        start_time = find_start_time()
-            # This point is reached only when a good starting point is found
-            return start_time
-        
-        # Assign random start_time if it is None
-        if self.random_start_time:
-            self.start_time = find_start_time()
+    def reset(self):            
 
         sudoPassword = self.password
 
@@ -388,12 +271,6 @@ class BoptestGymEnv(gym.Env):
 
         self.forecast_y = forecasts
 
-        # Set forecasting parameters if predictive
-        # if self.is_predictive:
-        #     forecast_parameters = {'horizon':self.forecasting_period, 'interval':self.Ts}
-        #     requests.put('{0}/forecast_parameters'.format(self.url),
-        #                  data=forecast_parameters)
-
         # Initialize objective integrand
         self.kpi_timestep = {key: 0 for key in ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']}
         self.kpi_integral_last_step = {key: 0 for key in ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']}
@@ -406,28 +283,7 @@ class BoptestGymEnv(gym.Env):
         return meas
 
 
-    def step(self, action):
-        '''
-        Advance the simulation one time step
-        
-        Parameters
-        ----------
-        action: list
-            List of actions computed by the agent to be implemented 
-            in this step
-            
-        Returns
-        -------
-        observations: numpy array
-            Observations at the end of this time step
-        reward: float
-            Reward for the state-action pair implemented
-        done: boolean
-            True if episode is finished after this step
-        info: dictionary
-            Additional information for this step
-        
-        '''
+    def step(self, action):              
         # Initialize inputs to send through BOPTEST Rest API
         u = { #Low-level heating coil
              'PSZACcontroller_oveHeaCor_u': 0,
@@ -454,8 +310,8 @@ class BoptestGymEnv(gym.Env):
             # Low-level damper control
              'PSZACcontroller_oveDamCor_u': 0,   # 0 to 0.5 m3/s
              'PSZACcontroller_oveDamCor_activate': 0,
-             'PSZACcontroller_oveDamP1_u': 0.5,
-             'PSZACcontroller_oveDamP1_activate': 1,
+             'PSZACcontroller_oveDamP1_u': 0,
+             'PSZACcontroller_oveDamP1_activate': 0,
              'PSZACcontroller_oveDamP2_u': 0,
              'PSZACcontroller_oveDamP2_activate': 0,
              'PSZACcontroller_oveDamP3_u': 0,
@@ -522,7 +378,6 @@ class BoptestGymEnv(gym.Env):
 
 
     def normalize_obs(self,obs):
-
         if self.DR_event == True:
             low = self.observation_space.low[0:-len(self.dr_obs)]
             high = self.observation_space.high[0:-len(self.dr_obs)]
@@ -577,8 +432,6 @@ class BoptestGymEnv(gym.Env):
                     if (i + 1) < len(DR_signal):
                         DR_signal[i + 1] = 0
 
-
-
             if hour_dec > end_DR:
                 DR_signal = list()
                 #print("check condition")
@@ -626,37 +479,12 @@ class BoptestGymEnv(gym.Env):
         meas = np.array(observations).astype(np.float32)
         return meas
     
-    def render(self, mode='console'):
-        '''
-        Renders the process evolution 
-        
-        Parameters
-        ----------
-        mode: string
-            Mode to be used for the renderization
-        
-        '''
-        if mode != 'console':
-            raise NotImplementedError()
+  
 
     def close(self):
         pass
     
     def compute_reward(self):
-        '''
-        Compute the reward of last state-action-state' tuple. The 
-        reward is implemented as the negated increase in the objective
-        integrand function. In turn, this objective integrand function 
-        is calculated as the sum of the total operational cost plus
-        the weighted discomfort. 
-        
-        Returns
-        -------
-        Reward: float
-            Reward of last state-action-state' tuple
-        
-
-        '''
 
         # Compute BOPTEST core kpis
         kpis = requests.get('{0}/kpi'.format(self.url)).json()
@@ -664,7 +492,6 @@ class BoptestGymEnv(gym.Env):
         kpis_keys = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']
 
         reward = 0
-
         kpi_dict = {}
 
         customized_kpi_config = 'custom_kpi/custom_kpis_example_gym.config'
@@ -689,7 +516,7 @@ class BoptestGymEnv(gym.Env):
 
         hour = self.building_y['senHouDec_y']
 
-        if (hour >= 6) & (hour < 22):
+        if (hour >= 6) & (hour < 20):
             upp_setpoint = 297.15
             low_setpoint = 294.15
         else:
@@ -726,7 +553,6 @@ class BoptestGymEnv(gym.Env):
         # print (sel_kpi_ener)
 
         R = []
-
         R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_0_Dev'] + self.KPI_rewards['tdis_tot']["hyper"]*power_dict['Average_power_0'])
         R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_1_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_1'])
         R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_2_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_2'])
@@ -759,25 +585,6 @@ class BoptestGymEnv(gym.Env):
         return done
 
     def get_observations(self, res):
-        '''
-        Get the observations, i.e. the conjunction of measurements and 
-        forecasting variables if any. Also transforms the output to have
-        the right format. 
-        
-        Parameters
-        ----------
-        res: dictionary
-            Dictionary mapping simulation variables and their value at the
-            end of the last time step. 
-        
-        Returns
-        -------
-        observations: numpy array
-            Reformatted observations that include measurements and 
-            predictions (if any) at the end of last step. 
-        
-        '''
-        
         # Initialize observations
         observations = []
 
@@ -794,16 +601,9 @@ class BoptestGymEnv(gym.Env):
             
         # Reformat observations
         observations = np.array(observations).astype(np.float32)
-                
         return observations
     
     def get_KPIs(self):
-        '''Auxiliary method to get the so-colled core KPIs as computed in 
-        the BOPTEST framework. This is handy when evaluating performance 
-        of an agent in this environment. 
-        
-        '''
-        
         # Compute BOPTEST core kpis
         kpis = requests.get('{0}/kpi'.format(self.url)).json()
         
@@ -832,114 +632,11 @@ class BoptestGymEnv(gym.Env):
                 unit = None
             print('{0}: {1} {2}'.format(key, kpi[key], unit))
 
-
-    def reformat_expert_traj(self, file_path='data.csv'):
-        '''
-        Reformats expert trajectory from a csv file to the npz format 
-        required by Stable Baselines algorithms to be pre-trained.   
-        
-        Parameters
-        ----------
-        file_path: string
-            path to csv file containing data
-            
-        Returns
-        -------
-        numpy_dict: numpy dictionary
-            Numpy dictionary with the reformatted data
-        
-        Notes
-        -----
-        The resulting reformatted data considers only one episode from
-        a long trajectory (a long time series). No recurrent policies 
-        supported (mask and state not defined). 
-        
-        '''
-        
-        # We consider only one episode of index 0 that is never done
-        n_episodes = 1
-        ep_idx = 0
-        done = False
-        
-        # Initialize data in the episode
-        actions = []
-        observations = []
-        rewards = []
-        episode_returns = np.zeros((n_episodes,))
-        episode_starts = []
-        
-        # Initialize the only episode that we use
-        episode_starts.append(True)
-        reward_sum = 0.0
-
-        df = pd.read_csv(file_path)
-        for row in df.index:
-            # Retrieve step information from csv
-            obs     = df.loc[row, self.observations]
-            action  = df.loc[row, self.actions]
-            reward  = df.loc[row, self.reward]
-            
-            if obs.hasnans or action.hasnans or reward.hasnans:
-                raise ValueError('Nans found in row {}'.format(row))
-            
-            # Append to data
-            observations.append(np.array(obs))
-            actions.append(np.array(action))
-            rewards.append(np.array(reward))
-            episode_starts.append(np.array(done))
-            
-            reward_sum += reward
-        
-        # This is hard coded as we only support one episode so far but
-        # here we could implement some functionality for creating different 
-        # episodes from csv data
-        done = True
-        if done:
-            episode_returns[ep_idx] = reward_sum
-            reward_sum = 0.0
-    
-        if isinstance(self.observation_space, spaces.Box):
-            observations = np.concatenate(observations).reshape((-1,) + self.observation_space.shape)
-        elif isinstance(self.observation_space, spaces.Discrete):
-            observations = np.array(observations).reshape((-1, 1))
-    
-        if isinstance(self.action_space, spaces.Box):
-            actions = np.concatenate(actions).reshape((-1,) + self.action_space.shape)
-        elif isinstance(self.action_space, spaces.Discrete):
-            actions = np.array(actions).reshape((-1, 1))
-    
-        rewards = np.array(rewards)
-        episode_starts = np.array(episode_starts[:-1])
-    
-        assert len(observations) == len(actions)
-    
-        numpy_dict = {
-            'actions': actions,
-            'obs': observations,
-            'rewards': rewards,
-            'episode_returns': episode_returns,
-            'episode_starts': episode_starts
-        }  # type: Dict[str, np.ndarray]
-    
-        for key, val in numpy_dict.items():
-            print(key, val.shape)
-    
-        np.savez(file_path.split('.')[-2], **numpy_dict)
-        
-        return numpy_dict
-
-
 if __name__ == "__main__":
-    
     # Instantiate the env    
     env = BoptestGymEnv()
-
-
-    # Check the environment
-    #check_env(env, warn=True)
     obs = env.reset()
     print (env.get_summary())
-    env.render()
     print('Observation space: {}'.format(env.observation_space))
     print('Action space: {}'.format(env.action_space))
     

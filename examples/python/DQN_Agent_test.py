@@ -18,43 +18,41 @@ import sys
 import pandas as pd; import numpy as np
 import collections; from collections import deque
 import gym; from gym import spaces
-import keras
-from keras.layers import Dense
-from keras.optimizers import Adam
-from keras.models import Sequential
+import tensorflow
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
 
 
 
 BOPTEST_path = path.abspath(path.join(os.getcwd(), "../.."))
 sys.path.append(BOPTEST_path+"/examples/python")
 
-
 class DQN_Agent:
     def __init__(self,state_size,action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.learning_rate = 0.00001
-        self.memory = deque(maxlen=4000)
+        self.learning_rate = 0.000002
+        self.memory = deque(maxlen=288*35)
         self.target_model = self.build_model()
-        self.epsilon = 0.99 # initial epsilon
-        self.epsilon_decay = 0.95
-        self.train_start =288*3 #800
-        self.batch_size = 400  #2000
+        self.epsilon = 0.35 # initial epsilon
+        self.epsilon_decay = 0.99
+        self.train_start =288*4 #800
+        self.batch_size = 800  #2000
         self.discount_factor = 0.9995
-        self.epsilon_min = 0.001  # keep epsilon exploration to 0.1 % at the end
+        self.epsilon_min = 0.00001  # keep epsilon exploration to 0.00001 % at the end
         self.model = self.build_model()
 
 
 
     def build_model(self):
         model = Sequential()
-        model.add(Dense(300,input_dim=self.state_size,activation="relu",kernel_initializer = 'he_uniform'))
+        model.add(Dense(300,input_dim=self.state_size,activation="tanh",kernel_initializer = 'he_uniform'))
         model.add(Dense(350, activation="tanh", kernel_initializer='he_uniform'))
-        model.add(Dense(450, activation="tanh", kernel_initializer='he_uniform'))
-        model.add(Dense(600, activation="tanh", kernel_initializer='he_uniform'))
+        model.add(Dense(400, activation="tanh", kernel_initializer='he_uniform'))
         model.add(Dense(500, activation="tanh", kernel_initializer='he_uniform'))
+        model.add(Dense(450, activation="linear", kernel_initializer='he_uniform'))
         model.add(Dense(400, activation="linear", kernel_initializer='he_uniform'))
-        model.add(Dense(300, activation="linear", kernel_initializer='he_uniform'))
         model.add(Dense(self.action_size, activation="linear", kernel_initializer='he_uniform'))
         model.summary()
         model.compile(loss='mse',optimizer = Adam(lr=self.learning_rate))
