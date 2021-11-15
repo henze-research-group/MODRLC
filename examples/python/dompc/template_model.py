@@ -100,9 +100,12 @@ def template_model():
     discomfort = (fmax(t_indoor - tsetpoint_upper, 0) ** 2 + fmax(tsetpoint_lower - t_indoor, 0) ** 2)
     # energy_cost = total_power * elec_unit_cost
     # demand_cost = elec_demand_cost * (fmax(peak_demand - target_demand_limit, 0) ** 2)
-    cost_function = w_power * cf_heating_power * elec_cost_multiplier + \
+    cost_function = w_power * cf_heating_power * elec_cost_multiplier_no_dr + \
                     w_discomfort * discomfort + \
                     w_coc_increase * fmax(cf_heating_power - heating_power_prev, 0) ** 2
+    # cost_function = w_power * cf_heating_power * elec_cost_multiplier + \
+                    # w_discomfort * discomfort + \
+                    # w_coc_increase * fmax(cf_heating_power - heating_power_prev, 0) ** 2
     model.set_expression(expr_name='cost', expr=cost_function)
     model.setup()
 

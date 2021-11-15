@@ -32,7 +32,8 @@ model = template_model()
 mpc = template_mpc(model)
 simulator, boptest_client = template_simulator(model)
 if boptest_client is not None:
-    results_path = 'results/som3_mpc_boptest'
+    # results_path = 'results/som3_mpc_boptest'
+    results_path = 'results/som3_mpc_nodr_boptest'
 else:
     results_path = 'results/som3_mpc_statefeedback'
 

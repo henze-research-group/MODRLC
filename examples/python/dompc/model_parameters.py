@@ -15,21 +15,21 @@ class ModelParameters:
         p = Path('.').resolve().parent / 'metamodeling' / 'output'
         if p.exists():
             # States are room temperatures, <to flesh out>
-            self.a = np.load(p / 'output' / 'matrix_A1.npy')
+            self.a = np.load(p / 'matrix_A1.npy')
             print(self.a)
-            self.b = np.load(p / 'output' / 'matrix_B1.npy')
+            self.b = np.load(p / 'matrix_B1.npy')
             print("B Matrix")
             print(self.b.shape)
             print(self.b)
-            self.c = np.load(p / 'output' / 'matrix_C1.npy')
+            self.c = np.load(p / 'matrix_C1.npy')
             # D array is zeroed out for the length of the inputs in _u
             self.d = np.array([[0, 0, 0, 0, 0]])
             print("D Matrix")
             print(self.d.shape)
             print(self.d)
-            self.K = np.load(p / 'output' / 'kalman_gain_K.npy')
+            self.K = np.load(p / 'kalman_gain_K.npy')
             # use the last column of the data per Thibault's comment
-            self.x0 = np.transpose([np.load(p / 'output' / 'sys_id1_x0.npy')[:,1]])
+            self.x0 = np.transpose([np.load(p / 'sys_id1_x0.npy')[:,1]])
             print(self.x0.shape)
             print(self.x0)
             print("finished loading matrices")
@@ -38,7 +38,7 @@ class ModelParameters:
             # if not tvp_file.exists():
             #     raise Exception("There is no time varying parameter file, make sure to unzip wrapped 2.7z")
 
-            self.u1test = pd.read_csv(p / 'output' / 'u1test.csv')
+            self.u1test = pd.read_csv(p / 'u1test.csv')
 
             # # Read in the time varying parameters -- old processing code
             # tvp_data = pd.read_csv(tvp_file)
@@ -51,7 +51,7 @@ class ModelParameters:
             # self.tvp_data = self.tvp_data.head(int(7000000 / 300))
             # self.tvp_data.to_csv('tmp_exogenous_data.csv')
 
-            p_data = p.resolve() / 'output' / 'u1test_tvps.xls'
+            p_data = p.resolve() / 'u1test_tvps.xls'
             if not p_data.exists():
                 raise Exception(f"There is not time varying setpoint parameter file, make sure it exists {p_data}")
 
@@ -178,6 +178,13 @@ class ModelParameters:
             "var_name": "ElecCost",
             "data_column_name": "elec_cost_multiplier",
             "local_var_name": "elec_cost_multiplier",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "u1test_tvps",
+            "var_name": "ElecCostNoDR",
+            "data_column_name": "elec_cost_multiplier_no_dr",
+            "local_var_name": "elec_cost_multiplier_no_dr",
         })
 
         # running configuration
