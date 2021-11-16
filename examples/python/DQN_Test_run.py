@@ -36,9 +36,9 @@ env = BoptestGymEnv(episode_length=episode_length,
                      building_obs=building_obs,
                      forecast_obs=forecast_obs,
                      kpi_zones= kpi_zones,
-                     password =None,                            # put your own password
-                     lower_obs_bounds=[15,  0, -12,      0],    # manually set the lower bounds for observation
-                     upper_obs_bounds=[27, 24,   5,    200],    # manually set the upper bounds for observation
+                     password =None,                                         # put your own password
+                     lower_obs_bounds=[273.15+15,  0, 273.15-12,      0],    # manually set the lower bounds for observation
+                     upper_obs_bounds=[273.15+27, 24,  273.15+5,    195.8],    # manually set the upper bounds for observation
                      KPI_rewards=KPI_rewards,
                      n_obs = True)                              # if set to True returns a normalized state vector between 0-1
 
@@ -47,8 +47,8 @@ state_size = env.observation_space.shape[0]
 
 print ("State_size :{}".format(state_size))
 
-episodes= 6
-last_ep= 0
+episodes= 5
+last_ep= 100
 
 Agent_1 = DQN_Agent(state_size, 5)
 

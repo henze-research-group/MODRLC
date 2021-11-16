@@ -11,8 +11,6 @@ imported from a different module.
 # ----------------------
 import requests; import os
 import time ; import random
-import json,collections
-from collections import deque
 import os.path as path
 import sys
 import pandas as pd; import numpy as np
@@ -35,12 +33,12 @@ class DQN_Agent:
         self.learning_rate = 0.000002
         self.memory = deque(maxlen=288*35)
         self.target_model = self.build_model()
-        self.epsilon = 0.35 # initial epsilon
+        self.epsilon = 0.000001 # initial exploration
         self.epsilon_decay = 0.99
-        self.train_start =288*4 #800
-        self.batch_size = 800  #2000
+        self.train_start =288*4
+        self.batch_size = 800
         self.discount_factor = 0.9995
-        self.epsilon_min = 0.00001  # keep epsilon exploration to 0.00001 % at the end
+        self.epsilon_min = 0  # min exploration at the end
         self.model = self.build_model()
 
 
