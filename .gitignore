@@ -18,9 +18,9 @@ parser/*.json
 ~$*
 
 # ignore the really large csv files for MPC related analysis
-examples/python/metamodeling/wrapped 2.csv
-examples/python/metamodeling/*/SOM3N4SID_clean3*
-examples/python/dompc/.ipynb_checkpoints
+metamodeling/wrapped 2.csv
+metamodeling/*/SOM3N4SID_clean3*
+interfaces/dompc/.ipynb_checkpoints
 
 # ignore python example tmp files
 examples/python/tmp_*

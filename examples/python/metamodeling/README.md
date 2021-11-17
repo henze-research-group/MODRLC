@@ -14,7 +14,7 @@ dependencies using Poetry `pip install poetry; poetry install`,
 the user can simply run the block below to retrain the metamodels.
 
 ```bash
-python SOM.py
+python spawnrefsmalloffice.py
 ```
 ## Work in progress
 
