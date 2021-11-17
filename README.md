@@ -75,12 +75,12 @@ as a hook on all commits by calling `pre-commit install` in the root directory o
 ## Gym Interface
 The gym interface works after building the docker container for the selected Spawn model. The gym environment can be customized to form various control problems by initializing  the environment with different settings to setup different problems. 
  
-### Initialization
+### Initializating the Environment 
 
 The following instance variables are available: <br>
 * ``Ts`` = Time step in seconds, (*default*=300)
 * ``episode_length`` = Simulation time in seconds, (*default*=300)
-* ``start_time`` = Start time of simulation from the start of a year, (*default*=3x24x3600)
+* ``start_time`` = Start time of simulation from the start of a year, (*default*=0)
 * ``actions`` = Select which control actions to take, (*default*=300)
 * ``KPI_rewards`` = Set the weights for the different KPIs in a dictionary format to form the reward function, (*default*= energy and thermal discomfort set to -1, others set to 0). See the example provided below. 
 * ``kpi_zones`` = Form the reward function from the selected zones, (*default*= ["1","2"])
@@ -92,8 +92,20 @@ The following instance variables are available: <br>
 * ``password`` = Provide your own password, (*default*=None)
 * ``DR_event`` = To do DR events set this to True, (*default*=False)
 * ``dr_obs`` = To do DR events set this to True, (*default*=False)
-* ``DR_time`` = Set the time interval for th DR in a list format, (*default*=[3600*14,3600*14])
-* ``dr_power_limit`` = Set the time interval for th DR in a list format, (*default*=[3600*14,3600*14])
+* ``DR_time`` = Set the time interval for th DR in a list format, (*default*=[3600x14,3600x14])
+* ``dr_power_limit`` = Set the time interval for th DR in a list format, (*default*=[3600x14,3600x14])
+ 
+ 
+ ### Functionalities of the Gym Environment
+ 
+The following instance variables are available: <br>
+* ``env.reset()`` = Time step in seconds, (*default*=300)
+* ``env.step()`` = Time step in seconds, (*default*=300)
+* ``env.get_KPIs()`` = Time step in seconds, (*default*=300)
+* ``env.get_building_states()`` = Time step in seconds, (*default*=300)
+* ``env.get_input_hist()`` = Time step in seconds, (*default*=300)
+* ``env.get_info()`` = Time step in seconds, (*default*=300)
+
 
  Example: 
  
