@@ -50,6 +50,7 @@ The following instance variables are available: <br>
                      lower_obs_bounds = [ 0, 243.15, 243.15, 243.15, 243.15,   0],              # manually set the lower bounds for observation
                      upper_obs_bounds = [ 0, 313.15, 313.15, 313.15, 313.15, 700],              # manually set the upper bounds for observation
                      kpi_zones = ["1","2"],                                                     # Only Zone 1 and Zone 2 KPIs are used to form the reward function
+                     n_obs = True,                                                              # If set to True returns a normalized state vector between (0-1)
                      KPI_rewards = {
                         "ener_tot": {"hyper": -1, "power": 1},
                         "tdis_tot": {"hyper": -1, "power": 1},
