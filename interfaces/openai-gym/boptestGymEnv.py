@@ -9,6 +9,7 @@ import sys
 sys.path.append("../..")
 from custom_kpi import custom_kpi_calculator as kpicalculation
 import time as _time
+from pathlib import Path
 
 from collections import OrderedDict
 from pprint import pformat
@@ -491,7 +492,7 @@ class BoptestGymEnv(gym.Env):
         reward = 0
         kpi_dict = {}
 
-        customized_kpi_config = 'custom_kpi/custom_kpis_example_gym.config'
+        customized_kpi_config = str(Path(__file__).parent.absolute() / 'custom_kpi' / 'custom_kpis_example_gym.config')
 
         # Define customized KPI if any
         customizedkpis = []  # Initialize customzied kpi calculation list
