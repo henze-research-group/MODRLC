@@ -242,12 +242,13 @@ class BoptestGymEnv(gym.Env):
         sudoPassword = self.password
 
         print("TESTING: Stopping Docker container")
-        command = 'bash stop.sh'
+        cur_path = str(Path(__file__).parent.absolute())
+        command = 'bash '+cur_path+'/stop.sh'
         p = os.system('echo %s|sudo -S %s' % (sudoPassword, command))
         _time.sleep(3)
 
         print("TESTING: Starting Docker container")
-        command = 'bash start.sh'
+        command = 'bash '+cur_path+'/start.sh'
         p = os.system('echo %s|sudo -S %s' % (sudoPassword, command))
         _time.sleep(10)
 
