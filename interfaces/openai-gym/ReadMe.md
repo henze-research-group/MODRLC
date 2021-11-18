@@ -3,7 +3,7 @@ The gym interface works after building the docker container for the selected Spa
  
 ### Initializating the Environment 
 
-The following instance variables are available: <br>
+The following instance variables are available.: <br>
 * ``Ts`` = Time step in seconds, (*default*=300)
 * ``episode_length`` = Simulation time in seconds, (*default*=300)
 * ``start_time`` = Start time of simulation from the start of a year, (*default*=0)
@@ -17,20 +17,23 @@ The following instance variables are available: <br>
 * ``n_obs`` = This normalizes the observation states between the upper and lower bounds if set to True, (*default*= False)
 * ``password`` = Provide your own password, (*default*=None)
 * ``DR_event`` = To do DR events set this to True, (*default*=False)
-* ``dr_obs`` = To do DR events set this to True, (*default*=False)
+* ``dr_obs`` = List to indicate the type of binary signals to check whether there is current DR event going on or some hours ahead. This is only used if ``DR_event`` is set to True.  (*default*=[0,1])
 * ``DR_time`` = Set the time interval for th DR in a list format, (*default*=[3600x14,3600x14])
-* ``dr_power_limit`` = Set the time interval for th DR in a list format, (*default*=[3600x14,3600x14])
+* ``dr_power_limit`` = Set the power limit penalty term. If the total power is above this limit there is penalty. This is mulitplied by the penalty weight set in ``KPI_rewards``. (*default*=10000)
  
  
  ### Functionalities of the Gym Environment
  
 The following instance variables are available: <br>
-* ``env.reset()`` = Time step in seconds, (*default*=300)
-* ``env.step()`` = Time step in seconds, (*default*=300)
-* ``env.get_KPIs()`` = Time step in seconds, (*default*=300)
-* ``env.get_building_states()`` = Time step in seconds, (*default*=300)
-* ``env.get_input_hist()`` = Time step in seconds, (*default*=300)
-* ``env.get_info()`` = Time step in seconds, (*default*=300)
+* ``env.reset()`` : Restart the simulation to the start
+* ``env.step(u)`` : Advance one time step of simulation. ``u`` is the list of the control vector containing the values of only the selected controlled actions. This returns the observation ``states``, the ``reward``, the ``done`` flag and ``info``
+* ``env.get_KPIs()`` : Returns the different KPIs calculated by the BOPTEST framework in a dictionary format.
+* ``env.get_weather_forecast()`` : Returns a dictionary of the weather variables with its forecast.
+* ``env.get_building_states()`` : Returns a dictionary of all the building sensors available in the model.
+* ``env.change_rewards_weights(KPI_rewards)`` : This enables to change the weights during a simulation. The format to ``KPI_rewards`` is similar to the one used in the environment initialization.
+* ``env.set_DR_signal(DR_time)`` : This enables to change the DR time in a day during a simulation. The format to ``DR_time`` is similar to the one used in the environment initialization.
+* ``env.get_input_hist()`` : This returns the full control vector including the activated and the deactivated controls. 
+* ``env.get_info()`` : This returns the dictionary of all the individual rewards from the individual zones. This is particularly useful for a multi-agent setting. 
 
 
  Example: 
@@ -42,6 +45,11 @@ The following instance variables are available: <br>
                      start_time = 3*3600*24,                                                    # Select start of simulation (Here it starts from Jan 4th - midnight)
                      episode_length = 3600*24,                                                  # Select length of simulation (Day simulation is selected) 
                      actions = ['PSZACcontroller_oveHeaPer1_u','PSZACcontroller_oveHeaPer2_u'], # Select which actions to control (Zone 1 and Zone 2 Low-level heating coils)
+                     building_obs = ['senHouDec_y','senTemRoom1_y','senTemRoom2_y'],            # Specify which building sensor states to return as observation States
+                     forecast_obs = [{'TDryBul':[0,1],'HGloHor':[0]}],                          # Specify which exogenous states to return as observation States - 0: index means current, 1: index means forecasted state 1 hour ahead
+                     lower_obs_bounds = []       
+                     upper_obs_bounds = [],
+                     kpi_zones = ["1","2"],
                      KPI_rewards = {
                         "ener_tot": {"hyper": -1, "power": 1},
                         "tdis_tot": {"hyper": -1, "power": 1},
