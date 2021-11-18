@@ -13,7 +13,7 @@ The following instance variables are available.: <br>
 * ``building_obs`` = Can Specify which building sensors as well as time variable to return as observation (*default*= hour of the day, Zone 1 and Zone 2 temperature)
 * ``forecast_obs`` = Select which exogeneous weather variables and its forecasts to observe, (*default*= Current Outside air temperature and Global Horizontal Irradiation )
 * ``lower_obs_bounds`` = Manually provide the observation state lower bounds in a list format, (*default* = [0, 243.15,243.15,243.15,0])
-* ``upper_obs_bounds`` = Manually provide the observation state upper bounds in a list format, (*default*= [24, 323.15,243.15,243.15,1000])
+* ``upper_obs_bounds`` = Manually provide the observation state upper bounds in a list format, (*default*= [24, 323.15,323.15,323.15,1000])
 * ``n_obs`` = This normalizes the observation states between the upper and lower bounds if set to True, (*default*= False)
 * ``password`` = Provide your own password, (*default*=None)
 * ``DR_event`` = To do DR events set this to True, (*default*=False)
@@ -31,7 +31,7 @@ The following instance variables are available: <br>
 * ``env.get_weather_forecast()`` : Returns a dictionary of the weather variables with its forecast.
 * ``env.get_building_states()`` : Returns a dictionary of all the building sensors available in the model.
 * ``env.change_rewards_weights(KPI_rewards)`` : This enables to change the weights during a simulation. The format to ``KPI_rewards`` is similar to the one used in the environment initialization.
-* ``env.set_DR_signal(DR_time)`` : This enables to change the DR time in a day during a simulation. The format to ``DR_time`` is similar to the one used in the environment initialization.
+* ``env.set_DR_time(DR_time)`` : This enables to change the DR time in a day during a simulation. The format to ``DR_time`` is similar to the one used in the environment initialization.
 * ``env.get_input_hist()`` : This returns the full control vector including the activated and the deactivated controls. 
 * ``env.get_info()`` : This returns the dictionary of all the individual rewards from the individual zones. This is particularly useful for a multi-agent setting. 
 
@@ -47,9 +47,9 @@ The following instance variables are available: <br>
                      actions = ['PSZACcontroller_oveHeaPer1_u','PSZACcontroller_oveHeaPer2_u'], # Select which actions to control (Zone 1 and Zone 2 Low-level heating coils)
                      building_obs = ['senHouDec_y','senTemRoom1_y','senTemRoom2_y'],            # Specify which building sensor states to return as observation States
                      forecast_obs = [{'TDryBul':[0,1],'HGloHor':[0]}],                          # Specify which exogenous states to return as observation States - 0: index means current, 1: index means forecasted state 1 hour ahead
-                     lower_obs_bounds = []       
-                     upper_obs_bounds = [],
-                     kpi_zones = ["1","2"],
+                     lower_obs_bounds = [ 0, 243.15, 243.15, 243.15, 243.15,   0],              # manually set the lower bounds for observation
+                     upper_obs_bounds = [ 0, 313.15, 313.15, 313.15, 313.15, 700],              # manually set the upper bounds for observation
+                     kpi_zones = ["1","2"],                                                     # Only Zone 1 and Zone 2 KPIs are used to form the reward function
                      KPI_rewards = {
                         "ener_tot": {"hyper": -1, "power": 1},
                         "tdis_tot": {"hyper": -1, "power": 1},
