@@ -7,7 +7,7 @@ The following instance variables are available.: <br>
 * ``Ts`` = Time step in seconds, (*default*=300)
 * ``episode_length`` = Simulation time in seconds, (*default*=300)
 * ``start_time`` = Start time of simulation from the start of a year, (*default*=0)
-* ``actions`` = Select which control actions to take, (*default*=300)
+* ``actions`` = Select which control actions to take, (*default*= Low-level heating coil controls for Zone 1 and Zone 2)
 * ``KPI_rewards`` = Set the weights for the different KPIs in a dictionary format to form the reward function, (*default*= energy and thermal discomfort set to -1, others set to 0). See the example provided below. 
 * ``kpi_zones`` = Form the reward function from the selected zones, (*default*= ["1","2"])
 * ``building_obs`` = Can Specify which building sensors as well as time variable to return as observation (*default*= hour of the day, Zone 1 and Zone 2 temperature)
