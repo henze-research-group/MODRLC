@@ -28,7 +28,9 @@ RUN mkdir $HOME/MODELICAPATH && mkdir git && \
     #ln -s $HOME/git/modelica-ibpsa/IBPSA $HOME/MODELICAPATH/IBPSA && \
     ln -s $ROOT_DIR/JModelica/ThirdParty/MSL/Modelica $HOME/MODELICAPATH/Modelica && \
     ln -s $ROOT_DIR/JModelica/ThirdParty/MSL/ModelicaServices $HOME/MODELICAPATH/ModelicaServices && \
-    #cd git/modelica-buildings/Buildings/Resources/bin/spawn-linux64/bin && mv spawn-0.2.0-d7f1e095f3 spawn
+
+    # Temporary fix. Instead, update Spawn binaries in next revision.
+    cd modelica-buildings/Buildings/Resources/bin/spawn-linux64/bin && mv spawn-0.2.0-d7f1e095f3 spawn
 ENV MODELICAPATH $HOME/MODELICAPATH
 
 ENV ROOT_DIR /usr/local
