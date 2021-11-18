@@ -18,7 +18,7 @@ The following instance variables are available.: <br>
 * ``password`` = Provide your own password, (*default*=None)
 * ``DR_event`` = To do DR events set this to True, (*default*=False)
 * ``dr_obs`` = List to indicate the type of binary signals to check whether there is current DR event going on or some hours ahead. This is only used if ``DR_event`` is set to True.  (*default*=[0,1])
-* ``DR_time`` = Set the time interval for th DR in a list format, (*default*=[3600x14,3600x14])
+* ``DR_time`` = Set the time interval for th DR event in a list format, (*default*=[3600x14,3600x16] an event between 2 p.m. and 4 p.m.)
 * ``dr_power_limit`` = Set the power limit penalty term. If the total power is above this limit there is penalty. This is mulitplied by the penalty weight set in ``KPI_rewards``. (*default*=10000)
  
  
