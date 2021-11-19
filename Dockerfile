@@ -45,10 +45,6 @@ USER developer
 
 WORKDIR $HOME
 
-# Copy the weather files over to the previous location since upgrading to MBL 8.0.0
-#RUN mkdir -p /home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources
-#COPY testcases/${testcase}/models/Resources/* /home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources/
-
 RUN pip install --user flask-restful pandas
 
 RUN mkdir models && \

@@ -1,15 +1,14 @@
 from rbc import rulebased
 import config
-
-
 # Parameters
 
-start_time = 3 * 24 * 3600 + 5 * 3600
+start_time = int(3 * 24 * 3600 + 5 * 3600)
 warmup = 0
 length = 24 * 3600 * 1
 step = 300
-control_level = 'supervisory'
+control_level = 'lowlevel'
 plot = True
+
 # create RBC object
 rbc = rulebased(config = config, step = step, level = control_level, start_time = start_time, length = length)
 

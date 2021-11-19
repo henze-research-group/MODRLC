@@ -7,8 +7,8 @@ schedule = dict(start_day = 'sunday',
                                  unoccupied = [273.15 + 15.6, 273.15 + 26.7]),
                 co2Setpoints = dict(occupied = 800,
                                     unoccupied = 1000),
-                oasetpoints = dict(occupied = [0.08, 0.11],
-                                   unoccupied = [0.0, 0.0])
+                oasetpoints = dict(occupied = [0.08, 0.08, 0.08, 0.08, 0.08],
+                                   unoccupied = [0.0, 0.0, 0.0, 0.0, 0.0])
                 )
 
 zones = ['core', 'perimeter1', 'perimeter2', 'perimeter3', 'perimeter4']

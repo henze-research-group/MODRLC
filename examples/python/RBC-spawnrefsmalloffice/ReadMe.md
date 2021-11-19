@@ -5,11 +5,9 @@ This folder contains three examples of a rule-based controller for the Spawn Ref
 ``supervisory_example.py`` is an example of supervisory control which overrides the heating and cooling setpoints
 during a heating day.
 
-TODO: ``lowlevel_example.py`` is an example of low-level control which overrides the heating coil command during
-a heating day.
+``lowlevel_example.py`` is an example of low-level control during a heating day.
 
-``no_override.py`` simply simulates the Spawn model using the built-in rule-based controller. It includes a live
-plotting function.
+``no_override.py`` simply simulates the Spawn model using the built-in rule-based controller.
 
 ## Usage:
 
