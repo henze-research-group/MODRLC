@@ -117,7 +117,8 @@ axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
 mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
-mpc_plot.add_line('_x', 't_indoor', ax[axis], color='orange')
+mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
+sim_plot.add_line('_x', 't_indoor', ax[axis], color='orange')
 
 axis += 1
 ax[axis].set_title('Electricity Cost Multiplier')
@@ -157,7 +158,7 @@ for k in range(288 * 1):
     historian.add_datum('timestamp', current_time.strftime("%Y/%m/%d %H:%M:%S"))
     print(f"{k}: {x0}")
 
-    u0 = mpc.make_step(x0)
+    u0 = mpc.make_step(simulator._x0)
     # if u0[0] > 0.05:
     #     print('i am here')
 
@@ -172,15 +173,17 @@ for k in range(288 * 1):
         historian.add_datum('t_indoor_predicted', x0[7][0])
     else:
         # y_measured, oa_room = simulator.make_step(u0)
-        y_measured, x_next, x0 = simulator.make_step(u0)
+        y_measured, x_next, simulator._x0 = simulator.make_step(u0)
         # t + 1
 
         # the 7th element is the predicted temperature
-        # y_pred = mp.c @ x_next[0:x_state_var_cnt] + 273.15
-        y_pred = float(x0.master[7])
+        y_pred = float(simulator._x0.master[7])
 
-        x_kalman = x0.master[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
+        x_kalman = simulator._x0.master[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
         y_kalman = mp.c @ x_kalman  # result is in Deg C, and the historian expected it as such.
+        simulator._x0.master[0:x_state_var_cnt] = x_kalman
+        simulator._x0.master[7] = y_measured
+        # change x0 to be x_kalman
 
         # Store to the historian
         historian.add_datum('t_indoor_measured', y_measured)
@@ -197,6 +200,9 @@ for k in range(288 * 1):
         mpc_plot.plot_results(t_ind=k)
         mpc_plot.plot_predictions(t_ind=k)
         mpc_plot.reset_axes()
+
+        sim_plot.plot_results(t_ind=k)
+        sim_plot.reset_axes()
 
         # mhe_plot.plot_results()
         # sim_plot.plot_results()

@@ -642,8 +642,8 @@ class BoptestSimulator(do_mpc.model.IteratedVariables):
             t_room = y_next['senTemRoom1_y']
             print("Cooling power:", y_next['senCCPow1_y'])
             # print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
-
-            self.data.update(_x=x0)
+            #x_next[7] = t_room
+            self.data.update(_x=x_next)
             self.data.update(_u=u0)
             self.data.update(_z=z0)
             self.data.update(_tvp=tvp0)
