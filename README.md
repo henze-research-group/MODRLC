@@ -47,6 +47,11 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 6) Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``Ctrl+D`` to exit the Docker container.
 7) Remove the test case Docker image by ``$ make remove-image TESTCASE=<testcase_dir_name>``.
 
+## Known Issues
+
+Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
+- the metamodeling framework produces models which temperature prediction is shifted by approx. 20 K.
+
 ## Structure
 - ``/testcases`` contains Spawn of EnergyPlus test cases, including docs, models, and configuration settings.
 - ``/examples`` contains examples of MPC and RLC Python controllers that interact with Spawn models.
@@ -60,3 +65,20 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 - ``/kpis`` contains prototype code for calculating key performance indicators.
 - ``/docs`` contains design requirements and guide documentation.
 
+## Acknowledgements
+We gratefully acknowledge funding by the U.S. Department of Energy under Project 3.2.6.80, titled _Multi-Objective Deep Reinforcement Learning Controls_.
+
+To develop the ACTB, we rely on the following software:
+- the [Buildings Operation Performance TEST](https://github.com/ibpsa/project1-boptest), developed under IBPSA Project 1
+- the [BOPTEST OpenAI Gym interface](https://github.com/ibpsa/project1-boptest-gym), developed under IBPSA Project 1
+- [Spawn of EnergyPlus](https://www.energy.gov/eere/buildings/downloads/spawn-energyplus-spawn)
+- the [System Identification Package for Python](https://github.com/CPCLAB-UNIPI/SIPPY.git)
+- the [do-mpc](https://www.do-mpc.com/en/latest/) package
+- the [OpenAI Gym](https://gym.openai.com/) package
+
+## Authors
+This project is led by Professor Gregor Henze, at the University of Colorado Boulder.
+It is developed and maintained by Dr. Thibault Marzullo, Sourav Dey and Nicholas Long, at the University of Colorado Boulder.
+
+Former project members:
+- Developer (2021-2021): José Angel Leiva Vilaplana, Masters candidate, Universitat Politecnica de Catalunya.
