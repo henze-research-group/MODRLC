@@ -79,7 +79,7 @@ To develop the ACTB, we rely on the following software:
 
 ## Authors
 This project is led by Professor Gregor Henze, at the University of Colorado Boulder.
-It is developed and maintained by Dr. Thibault Marzullo, Sourav Dey and Nicholas Long, at the University of Colorado Boulder.
+It is developed and maintained by Dr. Thibault Marzullo, Sourav Dey, and Nicholas Long, at the University of Colorado Boulder.
 
 Former project members:
 - Developer (2021-2021): José Angel Leiva Vilaplana, Masters candidate, Universitat Politecnica de Catalunya.
