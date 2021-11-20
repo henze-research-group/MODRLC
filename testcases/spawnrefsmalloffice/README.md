@@ -24,7 +24,7 @@ See the `{actb root}/examples/python` folder for example controllers (rule-based
 Recompiling the model is not normally needed. However, should you need to modify the `models/spawnrefsmalloffice.mo` file, you should follow these steps to recompile the model.
 
 1. `cd` to `{actb root}/testing`
-2. Build the Docker container used for compiling the model using `sudo make build-jm`
-3. Compile the model using `sudo make compile_testcase_model TESTCASE=spawnrefsmalloffice`
+2. Build the Docker container used for compiling the model using `make build-jm`
+3. Compile the model using `make compile_testcase_model TESTCASE=spawnrefsmalloffice`
 4. `cd` back to the ACTB root
-5. Re-build the Docker container used for simulating models using `sudo make build TESTCASE=spawnrefsmalloffice`
+5. Re-build the Docker container used for simulating models using `make build TESTCASE=spawnrefsmalloffice`
