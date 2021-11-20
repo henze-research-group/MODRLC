@@ -13,9 +13,9 @@ This is a simple 5-zone building with 5 constant air volume AHUs.
 
 
 Build the Docker container. At the root of the ACTB, open a terminal and use:
-``sudo make build TESTCASE=spawnrefsmalloffice``
+``make build TESTCASE=spawnrefsmalloffice``
 Then, run the Docker container:
-``sudo make run TESTCASE=spawnrefsmalloffice``
+``make run TESTCASE=spawnrefsmalloffice``
 You can now interact with the model using the Python API (e.g. initialize and step the simulation, read sensors and override controls, etc.).
 See the `{actb root}/examples/python` folder for example controllers (rule-based, model predictive and reinforcement learning controls). 
 
