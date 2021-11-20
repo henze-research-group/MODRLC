@@ -19,7 +19,7 @@ Then, run the Docker container:
 You can now interact with the model using the Python API (e.g. initialize and step the simulation, read sensors and override controls, etc.).
 See the `{actb root}/examples/python` folder for example controllers (rule-based, model predictive and reinforcement learning controls). 
 
-##Compile the Model
+## Compile the Model
 
 Recompiling the model is not normally needed. However, should you need to modify the `models/spawnrefsmalloffice.mo` file, you should follow these steps to recompile the model.
 
