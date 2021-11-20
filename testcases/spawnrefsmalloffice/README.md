@@ -1,24 +1,30 @@
-BOPTEST Test Case 1
-===================
-This test is a simple RC network with feedback controlled heating device.
+#Small Office Building - Spawn
 
-Structure
----------
+This is a simple 5-zone building with 5 constant air volume AHUs.
 
-- ``doc/`` contains documentation of the test case.
-- ``models/`` contains the emulation model files for the test case.
+##Structure
+
+
+- ``doc/`` contains documentation of the test case. It includes a list of sensor and control override points for external controllers.
+- ``models/`` contains the model files for the test case.
 - ``config.py`` defines the configuration of the test case for building the Docker image.
 
-Compile the Model
------------------
+##Usage
 
-The Modelica model makes use of the signal overwrite blocks and uses the
-overwrite block parser (``<repo_root>/parser/parser.py``) to compile the FMU.
 
-1. Add the root of the BOPTEST repository to the PYTHONPATH environment variable.
+Build the Docker container. At the root of the ACTB, open a terminal and use:
+``make build TESTCASE=spawnrefsmalloffice``
+Then, run the Docker container:
+``make run TESTCASE=spawnrefsmalloffice``
+You can now interact with the model using the Python API (e.g. initialize and step the simulation, read sensors and override controls, etc.).
+See the `{actb root}/examples/python` folder for example controllers (rule-based, model predictive and reinforcement learning controls). 
 
-2. ``$ cd models``
+## Compile the Model
 
-3. ``$ python compile_fmu.py`` to compile the model FMU using the overwrite block parser.
+Recompiling the model is not normally needed. However, should you need to modify the `models/spawnrefsmalloffice.mo` file, you should follow these steps to recompile the model.
 
-4. The resulting FMU will be named ``wrapped.fmu``.
+1. `cd` to `{actb root}/testing`
+2. Build the Docker container used for compiling the model using `make build-jm`
+3. Compile the model using `make compile_testcase_model TESTCASE=spawnrefsmalloffice`
+4. `cd` back to the ACTB root
+5. Re-build the Docker container used for simulating models using `make build TESTCASE=spawnrefsmalloffice`
