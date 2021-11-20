@@ -50,7 +50,8 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 ## Known Issues
 
 Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
-- the metamodeling framework produces models which temperature prediction is shifted by approx. 20 K.
+- the metamodeling framework produces models which temperature prediction is shifted by approximately 20 K.
+
 
 ## Structure
 - ``/testcases`` contains Spawn of EnergyPlus test cases, including docs, models, and configuration settings.
