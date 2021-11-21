@@ -1,13 +1,13 @@
-# Advanced Controller Test Bed
+# Advanced Controls Test Bed
 
-The Advanced Controller Test Bed (ACTB) is a virtual buildings test bed that interfaces external controllers to high-fidelity Spawn of EnergyPlus models. 
-The ACTB has two interfaces to Python controller libraries:
+The Advanced Controls Test Bed (ACTB) is a virtual buildings test bed that interfaces external controllers to high-fidelity Spawn of EnergyPlus models. 
+The ACTB has two interfaces to Python control libraries:
 - one interface for model predictive controllers (MPC) based on [do-mpc](https://www.do-mpc.com/en/latest/)
 - one interface for reinforcement learning controllers (RLC) based on [OpenAI Gym](https://gym.openai.com/)
 
 [Spawn of EnergyPlus](https://www.energy.gov/eere/buildings/downloads/spawn-energyplus-spawn) is a model-exchange framework that allows the simulation of building envelope and internal gains models in EnergyPlus, and their HVAC systems and controls in Modelica.
 
-This makes the ACTB a flexible and user-friendly framework for developing and evaluating advanced controllers using high-fidelity building models.
+This makes the ACTB a flexible and user-friendly framework for developing and evaluating advanced controls using high-fidelity building models.
 
 The ACTB is based on the BOPTEST framework available [here](https://github.com/ibpsa/project1-boptest) and the [BOPTEST OpenAI Gym interface](https://github.com/ibpsa/project1-boptest-gym).
 
