@@ -47,6 +47,13 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 6) Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``Ctrl+D`` to exit the Docker container.
 7) Remove the test case Docker image by ``$ make remove-image TESTCASE=<testcase_dir_name>``.
 
+## Windows Users
+
+The ACTB runs on UNIX operating systems, but an additional software layer is currently necessary for Windows users.
+Please install the Windows Subsystem for Linux (WSL) by following the instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install).
+You will simply need to start an instance of the WSL first, then run the commands found in the various instructions of this repository in the Linux terminal
+that will be launched.
+
 ## Known Issues
 
 Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
