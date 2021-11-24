@@ -86,7 +86,8 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 
 Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
 - the metamodeling framework produces models which temperature prediction is shifted by approximately 20 K.
-
+- the Spawn test cases cannot be initialized again after the simulation completed. You currently need to stop the Docker container
+and start it again. This will be fxed
 
 ## Structure
 - ``/testcases`` contains Spawn of EnergyPlus test cases, including docs, models, and configuration settings.

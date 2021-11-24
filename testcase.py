@@ -66,6 +66,11 @@ class TestCase(object):
         # Initialize simulation data arrays
         self.__initilize_data()
         self.elapsed_control_time = []
+        print('\n==========\n'
+              'The Advanced Controller Test Bed is now running!\n'
+              'Please open a new terminal window to run an external controller script. \n'
+              'Refer to the ReadMe file for usage examples.\n'
+              '==========\n')
 
     def __initilize_data(self):
         '''Initializes objects for simulation data storage.
