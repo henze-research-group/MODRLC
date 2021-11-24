@@ -23,4 +23,5 @@ for i in range(int(length/step)):
 
 final_results = rbc.get_results()
 final_kpis = rbc.get_kpis()
-print(final_kpis)
+rbc.save_results()
+input("Simulation ended successfully!\nResults have been saved in the Results/ folder.\nPress enter to exit.")

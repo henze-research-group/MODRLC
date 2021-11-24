@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 from matplotlib import pyplot as plt
+import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'boptest_client'))
 from boptest_client import BoptestClient
 
@@ -52,11 +53,12 @@ class rulebased():
         plt.ion()
         plt.show()
 
+
     def set_dl_alarm(self, result):
         dl_violation = False
         if result is not None:
             for zone in range(len(self.zones)):
-                if result[self.sensors['ahuPower'][zone]] >= self.dl['maxpow'] and self.dl_alarm <= 3: #todo check max alarm level
+                if result[self.sensors['heatingPower'][zone]] >= self.dl['maxpow'] and self.dl_alarm <= 3: #todo check max alarm level
                     self.dl_alarm +=1
                     dl_violation = True
                     break
@@ -106,7 +108,7 @@ class rulebased():
         if result is not None:
             stp = self.get_setpoint('tempSetpoints', result['time'])
             temps = [result[self.sensors['zoneTemps'][zone]] for zone in range(len(self.zones))]
-            power = [result[self.sensors['ahuPower'][zone]] for zone in range(len(self.zones))]
+            power = [result[self.sensors['heatingPower'][zone]] for zone in range(len(self.zones))]
             time = result['time']
         else:
             stp = self.get_setpoint('tempSetpoints', self.start_time)
@@ -135,7 +137,7 @@ class rulebased():
         else:
             time = result['time']
             cur_temp = [result[self.sensors['zoneTemps'][zone]] for zone in range(len(self.zones))]
-            power = [result[self.sensors['ahuPower'][zone]] for zone in range(len(self.zones))]
+            power = [result[self.sensors['heatingPower'][zone]] for zone in range(len(self.zones))]
         print('Current simulation time: {}'.format(time))
 
         # dampers
@@ -179,15 +181,18 @@ class rulebased():
         self.axes[0].set_title('Zone temperatures', fontweight='bold')
         self.axes[0].set_ylim(15, 27)
         self.axes[0].set_xlim(0, self.length / 3600)
-        self.axes[0].set_ylabel('Temperature (°C)')
+        self.axes[0].set_xticks(range(0, int(self.length / 3600) + 6, 6))
+        self.axes[0].set_ylabel('Temperature [C]')
         self.axes[0].set_yticks([i for i in range(15, 28)])
         self.axes[0].grid(which='both', linewidth=0.5, color='white')
         self.axes[0].set_facecolor("gainsboro")
 
-        self.axes[1].set_title('Power demand', fontweight='bold')
+        self.axes[1].set_title('Heating coil power demand (thermal)', fontweight='bold')
         self.axes[1].set_ylim(0 , 15000)
         self.axes[1].set_xlim(0, self.length / 3600)
-        self.axes[1].set_ylabel('Watts (W)')
+        self.axes[1].set_xticks(range(0, int(self.length / 3600) + 6, 6))
+        self.axes[1].set_ylabel('Watts [W]')
+        self.axes[1].set_xlabel('Time [hours]')
         self.axes[1].set_yticks([i for i in range(0, 16000, 1000)])
         self.axes[1].grid(which='both', linewidth=0.5, color='white')
         self.axes[1].set_facecolor("gainsboro")
@@ -204,6 +209,25 @@ class rulebased():
         plt.pause(0.5)
         if animate:
             plt.savefig("animation/anim_{}.png".format(str(i)))
+        plt.savefig('Results/RBC_{}.png'.format(self.level))
+
+    def save_results(self):
+        historian = pd.DataFrame(self.historian)
+        historian.to_csv('Results/RBC_{}.csv'.format(self.level))
+        kpis = self.get_kpis()
+        with open('Results/kpis_{}.txt'.format(self.level), 'w') as file:
+            file.write('Key performance indicators:\n')
+            for key in kpis.keys():
+                if key == 'tdis_tot':
+                    file.write('Thermal discomfort: %.3f Kh\n'%(kpis[key]))
+                if key == 'idis_tot':
+                    file.write('Air quality discomfort: %.3f ppmh\n'%(kpis[key]))
+                elif key == 'ener_tot':
+                    file.write('Energy usage: %.3f kWh\n'%(kpis[key]))
+                elif key == 'cost_tot':
+                    file.write('Total cost: %.3f $\n'%(kpis[key]))
+                elif key == 'emis_tot':
+                    file.write('Total emissions: %.3f kg CO2\n'%(kpis[key]))
 
 
 class simple_PI():

@@ -18,11 +18,11 @@ sensors = dict(zoneTemps = ['senTemRoom_y',
                             'senTemRoom2_y',
                             'senTemRoom3_y',
                             'senTemRoom4_y'],
-               ahuPower = ['senPowCor_y',
-                           'senPowPer1_y',
-                           'senPowPer2_y',
-                           'senPowPer3_y',
-                           'senPowPer4_y']
+               heatingPower = ['senHeaPow_y',
+                           'senHeaPow1_y',
+                           'senHeaPow2_y',
+                           'senHeaPow3_y',
+                           'senHeaPow4_y']
                )
 
 controls = dict(supervisory = dict(heating = ['PSZACcontroller_oveHeaStpCor_u',
