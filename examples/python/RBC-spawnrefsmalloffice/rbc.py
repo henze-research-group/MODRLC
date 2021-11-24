@@ -15,7 +15,7 @@ class rulebased():
                  ki_heating = 30,
                  curr_day = 0,
                  level = 'supervisory',
-                 url = 'http://localhost:5000',
+                 url = 'http://127.0.0.1:5000',
                  step = 300,
                  start_time = 0,
                  warmup = 0):

@@ -18,7 +18,7 @@ def template_simulator(model):
 
     mp = ModelParameters()
     try:
-        client = BoptestClient('http://localhost:5000')
+        client = BoptestClient('http://127.0.0.1:5000')
         if client.name() is not None:
             print("BOPTEST is configured to act as simulator")
             client.set_step(step=mp.time_step)

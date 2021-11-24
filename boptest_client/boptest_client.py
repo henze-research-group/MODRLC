@@ -16,7 +16,7 @@ class BoptestClient:
 
     # The url argument is the address of the Alfalfa server
     # default should be http://localhost/api
-    def __init__(self, url='http://localhost'):
+    def __init__(self, url='http://127.0.0.1:5000'):
         self.url = url
         self.haystack_filter = self.url + '/api/read?filter='
         self.haystack_json_header = {

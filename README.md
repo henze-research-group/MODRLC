@@ -13,6 +13,56 @@ The ACTB is based on the BOPTEST framework available [here](https://github.com/i
 
 The ACTB is currently in its first release version and might undergo changes, contain broken modules, or function unexpectedly. Please report all issues in the Issues tab at the top of the page.
 
+## Install
+
+### Operating systems
+
+The ACTB works with Linux and Mac OS out of the box, but requires an additional software layer for working on Windows. If you are a Windows user,
+please install the **Windows Subsystem for Linux (WSL)** by following the instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install).
+You will simply need to start an instance of the WSL first, then run the commands found in the various instructions of this repository in the Linux terminal
+that will be launched.
+
+### Docker
+
+The ACTB is packaged as a Docker container, please install Docker by following the instructions [here](https://docs.docker.com/get-docker/).
+
+### Python
+
+While the Docker container comes with Python and all the dependencies installed, if you are running a controller script externally
+you will need to install Python and a few libraries. For Python, please install **Python 3.6** by following these links for [Linux](https://docs.python-guide.org/starting/install3/linux/),
+[Mac OS](https://docs.python-guide.org/starting/install3/osx/), or [Windows](https://docs.python.org/3/using/windows.html).
+
+Note: if you have several versions of Python installed, make sure you are running Python 3.6 by replacing `python` commands by `python3`.
+
+### Libraries
+
+We strongly recommend installing and using `pip` to manage Python libraries.
+Follow the instructions [here](https://pip.pypa.io/en/stable/installation/) to install pip.
+
+With pip installed, just open a terminal window, `cd` at the root of the ACTB
+and run:
+
+`pip install -r requirements.txt`
+
+If you have several versions of Python installed, you may need to replace `pip` by `pip3` in the above command to make sure you 
+are installing these libraries for your Python 3. 
+
+## Quick-Start to Run Test Cases
+
+1. Build the test case by ``$ make build TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory located in ``/testcases``.
+For example, build the Spawn Small Office test case by running ``$ make build TESTCASE=spawnrefsmalloffice``
+2. Deploy the test case by ``$ make run TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory located in ``/testcases``.
+For example, run the Spawn Small Office test case by running ``$ make run TESTCASE=spawnrefsmalloffice``
+3. Run an example test controller:
+
+  * Add the root directory of the BOPTEST repository to the PYTHONPATH environment variable.
+  * Build and deploy ``spawnrefsmalloffice``.  Then, in a separate terminal, use ``$ cd examples/python/MPC-spawnrefsmalloffice && python main.py`` to test a MPC controller.
+  * Build and deploy ``spawnrefsmalloffice``.  Then, in a separate terminal, use ``$ cd examples/python/RLC-spawnrefsmalloffice && python main.py`` to test a RLC controller.
+  * Build and deploy ``spawnrefsmalloffice``.  Then, in a separate terminal, use ``$ cd examples/python/RBC-spawnrefsmalloffice && python noOverride.py`` to test the RBC controller built into the Spawn test case.
+ 
+4. Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``Ctrl+D`` to exit the Docker container.
+5. Remove the test case Docker image by ``$ make remove-image TESTCASE=<testcase_dir_name>``.
+
 ## Architecture
 
 The ACTB is based on BOPTEST-service, a merge between BOPTEST and [Alfalfa](https://github.com/NREL/alfalfa). It is supplemented by a library of high-fidelity Spawn models and two advanced controller interfaces. A metamodeling framework allows the generation of reduced order models from Spawn data, in order to provide computationally-efficient models for MPC planning models and RLC pre-training (see the RLC guide [here](TODO)).
@@ -32,27 +82,6 @@ For the moment, one Spawn test case is available. It represents the U.S. Departm
 It is provided with a documentation, found under ``/testcases/spawnrefsmalloffice/docs``.
 
 ![Animation of the ACTB test case](docs/figures/ACTBdemo.gif)
-
-## Quick-Start to Run Test Cases
-1) Install [Docker](https://docs.docker.com/get-docker/).
-2) Build the test case by ``$ make build TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory located in ``/testcases``.
-3) Deploy the test case by ``$ make run TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory located in ``/testcases``.
-4) Run an example test controller:
-
-  * Add the root directory of the BOPTEST repository to the PYTHONPATH environment variable.
-  * Build and deploy ``spawnrefsmalloffice``.  Then, in a separate terminal, use ``$ cd examples/python/MPC-spawnrefsmalloffice && python main.py`` to test a MPC controller.
-  * Build and deploy ``spawnrefsmalloffice``.  Then, in a separate terminal, use ``$ cd examples/python/RLC-spawnrefsmalloffice && python main.py`` to test a RLC controller.
-  * Build and deploy ``spawnrefsmalloffice``.  Then, in a separate terminal, use ``$ cd examples/python/RBC-spawnrefsmalloffice && python noOverride.py`` to test the RBC controller built into the Spawn test case.
- 
-6) Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``Ctrl+D`` to exit the Docker container.
-7) Remove the test case Docker image by ``$ make remove-image TESTCASE=<testcase_dir_name>``.
-
-## Windows Users
-
-The ACTB runs on UNIX operating systems, but an additional software layer is currently necessary for Windows users.
-Please install the Windows Subsystem for Linux (WSL) by following the instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install).
-You will simply need to start an instance of the WSL first, then run the commands found in the various instructions of this repository in the Linux terminal
-that will be launched.
 
 ## Known Issues
 
