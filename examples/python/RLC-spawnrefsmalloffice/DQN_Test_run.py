@@ -5,7 +5,41 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'interfaces' / 'openai-gym'))
 from boptestGymEnv import BoptestGymEnv
 import math
+import matplotlib.pyplot as plt
 
+
+def plot(zonetemp, heatingcoil, Historian, axes, plotutils):
+
+    time_hours = [time / 3600 for time in Historian["time"]]
+    axes[0].cla()
+    axes[1].cla()
+    axes[0].set_title('Zone temperature', fontweight='bold')
+    axes[0].set_ylim(15, 27)
+    axes[0].set_xlim(0, plotutils['length'] / 3600)
+    axes[0].set_xticks(range(0, int(plotutils['length'] / 3600) + 6, 6))
+    axes[0].set_ylabel('Temperature [C]')
+    axes[0].set_yticks([i for i in range(15, 28)])
+    axes[0].grid(which='both', linewidth=0.5, color='white')
+    axes[0].set_facecolor("gainsboro")
+
+    axes[1].set_title('Heating coil power demand (thermal)', fontweight='bold')
+    axes[1].set_ylim(0, 15000)
+    axes[1].set_xlim(0, plotutils['length'] / 3600)
+    axes[1].set_xticks(range(0, int(plotutils['length'] / 3600) + 6, 6))
+    axes[1].set_ylabel('Watts [W]')
+    axes[1].set_xlabel('Time [hours]')
+    axes[1].set_yticks([i for i in range(0, 16000, 1000)])
+    axes[1].grid(which='both', linewidth=0.5, color='white')
+    axes[1].set_facecolor("gainsboro")
+
+    axes[0].plot(plotutils['time'], plotutils['lostp'], color='red', ls='--', label='Setpoints')
+    axes[0].plot(plotutils['time'], plotutils['histp'], color='red', ls='--')
+    axes[0].plot(time_hours, zonetemp, label='Zone temperature')
+    axes[1].plot(time_hours, heatingcoil)
+    axes[0].legend(loc='upper right')
+    plt.tight_layout()
+    plt.draw()
+    plt.pause(0.5)
 
 # --------------------
 # Set parameters for initializing the gym environment
@@ -101,6 +135,15 @@ else:
 
 
 print('\n Starting Simulation...')
+plotutils = dict(time = [i / 3600 for i in range(0, int(episode_length) + step, step)],
+                 lostp = [21 if 6 <= i / 3600 <= 20 else 15.6 for i in range(0, int(episode_length) + step, step)],
+                 histp = [24 if 6 <= i / 3600 <= 20 else 26.7 for i in range(0, int(episode_length) + step, step)],
+                 length = episode_length)
+zonetemp = []
+heatingcoil = []
+fig, axes = plt.subplots(2, 1, figsize=(10,10))
+plt.ion()
+plt.show()
 
 # Simulation Loop
 for e in range(last_ep,last_ep+episodes):
@@ -176,15 +219,6 @@ for e in range(last_ep,last_ep+episodes):
         # Append samples
         Agent_1.append_sample(state, raw_action_u1, reward, next_state, done)
 
-        if (counter%24*3)==0:
-            # Train Models
-            Agent_1.train_model()
-
-        if (counter%24*5)==0:
-            # Train Models
-            print ("Updating target NN")
-            Agent_1.update_target_model()  # From 2nd episode
-
         if last_ep == 0:
             mem_list_1.append((state, raw_action_u1, reward, next_state, done))  # 1st episode
         else:
@@ -250,12 +284,14 @@ for e in range(last_ep,last_ep+episodes):
 
         Historian["Zone_1_HC_Action"].append(u['PSZACcontroller_oveHeaPer1_u'])
 
-        Historian['Damper_0'].append(u['PSZACcontroller_oveDamCor_u'])
-        Historian['Damper_1'].append(u['PSZACcontroller_oveDamP1_u'])
-        Historian['Damper_2'].append(u['PSZACcontroller_oveDamP2_u'])
-        Historian['Damper_3'].append(u['PSZACcontroller_oveDamP3_u'])
-        Historian['Damper_4'].append(u['PSZACcontroller_oveDamP4_u'])
-
+        # Historian['Damper_0'].append(u['PSZACcontroller_oveDamCor_u'])
+        # Historian['Damper_1'].append(u['PSZACcontroller_oveDamP1_u'])
+        # Historian['Damper_2'].append(u['PSZACcontroller_oveDamP2_u'])
+        # Historian['Damper_3'].append(u['PSZACcontroller_oveDamP3_u'])
+        # Historian['Damper_4'].append(u['PSZACcontroller_oveDamP4_u'])
+        zonetemp.extend([building_states['senTemRoom1_y'] - 273.15])
+        heatingcoil.extend([building_states['senPowPer1_y']])
+        plot(zonetemp, heatingcoil, Historian, axes, plotutils)
 
 
     # Print KPIs
@@ -273,8 +309,6 @@ for e in range(last_ep,last_ep+episodes):
     df_m_1 = pd.DataFrame(mem_list_1, columns=['States', 'Action', 'Reward', 'Next_State', 'Done'])
     df_m_1.to_csv("RL_Data_test/04_Mem/mem_data_" + str(e) + ".csv")
 
-    Agent_1.model_save_weights("RL_Data_test/02_NN/DQN_" + str(e) + ".h5")
-
     Historian_df = pd.DataFrame.from_dict(Historian)
     Historian_df.to_csv("RL_Data_test/dr_data_test_v2_" + str(e) + ".csv")
 
@@ -284,3 +318,6 @@ print('\nTest case complete.')
 # Get result data
 
 env.print_KPIs()
+
+
+

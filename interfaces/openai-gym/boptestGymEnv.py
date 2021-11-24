@@ -284,62 +284,63 @@ class BoptestGymEnv(gym.Env):
 
     def step(self, action):              
         # Initialize inputs to send through BOPTEST Rest API
-        u = { #Low-level heating coil
-             'PSZACcontroller_oveHeaCor_u': 0,
-             'PSZACcontroller_oveHeaCor_activate': 0,
-             'PSZACcontroller_oveHeaPer1_u': 0,
-             'PSZACcontroller_oveHeaPer1_activate': 0,
-             'PSZACcontroller_oveHeaPer2_u': 0,
-             'PSZACcontroller_oveHeaPer2_activate': 0,
-             'PSZACcontroller_oveHeaPer3_u': 0,
-             'PSZACcontroller_oveHeaPer3_activate': 0,
-             'PSZACcontroller_oveHeaPer4_u': 0,
-             'PSZACcontroller_oveHeaPer4_activate': 0,
-            # Heating Setpoint Control
-             'PSZACcontroller_oveHeaStpCor_u': 0,
-             'PSZACcontroller_oveHeaStpCor_activate': 0,
-             'PSZACcontroller_oveHeaStpPer1_u': 0,
-             'PSZACcontroller_oveHeaStpPer1_activate': 0,
-             'PSZACcontroller_oveHeaStpPer2_u': 0,
-             'PSZACcontroller_oveHeaStpPer2_activate': 0,
-             'PSZACcontroller_oveHeaStpPer3_u': 0,
-             'PSZACcontroller_oveHeaStpPer3_activate': 0,
-             'PSZACcontroller_oveHeaStpPer4_u': 0,
-             'PSZACcontroller_oveHeaStpPer4_activate': 0,
-            # Low-level damper control
-             'PSZACcontroller_oveDamCor_u': 0,   # 0 to 0.5 m3/s
-             'PSZACcontroller_oveDamCor_activate': 0,
-             'PSZACcontroller_oveDamP1_u': 0,
-             'PSZACcontroller_oveDamP1_activate': 0,
-             'PSZACcontroller_oveDamP2_u': 0,
-             'PSZACcontroller_oveDamP2_activate': 0,
-             'PSZACcontroller_oveDamP3_u': 0,
-             'PSZACcontroller_oveDamP3_activate': 0,
-             'PSZACcontroller_oveDamP4_u': 0,
-             'PSZACcontroller_oveDamP4_activate': 0,
-             # Cooling setpoint Control
-             'PSZACcontroller_oveCooStpCor_u': 0,
-             'PSZACcontroller_oveCooStpCor_activate': 0,
-             'PSZACcontroller_oveCooStpPer1_u': 0,
-             'PSZACcontroller_oveCooStpPer1_activate': 0,
-             'PSZACcontroller_oveCooStpPer4_u': 0,
-             'PSZACcontroller_oveCooStpPer4_activate': 0,
-             'PSZACcontroller_oveCooStpPer3_u': 0,
-             'PSZACcontroller_oveCooStpPer3_activate': 0,
-             'PSZACcontroller_oveCooStpPer2_u': 0,
-             'PSZACcontroller_oveCooStpPer2_activate': 0,
-             # Low-level cooling coil control
-             'PSZACcontroller_oveCooCor_u': 0,
-             'PSZACcontroller_oveCooCor_activate': 0,
-             'PSZACcontroller_oveCooPer1_u': 0,
-             'PSZACcontroller_oveCooPer1_activate': 0,
-             'PSZACcontroller_oveCooPer2_u': 0,
-             'PSZACcontroller_oveCooPer2_activate': 0,
-             'PSZACcontroller_oveCooPer3_u': 0,
-             'PSZACcontroller_oveCooPer3_activate': 0,
-             'PSZACcontroller_oveCooPer4_u': 0,
-             'PSZACcontroller_oveCooPer4_activate': 0
-              }
+        u = {}
+        # u = { #Low-level heating coil
+        #      'PSZACcontroller_oveHeaCor_u': 0,
+        #      'PSZACcontroller_oveHeaCor_activate': 0,
+        #      'PSZACcontroller_oveHeaPer1_u': 0,
+        #      'PSZACcontroller_oveHeaPer1_activate': 0,
+        #      'PSZACcontroller_oveHeaPer2_u': 0,
+        #      'PSZACcontroller_oveHeaPer2_activate': 0,
+        #      'PSZACcontroller_oveHeaPer3_u': 0,
+        #      'PSZACcontroller_oveHeaPer3_activate': 0,
+        #      'PSZACcontroller_oveHeaPer4_u': 0,
+        #      'PSZACcontroller_oveHeaPer4_activate': 0,
+        #     # Heating Setpoint Control
+        #      'PSZACcontroller_oveHeaStpCor_u': 0,
+        #      'PSZACcontroller_oveHeaStpCor_activate': 0,
+        #      'PSZACcontroller_oveHeaStpPer1_u': 0,
+        #      'PSZACcontroller_oveHeaStpPer1_activate': 0,
+        #      'PSZACcontroller_oveHeaStpPer2_u': 0,
+        #      'PSZACcontroller_oveHeaStpPer2_activate': 0,
+        #      'PSZACcontroller_oveHeaStpPer3_u': 0,
+        #      'PSZACcontroller_oveHeaStpPer3_activate': 0,
+        #      'PSZACcontroller_oveHeaStpPer4_u': 0,
+        #      'PSZACcontroller_oveHeaStpPer4_activate': 0,
+        #     # Low-level damper control
+        #      'PSZACcontroller_oveDamCor_u': 0,   # 0 to 0.5 m3/s
+        #      'PSZACcontroller_oveDamCor_activate': 0,
+        #      'PSZACcontroller_oveDamP1_u': 0,
+        #      'PSZACcontroller_oveDamP1_activate': 0,
+        #      'PSZACcontroller_oveDamP2_u': 0,
+        #      'PSZACcontroller_oveDamP2_activate': 0,
+        #      'PSZACcontroller_oveDamP3_u': 0,
+        #      'PSZACcontroller_oveDamP3_activate': 0,
+        #      'PSZACcontroller_oveDamP4_u': 0,
+        #      'PSZACcontroller_oveDamP4_activate': 0,
+        #      # Cooling setpoint Control
+        #      'PSZACcontroller_oveCooStpCor_u': 0,
+        #      'PSZACcontroller_oveCooStpCor_activate': 0,
+        #      'PSZACcontroller_oveCooStpPer1_u': 0,
+        #      'PSZACcontroller_oveCooStpPer1_activate': 0,
+        #      'PSZACcontroller_oveCooStpPer4_u': 0,
+        #      'PSZACcontroller_oveCooStpPer4_activate': 0,
+        #      'PSZACcontroller_oveCooStpPer3_u': 0,
+        #      'PSZACcontroller_oveCooStpPer3_activate': 0,
+        #      'PSZACcontroller_oveCooStpPer2_u': 0,
+        #      'PSZACcontroller_oveCooStpPer2_activate': 0,
+        #      # Low-level cooling coil control
+        #      'PSZACcontroller_oveCooCor_u': 0,
+        #      'PSZACcontroller_oveCooCor_activate': 0,
+        #      'PSZACcontroller_oveCooPer1_u': 0,
+        #      'PSZACcontroller_oveCooPer1_activate': 0,
+        #      'PSZACcontroller_oveCooPer2_u': 0,
+        #      'PSZACcontroller_oveCooPer2_activate': 0,
+        #      'PSZACcontroller_oveCooPer3_u': 0,
+        #      'PSZACcontroller_oveCooPer3_activate': 0,
+        #      'PSZACcontroller_oveCooPer4_u': 0,
+        #      'PSZACcontroller_oveCooPer4_activate': 0
+        #       }
 
         # Assign values to inputs if any
         for i, act in enumerate(self.actions):
