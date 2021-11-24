@@ -4,7 +4,7 @@ import config
 
 # Parameters
 
-start_time = 3 * 24 * 3600 + 5 * 3600
+start_time = 3 * 24 * 3600
 warmup = 0
 length = 24 * 3600 * 1
 step = 300
