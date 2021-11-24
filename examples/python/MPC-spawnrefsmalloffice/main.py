@@ -1,6 +1,7 @@
 # This started from an example file provided by do-mpc
 
 import matplotlib.pyplot as plt
+import numpy as np
 from casadi.tools import *
 
 from model_parameters import ModelParameters
@@ -84,49 +85,62 @@ Setup graphic:
 #
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(8, 10))
+fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(8, 10))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
+xticks = range(0, int(mp.length), int(6 * 3600))
+xlabels = range(0, int(mp.length/3600) + 6, 6)
+
 axis = 0
-ax[axis].set_title('OA Temperature')
-mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
+# ax[axis].set_title('OA Temperature')
+# mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
+# ax[axis].set_xticks(xticks)
+# ax[axis].set_xticklabels(xlabels)
+# ax[axis].set_ylabel('Temperature [C]')
 
 #axis += 1
-#ax[axis].set_title('Horizontal Global Irradiance')
-#mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
-
-#axis += 1
-#ax[axis].set_title('Occupancy Count')
-#mpc_plot.add_line('_tvp', 'occupancy_ratio', ax[axis])
-
-axis += 1
-ax[axis].set_title('Power Variables')
-mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
-mpc_plot.add_line('_x', 'cf_heating_power', ax[axis], color='blue')
-mpc_plot.add_line('_x', 'heating_power_prev', ax[axis], color='green')
-
-#axis += 1
-#ax[axis].set_title('Outside Air (m3/s)')
-# mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
-#mpc_plot.add_line('_tvp', 'OAVent', ax[axis])
-
-axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
 mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
-mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='blue')
-mpc_plot.add_line('_x', 't_indoor', ax[axis], color='green')
-sim_plot.add_line('_x', 't_indoor', ax[axis], color='orange')
+mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='red')
+mpc_plot.add_line('_x', 't_indoor', ax[axis], color='black')
+sim_plot.add_line('_x', 't_indoor', ax[axis], color='blue')
+ax[axis].set_xticks(xticks)
+ax[axis].set_xticklabels(xlabels)
+ax[axis].set_yticks(np.arange(mp.min_indoor_t, mp.max_indoor_t, 2))
+ax[axis].set_yticklabels(np.around(np.arange(mp.min_indoor_t-273.15, mp.max_indoor_t-273.15, 2)))
+ax[axis].set_ylabel('Temperature [C]')
+ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 4, 6])), ['Setpoints', 'Real temperature (spawn)', 'Simulated temperature (MPC)'], loc='lower right')
+
 
 axis += 1
-ax[axis].set_title('Electricity Cost Multiplier')
+ax[axis].set_title('Heating coil command')
+mpc_plot.add_line('_u', 'heating_power', ax[axis], color='red')
+ax[axis].set_xticks(xticks)
+ax[axis].set_xticklabels(xlabels)
+ax[axis].set_yticks(np.arange(0, 1.2, 0.2))
+ax[axis].set_yticklabels(np.arange(0, 120, 20))
+ax[axis].set_ylabel('Heating coil power [%]')
+
+axis += 1
+ax[axis].set_title('Electricity Cost')
 mpc_plot.add_line('_tvp', 'ElecCost', ax[axis])
+ax[axis].set_xticks(xticks)
+ax[axis].set_xticklabels(xlabels)
+ax[axis].set_ylabel('Cost [$]')
 
 axis += 1
 ax[axis].set_title('Cost Function')
-mpc_plot.add_line('_aux', 'cost', ax[axis])
+mpc_plot.add_line('_aux', 'cost', ax[axis], label='Total cost')
+mpc_plot.add_line('_x', 'discost', ax[axis], label='Discomfort cost')
+mpc_plot.add_line('_x', 'eleccost', ax[axis], label='Energy cost')
+ax[axis].set_xticks(xticks)
+ax[axis].set_xticklabels(xlabels)
+ax[axis].set_xlabel('Time [hours]')
+ax[axis].set_ylabel('Cost [$]')
+ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4])), ['Total cost', 'Discomfort cost', 'Energy cost'], loc='upper right')
 
 for ax_i in ax:
     ax_i.axvline(1.0)
@@ -151,8 +165,7 @@ if boptest_client is not None:
 
 # historian.add_point('T1_Rad', 'degC', 'TRooRad_y')
 
-# 288 5-minute intervals per day
-for k in range(288 * 1):
+for k in range(int(mp.length/mp.time_step)):
     # for k in range(10):
     current_time = mp.start_time_dt + datetime.timedelta(seconds=(k * 300))
     historian.add_datum('timestamp', current_time.strftime("%Y/%m/%d %H:%M:%S"))

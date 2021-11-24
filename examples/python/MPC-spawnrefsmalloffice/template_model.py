@@ -20,6 +20,8 @@ def template_model():
     # additional state for indoor temperature -- mainly for plotting right now
     t_indoor = model.set_variable(var_type='_x', var_name='t_indoor', shape=(1, 1))
     cf_heating_power = model.set_variable(var_type='_x', var_name='cf_heating_power', shape=(1, 1))
+    eleccost = model.set_variable(var_type='_x', var_name='eleccost', shape=(1, 1))
+    discost = model.set_variable(var_type='_x', var_name='discost', shape=(1, 1))
     # oa_vent_new = model.set_variable(var_type='_x', var_name='oa_vent_new', shape=(1, 1))
 
     # try setting
@@ -106,6 +108,8 @@ def template_model():
     cost_function = w_power * cf_heating_power * elec_cost_multiplier + \
                     w_discomfort * discomfort + \
                     w_coc_increase * fmax(cf_heating_power - heating_power_prev, 0) ** 2
+    model.set_rhs("discost", w_discomfort * discomfort)
+    model.set_rhs("eleccost", w_power * cf_heating_power * elec_cost_multiplier)
     model.set_expression(expr_name='cost', expr=cost_function)
     model.setup()
 

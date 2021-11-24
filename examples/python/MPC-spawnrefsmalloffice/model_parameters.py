@@ -69,7 +69,7 @@ class ModelParameters:
 
         # Additional states
         #   --  Initial T Zn1, Initial Heating Power Zn1, Previous Heating Power Zn1
-        self.additional_x_states_inits = np.array([[293], [0], [0]])
+        self.additional_x_states_inits = np.array([[293], [0], [0], [0], [0]])
 
         # The min_x is +/- 10 for the number of rows of A which is the # of states
         self.min_x = np.array([[-30]] * self.a.shape[0])
@@ -188,8 +188,8 @@ class ModelParameters:
 
         # running configuration
         self.time_step = 300
-        # TODO: This should be one day once things are working.
-        self.n_horizon = 96 #  8 hours ahead  -- 1 hour is 12 steps in the horizon
+        self.length = 24 * 3600 * 1
+        self.n_horizon = int(8 * 3600 / self.time_step) #  8 hours ahead  -- 1 hour is 12 steps in the horizon
 
         # Revert to this start time when generating final datset
         self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
