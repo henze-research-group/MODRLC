@@ -1,0 +1,16 @@
+ ReadVarsESO
+ processing:./RefBldgMediumOfficeNew2004_v1.4_7.2_5B_USA_CO_BOULDER.rvi
+ input file:eplusout.eso
+ output file:eplusout.csv
+ getting all vars from:eplusout.eso
+  number variables requested for output=          11
+ ReadVars Run Time=00hr 00min  0.16sec
+ ReadVarsESO program completed successfully.
+ ReadVarsESO
+ processing:./RefBldgMediumOfficeNew2004_v1.4_7.2_5B_USA_CO_BOULDER.mvi
+ input file:eplusout.mtr
+ output file:eplusmtr.csv
+ getting all vars from:eplusout.mtr
+  number variables requested for output=          11
+ ReadVars Run Time=00hr 00min  0.15sec
+ ReadVarsESO program completed successfully.

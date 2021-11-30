@@ -1,0 +1,17 @@
+###### RESTful API ######
+requests
+requests_toolbelt
+
+###### Utilities #######
+
+matplotlib
+pandas
+
+###### do-mpc ######
+
+do-mpc
+xlrd
+
+###### OpenAI Gym ####
+gym
+tensorflow >= 2.0, <=2.5

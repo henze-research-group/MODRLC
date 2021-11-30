@@ -1,87 +1,121 @@
-# IBPSA Project 1 - BOPTEST
+# Advanced Controls Test Bed
 
-[![Build Status](https://travis-ci.com/ibpsa/project1-boptest.svg?branch=master)](https://travis-ci.com/ibpsa/project1-boptest)
+The Advanced Controls Test Bed (ACTB) is a virtual buildings test bed that interfaces external controllers to high-fidelity Spawn of EnergyPlus models. 
+The ACTB has two interfaces to Python control libraries:
+- one interface for model predictive controllers (MPC) based on [do-mpc](https://www.do-mpc.com/en/latest/)
+- one interface for reinforcement learning controllers (RLC) based on [OpenAI Gym](https://gym.openai.com/)
 
-Building Optimization Performance Tests
+[Spawn of EnergyPlus](https://www.energy.gov/eere/buildings/downloads/spawn-energyplus-spawn) is a model-exchange framework that allows the simulation of building envelope and internal gains models in EnergyPlus, and their HVAC systems and controls in Modelica.
 
-This repository contains code for the Building Optimization Performance Test framework (BOPTEST)
-that is being developed as part of the IBPSA Project 1 (https://ibpsa.github.io/project1/).
+This makes the ACTB a flexible and user-friendly framework for developing and evaluating advanced controls using high-fidelity building models.
+
+The ACTB is based on the BOPTEST framework available [here](https://github.com/ibpsa/project1-boptest) and the [BOPTEST OpenAI Gym interface](https://github.com/ibpsa/project1-boptest-gym).
+
+The ACTB is currently in its first release version and might undergo changes, contain broken modules, or function unexpectedly. Please report all issues in the Issues tab at the top of the page.
+
+## Install
+
+### Operating systems
+
+The ACTB works with Linux and macOS out of the box, but requires an additional software layer for working on Windows. If you are a Windows user,
+please install the **Windows Subsystem for Linux (WSL)** by following the instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install).
+You will simply need to start an instance of the WSL first, then run the commands found in the various instructions of this repository in the Linux terminal
+that will be launched.
+
+### Docker
+
+The ACTB is packaged as a Docker container, please install Docker by following the instructions [here](https://docs.docker.com/get-docker/).
+
+### Python
+
+While the Docker container comes with Python and all the dependencies installed, if you are running a controller script externally
+you will need to install Python and a few libraries. For Python, please install **Python 3.6** by following these links for [Linux](https://docs.python-guide.org/starting/install3/linux/),
+[macOS](https://docs.python-guide.org/starting/install3/osx/), or [Windows](https://docs.python.org/3/using/windows.html).
+
+Note: If you have several versions of Python installed, make sure you are running Python 3.6 by replacing `python` 
+commands with `python3` whenever the command is present in the instructions.
+
+### Libraries
+
+We strongly recommend installing and using `pip` to manage Python libraries.
+Follow the instructions [here](https://pip.pypa.io/en/stable/installation/) to install pip.
+
+With pip installed, just open a terminal window, `cd` at the root of the ACTB
+and run:
+
+`pip install -r requirements.txt`
+
+If you have several versions of Python installed, you may need to replace `pip` by `pip3` in the above command to make sure you 
+are installing these libraries for your Python 3. 
+
+## Quick-Start to Run Test Cases
+
+1. Make sure the Docker daemon is running. 
+2. Build the Spawn Small Office test case by running ``$ make build TESTCASE=spawnrefsmalloffice``
+3. Run the Spawn Small Office test case by running ``$ make run TESTCASE=spawnrefsmalloffice``
+4. Run an example test controller in a separate terminal:
+
+  * ``$ cd examples/python/MPC-spawnrefsmalloffice && python main.py`` to test a MPC controller.
+  * ``$ cd examples/python/RLC-spawnrefsmalloffice && python DQN_Test_run.py`` to test a RLC controller.
+  * ``$ cd examples/python/RBC-spawnrefsmalloffice && python supervisory_example.py`` to test the RBC controller.
+ 
+4. Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``Ctrl+D`` to exit the Docker container.
+5. Remove the test case Docker image by ``$ make remove-image TESTCASE=spawnrefsmalloffice``.
+
+## Architecture
+
+The ACTB is based on BOPTEST-service, a merge between BOPTEST and [Alfalfa](https://github.com/NREL/alfalfa). It is supplemented by a library of high-fidelity Spawn models and two advanced controller interfaces. A metamodeling framework allows the generation of reduced order models from Spawn data, in order to provide computationally-efficient models for MPC planning models and RLC pre-training (see the RLC guide [here](TODO)).
+
+![ACTB architecture](docs/figures/ACTBarchi.png)
+## Interfaces
+
+Two advanced controller interfaces are currently available for the ACTB.
+- the do-mpc interface for MPC is available under ``/interfaces/dompc``, along with a ReadMe file and examples of applications. It is used by the MPC example found in ``/examples/python/MPC-spawnrefsmalloffice``.
+- the OpenAI Gym interface for RLC is available under ``/interfaces/openai-gym``, along with a ReadMe file and examples of applications. It is used by the RLC example found in ``/examples/python/RLC-spawnrefsmalloffice``
+
+## Test cases
+
+Testcases are found in the ``/testcases`` directory. Example controllers to go with these test cases are found under the ``/examples`` directory.
+
+For the moment, one Spawn test case is available. It represents the U.S. Department of Energy's Small Office Building.
+It is provided with a documentation, found under ``/testcases/spawnrefsmalloffice/docs``.
+
+![Animation of the ACTB test case](docs/figures/ACTBdemo.gif)
+
+## Known Issues
+
+Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
+- the metamodeling framework produces models which temperature prediction is shifted by approximately 20 K.
+- the Spawn test cases cannot be initialized again after the simulation completed. You currently need to stop the Docker container
+and start it again. This will be fxed
 
 ## Structure
-- ``/testcases`` contains test cases, including docs, models, and configuration settings.
-- ``/examples`` contains code for interacting with a test case and running example tests with simple controllers.  Those controllers are implemented in Python (Version 2.7 and 3.9), Julia (Version 1.0.3), and JavaScript (Version ECMAScript 2018).
-- ``/parsing`` contains code for a script that parses a Modelica model using signal exchange blocks and outputs a wrapper FMU and KPI json.
+- ``/testcases`` contains Spawn of EnergyPlus test cases, including docs, models, and configuration settings.
+- ``/examples`` contains examples of MPC and RLC Python controllers that interact with Spawn models.
+- ``/interfaces`` contains the clients for interfacing do-mpc and OpenAI Gym to the ACTB
+- ``/metamodeling`` contains prototype code for the metamodeling framework
+- ``/parsing`` contains prototype code for a script that parses a Modelica model using signal exchange blocks and outputs a wrapper FMU and KPI json.
+- ``/template`` contains template Modelica code for a test case emulator model.
 - ``/testing`` contains code for unit and functional testing of this software.  See the README there for more information about running these tests.
-- ``/data`` contains code for generating and managing data associated with test cases.  This includes boundary conditions, such as weather, schedules, and energy prices, as well as a map of test case FMU outputs needed to calculate KPIs.
-- ``/forecast`` contains code for returning boundary condition forecast, such as weather, schedules, and energy prices.
-- ``/kpis`` contains code for calculating key performance indicators.
+- ``/data`` contains prototype code for generating and managing data associated with test cases.  This includes boundary conditions, such as weather, schedules, and energy prices, as well as a map of test case FMU outputs needed to calculate KPIs.
+- ``/forecast`` contains prototype code for returning boundary condition forecast, such as weather, schedules, and energy prices.
+- ``/kpis`` contains prototype code for calculating key performance indicators.
 - ``/docs`` contains design requirements and guide documentation.
 
-##2) Build the test case by ``$ make build`` where <testcase_dir_name> is the name of the test case subdirectory located in ``/testcases``.
-## Quick-Start to Run Test Cases
-1) Install [Docker](https://docs.docker.com/get-docker/).
-2) Build the BOPTEST Service by ``$ make build``.
-3) Start the BOPTEST Service by ``$ make run``.
-4) In a separate process, use the test case API defined below to interact with a test case using your test controller.  Alternatively, view and run an example test controller as described in the next step.
-5) Run an example test controller:
+## Acknowledgements
+We gratefully acknowledge funding by the U.S. Department of Energy under Project 3.2.6.80, titled _Multi-Objective Deep Reinforcement Learning Controls_.
 
-* For Python-based example controllers:
-  * Build and run the BOPTEST Service.  Then, in a separate terminal, use ``$ cd examples/python/ && python testcase1.py`` to test a simple proportional feedback controller on this test case over a two-day period.
-  * Build and run the BOPTEST Service.  Then, in a separate terminal, use ``$ cd examples/python/ && python testcase1_scenario.py`` to test a simple proportional feedback controller on this test case over a test period defined using the ``/scenario`` API.
-  * Build and run the BOPTEST Service.  Then, in a separate terminal, use ``$ cd examples/python/ && python testcase2.py`` to test a simple supervisory controller on this test case over a two-day period.
+To develop the ACTB, we rely on the following software:
+- the [Buildings Operation Performance TEST](https://github.com/ibpsa/project1-boptest), developed under IBPSA Project 1
+- the [BOPTEST OpenAI Gym interface](https://github.com/ibpsa/project1-boptest-gym), developed under IBPSA Project 1
+- [Spawn of EnergyPlus](https://www.energy.gov/eere/buildings/downloads/spawn-energyplus-spawn)
+- the [System Identification Package for Python](https://github.com/CPCLAB-UNIPI/SIPPY.git)
+- the [do-mpc](https://www.do-mpc.com/en/latest/) package
+- the [OpenAI Gym](https://gym.openai.com/) package
 
-* Julia-based example controllers are not yet updated according to BOPTEST Service conventions
+## Authors
+This project is led by Professor Gregor Henze, at the University of Colorado Boulder.
+It is developed and maintained by Dr. Thibault Marzullo, Sourav Dey, and Nicholas Long, at the University of Colorado Boulder.
 
-6) Shutdown the Service from the terminal window using ``Ctrl+C``.
-7) Remove the test case Docker image by ``$ make remove-image``.
-
-## Test Case RESTful API
-- To run a test, use the API defined in the table below by sending RESTful requests to: ``http://127.0.0.1/<request>/<testid>``
-- In BOPTEST Service there can be many tests running concurently. The ``select`` API is used to begin a test and retrieve a unique ``testid`` which is used for further API requests related to the test: ``curl -X POST  http://127.0.0.1/testcases/testcase1/select``. The value ``testcase1`` can be any one of the available BOPTEST test cases reported by the API: GET ``http://127.0.0.1/testcases/``.
-
-Example RESTful interaction:
-
-- Begin a test and retrieve a unique ``testid``: ``$ curl -X POST http://127.0.0.1/testcases/testcase1/select``
-- Receive a list of available measurement names and their metadata: ``$ curl http://127.0.0.1/measurements/<testid>``
-- Receive a forecast of boundary condition data: ``$ curl http://127.0.0.1/forecast/<testid>``
-- Advance simulation of test case 2 with new heating and cooling temperature setpoints: ``$ curl http://127.0.0.1/advance/<testid> -d '{"oveTSetRooHea_u":293.15,"oveTSetRooHea_activate":1, "oveTSetRooCoo_activate":1,"oveTSetRooCoo_u":298.15}' -H "Content-Type: application/json"``.  Leave an empty json to advance the simulation using the setpoints embedded in the model.
-- End the test: ``$ curl -X PUT http://127.0.0.1/stop/<testid>``
-
-| Interaction                                                           | Request                                                   |
-|-----------------------------------------------------------------------|-----------------------------------------------------------|
-| List available test cases.                                             |  GET ``testcases`` |
-| Select a test case and begin a new test.                               |  POST ``testcases/{testcase_name}/select`` |
-| Stop a running test.                                                   |  PUT ``stop/{testid}`` |
-| Advance simulation with control input and receive measurements.        |  POST ``advance/{testid}`` with json data "{<input_name>:<value>}" |
-| Initialize simulation to a start time using a warmup period in seconds.     |  PUT ``initialize/{testid}`` with arguments ``start_time=<value>``, ``warmup_time=<value>``|
-| Receive communication step in seconds.                                 |  GET ``step/{testid}``                                             |
-| Set communication step in seconds.                                     |  PUT ``step/{testid}`` with argument ``step=<value>``              |
-| Receive sensor signal point names (y) and metadata.                          |  GET ``measurements/{testid}``                                     |
-| Receive control signal point names (u) and metadata.                        |  GET ``inputs/{testid}``                                           |
-| Receive test result data for the given point name between the start and final time in seconds. |  PUT ``results/{testid}`` with arguments ``point_name=<string>``, ``start_time=<value>``, ``final_time=<value>``|
-| Receive test KPIs.                                                     |  GET ``kpi/{testid}``                                              |
-| Receive test case name.                                                |  GET ``name/{testid}``                                             |
-| Receive boundary condition forecast from current communication step.   |  GET ``forecast/{testid}``                                         |
-| Receive boundary condition forecast parameters in seconds.             |  GET ``forecast_parameters/{testid}``                              |
-| Set boundary condition forecast parameters in seconds.                 |  PUT ``forecast_parameters/{testid}`` with arguments ``horizon=<value>``, ``interval=<value>``|
-| Receive current test scenario.                                         |  GET ``scenario/{testid}``                                   |
-| Set test scenario. Setting the argument ``time_period`` performs an initialization with predefined start time and warmup period and will only simulate for predefined duration. |  PUT ``scenario/{testid}`` with optional arguments ``electricity_price=<string>``, ``time_period=<string>``.  See README in [/testcases](https://github.com/ibpsa/project1-boptest/tree/master/testcases) for options and test case documentation for details.|
-| Receive BOPTEST version.                                               |  GET ``version``                                             |
-## Development
-
-This repository uses pre-commit to ensure that the files meet standard formatting conventions (such as line spacing, layout, etc).
-Presently only a handful of checks are enabled and will expanded in the near future. To run pre-commit first install
-pre-commit into your Python version using pip `pip install pre-commit`. Pre-commit can either be manually by calling
-`pre-commit run --all-files` from within the BOPTEST checkout directory, or you can install pre-commit to be run automatically
-as a hook on all commits by calling `pre-commit install` in the root directory of the BOPTEST GitHub checkout.
-
-## More Information
-See the [wiki](https://github.com/ibpsa/project1-boptest/wiki) for use cases and development requirements.
-
-## BOPTEST Dashboard
-A dashboard for aggregating and sharing test results is under development here: https://github.com/NREL/boptest-dashboard.
-
-## Publications
-D. Blum, F. Jorissen, S. Huang, Y. Chen, J. Arroyo, K. Benne, Y. Li, V. Gavan, L. Rivalin, L. Helsen, D. Vrabie, M. Wetter, and M. Sofos. (2019). “Prototyping the BOPTEST framework for simulation-based testing of advanced control strategies in buildings.” In *Proc. of the 16th International Conference of IBPSA*, Sep 2 – 4. Rome, Italy.
-
-# MODRLC
+Former project members:
+- Developer (2021-2021): José Angel Leiva Vilaplana, Masters candidate, Universitat Politecnica de Catalunya.

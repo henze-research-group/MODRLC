@@ -1,13 +1,15 @@
 # Test Cases
 
-This directory contains test cases for BOPTEST.  A summary of available test cases is provided in the table below.  For more detail on a particular test case, go to ``/<testcase_dir_name>/docs``.
+This directory contains test cases for the ACTB.  A summary of available test cases is provided in the table below.  For more detail on a particular test case, go to ``/<testcase_dir_name>/docs``.
 
-| Test Case                                                  | Description                                   | Scenarios |
-|------------------------------------------------------------|-----------------------------------------------|--------------------|
-| ``testcase1`` | Prototype test case for development purposes.  Single-zone R1C1 room model with sinusoidal ambient temperature and heater. |NA|
-| ``testcase2``| Prototype test case for development purposes.  Based on the single-zone AHU model found in Modelica Buildings Library. |NA|
-| ``testcase3``| Prototype test case for development purposes.  Two single-zone R1C1 room models with sinusoidal ambient temperature and individual heaters. |NA|
-| ``bestest_air``| BESTEST Case 900 room model with idealized fan coil unit.|**Electricity Prices**: <br />``'constant'``, <br />``'dynamic'``, <br />``'highly_dynamic'``<br />**Time Periods**:<br />``'peak_heat_day'``, <br />``'typical_heat_day'``, <br />``'peak_cool_day'``, <br />``'typical_cool_day'``, <br />``'mix_day'``|
-| ``bestest_hydronic``| BESTEST Case 900 room model with gas boiler and radiator.|**Electricity Prices**: <br />``'constant'``, <br />``'dynamic'``, <br />``'highly_dynamic'``<br />**Time Periods**: <br />``'peak_heat_day'``, <br />``'typical_heat_day'``|
-| ``bestest_hydronic_heat_pump``| BESTEST Case 900 room model, scaled by four in floor area, that uses a heat pump as heating production system and floor heating as heating emission system.|**Electricity Prices**: <br />``'constant'``, <br />``'dynamic'``, <br />``'highly_dynamic'``<br />**Time Periods**: <br />``'peak_heat_day'``, <br />``'typical_heat_day'``|
-| ``multizone_residential_hydronic``| Multi-zone residential hydronic model with gas boiler, radiators, and ideal cooling system. |**Electricity Prices**: <br />``'constant'``, <br />``'dynamic'``, <br />``'highly_dynamic'``<br />**Time Periods**: <br />``'peak_heat_day'``, <br />``'typical_heat_day'``|
+| Test Case                                                             | Description                                               | Status
+|-----------------------------------------------------------------------|-----------------------------------------------------------|---------------|
+| ``spawnrefsmalloffice`` | Spawn of EnergyPlus test case based on the U.S. DOE Reference Small Office Building.  5-zone building with 5 constant air volume AHUs based on ASHRAE Baseline System 3.| Ready |
+| ``spawnrefmediumoffice``| Spawn of EnergyPlus test case based on the U.S. DOE Reference Medium Office Building. 15-zone building with 3 multi-zone variable air volume AHUs.| In development|
+
+To build and run a testcase:
+1. Build the test case by ``$ make build TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory.
+For example, build the Spawn Small Office test case by running ``$ make build TESTCASE=spawnrefsmalloffice``
+2. Deploy the test case by ``$ make run TESTCASE=<testcase_dir_name>`` where <testcase_dir_name> is the name of the test case subdirectory.
+3. Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``Ctrl+D`` to exit the Docker container.
+4. Remove the test case Docker image by ``$ make remove-image TESTCASE=<testcase_dir_name>``.

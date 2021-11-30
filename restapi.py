@@ -80,6 +80,14 @@ class Initialize(Resource):
         warmup_period = float(args['warmup_period'])
         y = case.initialize(start_time,warmup_period)
         return y
+        
+class Reset(Resource):
+    '''Interface to reset the test case simulation.'''
+
+    def put(self):
+        '''PUT request to reset the test.'''
+        y = case.reset()
+        return y
 
 class Step(Resource):
     '''Interface to test case simulation step size.'''
