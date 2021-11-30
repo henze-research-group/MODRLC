@@ -70,7 +70,7 @@ class ActbClient:
             step size (str): the value of the step that was set
         """
 
-        requests.put('{0}/step/{1}'.format(self.url, self.simId))
+        requests.put('{0}/step/{1}'.format(self.url, self.simId), data={'step' : step})
 
     def initialize(self, **kwargs):
         """Initialize a testcase
@@ -159,7 +159,7 @@ class ActbClient:
 
         """
         data = {'horizon' : horizon, 'interval' : interval}
-        requests.put('{0}/forecast_parameters/{1}'.format(self.url, self.simId), data=data).json()
+        requests.put('{0}/forecast_parameters/{1}'.format(self.url, self.simId), data=data)
 
     def get_scenario(self):
         return requests.get('{0}/scenario/{1}'.format(self.url, self.simId)).json()

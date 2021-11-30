@@ -6,7 +6,10 @@ import json,collections
 import os
 import custom_kpi_calculator as kpicalculation
 import sys
+from pathlib import Path
 sys.path.append("../..")
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'boptest_client'))
+from actb_client import ActbClient
 from custom_kpi import custom_kpi_calculator as kpicalculation
 import time as _time
 from pathlib import Path
@@ -27,7 +30,8 @@ class BoptestGymEnv(gym.Env):
     metadata = {'render.modes': ['console']}
 
     def __init__(self, 
-                 url                = 'http://127.0.0.1:5000',
+                 url                = 'http://127.0.0.1:80',
+                 testcase = None,
                  password           = None,
                  actions            = ['oveDSet_activate'],
                  building_obs       = ['senTRoom_y'],
@@ -85,6 +89,8 @@ class BoptestGymEnv(gym.Env):
         self.dr_obs                 = dr_obs
         self.u                      = None
         self.password               = password
+        self.client = ActbClient(url)
+        self.client.select(testcase)
 
 
 
@@ -97,33 +103,27 @@ class BoptestGymEnv(gym.Env):
         # Get test information
         #=============================================================
         # Test case name
-        self.name = requests.get('{0}/name'.format(url)).json()
+        self.name = self.client.name()
         print('Name:\t\t\t\t{0}'.format(self.name))
         print("\n")
 
         # Measurements available
-        self.all_measurement_vars = requests.get('{0}/measurements'.format(url)).json()
+        self.all_measurement_vars = self.client.measurements()
         print('Measurements:\t\t\t{0}'.format(self.all_measurement_vars))
         print("\n")
 
-        # Forecasting variables available
-        self.all_forecasting_vars = requests.get('{0}/forecast'.format(url)).json()
-        print('Forecasting variables:\t\t\t{0}'.format(self.all_forecasting_vars))
-        print("\n")
-
-
         # Inputs available
-        self.all_input_vars = requests.get('{0}/inputs'.format(url)).json()
+        self.all_input_vars = self.client.inputs()
         print('Control Inputs:\t\t\t{0}'.format(self.all_input_vars))
         print("\n")
 
         # Default simulation step
-        self.step_def = requests.get('{0}/step'.format(url)).json()
+        self.step_def = self.client.get_step()
         print('Default Simulation Step:\t{0}'.format(self.step_def))
         print("\n")
 
         # Default forecast parameters
-        self.forecast_def = requests.get('{0}/forecast_parameters'.format(url)).json()
+        self.forecast_def = self.client.get_forecast_parameters()
         print('Default Forecast Interval:\t{0} '.format(self.forecast_def['interval']))
         print('Default Forecast Horizon:\t{0} '.format(self.forecast_def['horizon']))
         print("\n")
@@ -239,34 +239,34 @@ class BoptestGymEnv(gym.Env):
 
     def reset(self):            
 
-        sudoPassword = self.password
-
-        print("TESTING: Stopping Docker container")
-        cur_path = str(Path(__file__).parent.absolute())
-        command = 'bash '+cur_path+'/stop.sh'
-        p = os.system('echo %s|sudo -S %s' % (sudoPassword, command))
-        _time.sleep(3)
-
-        print("TESTING: Starting Docker container")
-        command = 'bash '+cur_path+'/start.sh'
-        p = os.system('echo %s|sudo -S %s' % (sudoPassword, command))
-        _time.sleep(10)
+        # sudoPassword = self.password
+        #
+        # print("TESTING: Stopping Docker container")
+        # cur_path = str(Path(__file__).parent.absolute())
+        # command = 'bash '+cur_path+'/stop.sh'
+        # p = os.system('echo %s|sudo -S %s' % (sudoPassword, command))
+        # _time.sleep(3)
+        #
+        # print("TESTING: Starting Docker container")
+        # command = 'bash '+cur_path+'/start.sh'
+        # p = os.system('echo %s|sudo -S %s' % (sudoPassword, command))
+        # _time.sleep(10)
 
         # Initialize the building simulation
-        res = requests.put('{0}/initialize'.format(self.url),
-                           data={'start_time': self.start_time,
-                                 'warmup_period': self.warmup_period}).json()
+        params = {'start_time': self.start_time,
+                                 'warmup_period': self.warmup_period}
+        res = self.client.initialize(**params)
 
         if res:
             print('Successfully initialized the simulation')
 
         # Set simulation step
-        requests.put('{0}/step'.format(self.url), data={'step': self.Ts})
+        self.client.set_step(self.Ts)
 
         print('Setting simulation step to {0}.'.format(self.Ts))
 
         # Get forecast values
-        forecasts = requests.get('{0}/forecast'.format(self.url)).json()
+        forecasts = self.client.get_forecasts()
 
         self.forecast_y = forecasts
 
@@ -351,11 +351,11 @@ class BoptestGymEnv(gym.Env):
             u[act.replace('_u','_activate')] = 1.
                 
         # Advance a BOPTEST simulation
-        res = requests.post('{0}/advance'.format(self.url), data=u).json()
+        res = self.client.advance(control_u = u)
         self.building_y = res
 
         # Get forecast values
-        forecasts = requests.get('{0}/forecast'.format(self.url)).json()
+        forecasts = self.client.get_forecasts()
         self.forecast_y = forecasts
         self.u = u
         
@@ -487,7 +487,7 @@ class BoptestGymEnv(gym.Env):
     def compute_reward(self):
 
         # Compute BOPTEST core kpis
-        kpis = requests.get('{0}/kpi'.format(self.url)).json()
+        kpis = self.client.kpis()
 
         kpis_keys = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']
 
@@ -594,7 +594,7 @@ class BoptestGymEnv(gym.Env):
         
         # Get predictions if this is a predictive agent
         if self.is_predictive:
-            forecast = requests.get('{0}/forecast'.format(self.url)).json()
+            forecast = self.client.get_forecasts()
             for var in self.forecasting_vars:
                 for i in range(self.fore_n):
                     observations.append(forecast[var][i])
@@ -604,10 +604,7 @@ class BoptestGymEnv(gym.Env):
         return observations
     
     def get_KPIs(self):
-        # Compute BOPTEST core kpis
-        kpis = requests.get('{0}/kpi'.format(self.url)).json()
-        
-        return kpis
+        return self.client.kpis()
 
     def change_rewards_weights(self,KPI_rewards):
         self.KPI_rewards = KPI_rewards
@@ -616,7 +613,7 @@ class BoptestGymEnv(gym.Env):
         return (self.building_y)
 
     def print_KPIs(self):
-        kpi = requests.get('{0}/kpi'.format(self.url)).json()
+        kpi = self.get_KPIs()
         for key in kpi.keys():
             if key == 'ener_tot':
                 unit = 'kWh'
