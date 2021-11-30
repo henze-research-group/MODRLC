@@ -5,11 +5,11 @@ import urllib3
 
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'interfaces' / 'dompc'))
-from boptest_simulator.boptest_simulator import BoptestSimulator
+from actb_simulator.actb_simulator import ActbSimulator
 from template_model import ModelParameters
 
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
-from boptest_client import BoptestClient
+from actb_client import ActbClient
 
 
 def template_simulator(model):
@@ -18,23 +18,24 @@ def template_simulator(model):
 
     mp = ModelParameters()
     try:
-        client = BoptestClient('http://127.0.0.1:5000')
+        client = ActbClient(url='http://127.0.0.1:80')
+        client.select('spawnrefsmalloffice')
         if client.name() is not None:
-            print("BOPTEST is configured to act as simulator")
+            print("ACTB is configured to act as simulator")
             client.set_step(step=mp.time_step)
             client.initialize(start_time=mp.start_time)
         else:
             print("Defaulting to simulator=model")
             client = None
     except (requests.exceptions.ConnectionError, urllib3.exceptions.NewConnectionError,):
-        print("BOPTEST is not running, if desired launch BOPTEST using `make run TESTCASE=som3`")
+        print("ACTB is not running, if desired launch ACTB using `make run`")
         print("Will continue in simulator=model mode")
         client = None
 
     if client is not None:
-        simulator = BoptestSimulator(model, client)
+        simulator = ActbSimulator(model, client)
     else:
-        simulator = BoptestSimulator(model)
+        simulator = ActbSimulator(model)
 
     # We are running the MPC model at t=300 seconds (5 min).
     simulator.set_param(t_step=mp.time_step)
