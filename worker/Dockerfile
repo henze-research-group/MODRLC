@@ -39,4 +39,11 @@ ENV PYTHONPATH $PYTHONPATH:$JMODELICA_HOME/Python:$JMODELICA_HOME/Python/pymodel
 
 RUN sed -i "350 i \\\n        if isinstance(self.model, fmi.FMUModelME2):\n            self.model.event_update()" $JMODELICA_HOME/Python/pyfmi/fmi_algorithm_drivers.py
 
+# temporary fix:
+# must update spawn, then add a git clone or similar to the MBL, and delete these 4 lines
+RUN mkdir -p /home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources
+COPY testcases/spawnrefsmalloffice/models/Resources/* /home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources/
+RUN mkdir -p /home/developer/git/modelica-buildings/Buildings
+COPY libs_temp/* /home/developer/git/modelica-buildings/Buildings/
+
 CMD [ "python3", "-m", "worker" ]

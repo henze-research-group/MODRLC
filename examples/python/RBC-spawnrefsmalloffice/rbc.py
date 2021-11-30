@@ -2,8 +2,8 @@ import sys
 from pathlib import Path
 from matplotlib import pyplot as plt
 import pandas as pd
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'boptest_client'))
-from boptest_client import BoptestClient
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
+from actb_client import ActbClient
 
 
 
@@ -17,11 +17,12 @@ class rulebased():
                  curr_day = 0,
                  level = 'supervisory',
                  url = 'http://127.0.0.1:5000',
+                 testcase='spawnrefsmalloffice',
                  step = 300,
                  start_time = 0,
                  warmup = 0):
 
-        self.client = BoptestClient(url = url)
+        self.client = ActbClient(url = url)
         self.schedule = config.schedule
         self.controls = config.controls[level]
         self.hea_PI = [simple_PI(kp_heating, ki_heating, step) for control in self.controls['heating']]
@@ -46,6 +47,7 @@ class rulebased():
         self.zones = config.zones
         self.sensors = config.sensors
         self.start_time = start_time
+        self.client.select(testcase)
         self.client.set_step(step = step)
         initparams = {'start_time' : start_time, 'warmup_period' : warmup}
         self.client.initialize(**initparams)
