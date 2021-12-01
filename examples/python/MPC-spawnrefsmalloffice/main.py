@@ -17,7 +17,7 @@ from template_model import template_model
 from template_mpc import template_mpc
 from template_simulator import template_simulator
 
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
 from historian import Historian, Conversions
 
 

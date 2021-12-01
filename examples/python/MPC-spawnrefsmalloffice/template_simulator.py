@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / '
 from actb_simulator.actb_simulator import ActbSimulator
 from template_model import ModelParameters
 
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
 from actb_client import ActbClient
 
 

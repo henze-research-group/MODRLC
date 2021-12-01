@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from matplotlib import pyplot as plt
 import pandas as pd
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
 from actb_client import ActbClient
 
 

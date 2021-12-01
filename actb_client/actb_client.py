@@ -95,7 +95,7 @@ class ActbClient:
             result = {"status": "error", "message": "unable to submit simulation"}
             raise Exception(result)
 
-    def advance(self, control_u=None):
+    def advance(self, control_u={}):
         """Advance the simulation through time at step level defined
 
         Parameters:

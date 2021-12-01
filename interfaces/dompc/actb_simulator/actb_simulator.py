@@ -29,8 +29,8 @@ import sys
 #   along with do-mpc.  If not, see <http://www.gnu.org/licenses/>.
 from pathlib import Path
 
-# Import the boptest_client to communicate with BOPTEST
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'boptest_client'))
+# Import the actb_client to communicate with BOPTEST
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'actb_client'))
 
 from casadi.tools import *
 from do_mpc.data import Data

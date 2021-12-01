@@ -11,6 +11,10 @@ imported from a different module.
 # ----------------------
 import requests
 import matplotlib.pyplot as plt
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
+from actb_client import ActbClient
 
 # ----------------------
 
@@ -76,12 +80,15 @@ def run(plot=True, customized_kpi_config=None):
     # SETUP TEST CASE
     # ---------------
     # Set URL for testcase
-    #url = 'http://127.0.0.1:5000'
-    url = 'http://0.0.0.0:5000'
+    url = 'http://localhost:80'
     # Set simulation parameters
     length = 84600
     start = 3*length
     step = 600
+    testcase = 'spawnrefsmalloffice'
+
+    client = ActbClient(url=url)
+    client.select(testcase)
 
     # Define customized KPI if any
     customizedkpis=[] # Initialize customzied kpi calculation list
@@ -92,15 +99,17 @@ def run(plot=True, customized_kpi_config=None):
     # -------------
     # Reset test case
     print('Initializing the simulation.')
-    res = requests.put('{0}/initialize'.format(url), data={'start_time':start,'warmup_period':0})
+    initparams = {'start_time':start,'warmup_period':0}
+    res = client.initialize(**initparams)
+
     if res:
         print('Successfully initialized the simulation')
     # Set simulation step
     print('Setting simulation step to {0}.'.format(step))
-    res = requests.put('{0}/step'.format(url), data={'step':step})
+    client.set_step(step = step)
     # Set the forecast for plotting utility
-    forecast_setup = requests.put('{0}/forecast_parameters'.format(url), data={'horizon': length, 'interval': step})
-    forecast = requests.get('{0}/forecast'.format(url)).json()
+    client.set_forecast_parameters(length, step)
+    forecast = client.get_forecasts()
 
 
     print('\nRunning test case...')
@@ -119,8 +128,8 @@ def run(plot=True, customized_kpi_config=None):
     # Simulation Loop
     for i in range(int(length/step)):
         # Advance simulation
-        y = requests.post('{0}/advance'.format(url), data=u).json()
-        kpis = requests.get('{0}/kpi'.format(url)).json()
+        y = client.advance(control_u = u)
+        kpis = client.kpis()
         xs.append(y['time']-start)
         tP1.append(y['senTemRoom1_y'])
         lostp.append(forecast['LowerSetp[1]'][i])
@@ -137,7 +146,7 @@ def run(plot=True, customized_kpi_config=None):
     # VIEW RESULTS
     # ------------
     # Report KPIs
-    kpi = requests.get('{0}/kpi'.format(url)).json()
+    kpi = client.kpis()
     print('\nKPI RESULTS \n-----------')
     for key in kpi.keys():
         if key == 'tdis_tot':
@@ -158,7 +167,7 @@ def run(plot=True, customized_kpi_config=None):
     # POST PROCESS RESULTS
     # --------------------
     # Get result data
-    res = requests.get('{0}/results'.format(url)).json()
+    res = client.results()
     # --------------------
 
     return res

@@ -8,7 +8,7 @@ import custom_kpi_calculator as kpicalculation
 import sys
 from pathlib import Path
 sys.path.append("../..")
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'boptest_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'actb_client'))
 from actb_client import ActbClient
 from custom_kpi import custom_kpi_calculator as kpicalculation
 import time as _time
