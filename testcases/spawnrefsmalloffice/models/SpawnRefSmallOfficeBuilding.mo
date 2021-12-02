@@ -2,10 +2,6 @@ within ;
 model SpawnRefSmallOfficeBuilding
   "Spawn replica of the Reference Small Office Building"
 
-  // User input //
-  String idfPat = "RefBldgSmallOfficeNew2004.idf";         // insert .idf file path
-  String weaPat = "USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw";         // insert  .mos file path
-
   //Parameters//
   Real OAInfCore = 0.121 "OA infiltration in the core zone";
   Real OAInfP1 = 0.089 "OA infiltration in the perimeter zone 1";
@@ -1124,15 +1120,12 @@ end controller;
 
   inner Buildings.ThermalZones.EnergyPlus.Building building(
     idfName=Modelica.Utilities.Files.loadResource(
-        "/home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources/RefBldgSmallOfficeNew2004_Chicago.idf"),
+        "/SpawnResources/spawnrefsmalloffice/RefBldgSmallOfficeNew2004_Chicago.idf"),
     weaName=Modelica.Utilities.Files.loadResource(
-        "/home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"),
-    usePrecompiledFMU=false,
-    logLevel=Buildings.ThermalZones.EnergyPlus.Types.LogLevels.Error,
-    showWeatherData=true,
-    computeWetBulbTemperature=false,
-    printUnits=true,
-    generatePortableFMU=true)
+        "/SpawnResources/spawnrefsmalloffice/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"),
+    epwName=Modelica.Utilities.Files.loadResource(
+        "/SpawnResources/spawnrefsmalloffice/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"),
+    computeWetBulbTemperature=false)
     annotation (Placement(transformation(extent={{-322,72},{-302,92}})));
 
   Buildings.ThermalZones.EnergyPlus.ThermalZone corZon(

@@ -7,7 +7,7 @@ WORKDIR /
 
 RUN apt-get update -y && apt-get install -y \
     ca-certificates curl libglu1 libjpeg8 libfreetype6 libxi6 libdbus-glib-1-2 libfontconfig1 libsm6 gdebi-core python3.5 python3-pip \
-    && apt-get install -y git
+    && apt-get install -y git git-lfs
 
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
   && python3 get-pip.py
@@ -39,11 +39,8 @@ ENV PYTHONPATH $PYTHONPATH:$JMODELICA_HOME/Python:$JMODELICA_HOME/Python/pymodel
 
 RUN sed -i "350 i \\\n        if isinstance(self.model, fmi.FMUModelME2):\n            self.model.event_update()" $JMODELICA_HOME/Python/pyfmi/fmi_algorithm_drivers.py
 
-# temporary fix:
-# must update spawn, then add a git clone or similar to the MBL, and delete these 4 lines
-RUN mkdir -p /home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources
-COPY testcases/spawnrefsmalloffice/models/Resources/* /home/developer/git/modrlc-models/spawnrefsmalloffice/models/Resources/
-RUN mkdir -p /home/developer/git/modelica-buildings/Buildings
-COPY libs_temp/* /home/developer/git/modelica-buildings/Buildings/
+RUN mkdir -p /SpawnResources/
+COPY testcases/SpawnResources/ /SpawnResources/
+ENV SPAWNPATH /SpawnResources
 
 CMD [ "python3", "-m", "worker" ]

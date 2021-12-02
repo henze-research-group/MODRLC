@@ -17,7 +17,7 @@ import shutil
 import sys
 
 debug_solver = False
-model="wrapped"
+model="spawnrefsmalloffice"
 generate_plot = False
 
 # Overwrite model with command line argument if specified
