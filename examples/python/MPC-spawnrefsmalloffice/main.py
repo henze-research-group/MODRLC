@@ -17,7 +17,7 @@ from template_model import template_model
 from template_mpc import template_mpc
 from template_simulator import template_simulator
 
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'boptest_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
 from historian import Historian, Conversions
 
 
@@ -30,8 +30,8 @@ Get configured do-mpc modules:
 """
 model = template_model()
 mpc = template_mpc(model)
-simulator, boptest_client = template_simulator(model)
-if boptest_client is not None:
+simulator, actb_client = template_simulator(model)
+if actb_client is not None:
     results_path = 'results/som3_mpc_boptest'
     # results_path = 'results/som3_mpc_nodr_boptest'
 else:
@@ -160,7 +160,7 @@ u0 = np.array([[0]])
 historian.add_point('timestamp', 'Time', None)
 historian.add_point('t_indoor_measured', 'degC', 'TRooAir_y', f_conversion=Conversions.deg_k_to_c)
 historian.add_point('t_indoor_predicted', 'degC', None, f_conversion=Conversions.deg_k_to_c)
-if boptest_client is not None:
+if actb_client is not None:
     historian.add_point('t_indoor_predicted_after_kalman', 'degC', None, f_conversion=None)
 
 # historian.add_point('T1_Rad', 'degC', 'TRooRad_y')
@@ -175,7 +175,7 @@ for k in range(int(mp.length/mp.time_step)):
     # if u0[0] > 0.05:
     #     print('i am here')
 
-    if boptest_client is None:
+    if actb_client is None:
         # When not using boptest, then the y_measures is all the states, no need to pull
         # out other states
         y_measured = simulator.make_step(u0)

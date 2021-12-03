@@ -1,28 +1,25 @@
-IMG_NAME=boptest_${TESTCASE}
-
-COMMAND_RUN=docker run \
-	  --name ${IMG_NAME} \
-	  --rm \
-	  -it \
-	  -p 127.0.0.1:5000:5000
 
 build:
-	docker build --build-arg testcase=${TESTCASE} --no-cache --rm -t ${IMG_NAME} .
-
-build-cached:
-	docker build --build-arg testcase=${TESTCASE} --rm -t ${IMG_NAME} .
+	docker-compose build
 
 remove-image:
-	docker rmi ${IMG_NAME}
+	docker-compose rm -sf
 
-run:
-	$(COMMAND_RUN) --detach=false ${IMG_NAME} /bin/bash -c "python restapi.py && bash"
+run :
+	$(MAKE) run-detached
+	$(MAKE) provision
+	docker-compose logs -f web worker
 
 bash:
 	$(COMMAND_RUN) --detach=false ${IMG_NAME} /bin/bash -c "bash"
 
 run-detached:
-	$(COMMAND_RUN) --detach=true ${IMG_NAME} /bin/bash -c "python restapi.py && bash"
+	docker-compose up -d web worker
+
+provision:
+	docker-compose run --no-deps provision python3 -m boptest_submit ./testcases/${TESTCASE}
 
 stop:
-	docker stop ${IMG_NAME}
+	docker-compose down
+
+.PHONY: build run run-detached remove-image stop provision

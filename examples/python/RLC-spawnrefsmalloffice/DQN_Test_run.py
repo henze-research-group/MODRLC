@@ -67,6 +67,7 @@ KPI_rewards = {
 
 # Initiliaze the environment
 env = BoptestGymEnv(episode_length=episode_length,
+                    testcase='spawnrefsmalloffice',
                      Ts=step,
                      start_time=start_time,
                      actions=actions,

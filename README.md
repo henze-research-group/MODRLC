@@ -51,16 +51,18 @@ are installing these libraries for your Python 3.
 ## Quick-Start to Run Test Cases
 
 1. Make sure the Docker daemon is running. 
-2. Build the Spawn Small Office test case by running ``$ make build TESTCASE=spawnrefsmalloffice``
-3. Run the Spawn Small Office test case by running ``$ make run TESTCASE=spawnrefsmalloffice``
+2. Build the Docker containers by running ``$ make build``
+3. Run the Docker containers by running ``$ make run``
 4. Run an example test controller in a separate terminal:
 
   * ``$ cd examples/python/MPC-spawnrefsmalloffice && python main.py`` to test a MPC controller.
   * ``$ cd examples/python/RLC-spawnrefsmalloffice && python DQN_Test_run.py`` to test a RLC controller.
   * ``$ cd examples/python/RBC-spawnrefsmalloffice && python supervisory_example.py`` to test the RBC controller.
  
-4. Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``Ctrl+D`` to exit the Docker container.
-5. Remove the test case Docker image by ``$ make remove-image TESTCASE=spawnrefsmalloffice``.
+4. Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``make stop`` to stop the Docker container.
+5. Remove the test case Docker image by ``$ make remove-image``.
+
+Please refer to the ReadMe file present in the ```actb_client``` directory for more details on the API usage.
 
 ## Architecture
 
