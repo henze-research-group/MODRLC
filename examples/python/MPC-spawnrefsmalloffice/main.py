@@ -91,8 +91,8 @@ mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
     
-xticks = range(0, int(mp.length), int(6 * 3600))
-xlabels = range(0, int(mp.length/3600), 6)
+xticks = range(0, int(mp.length) + 6 * 3600, int(6 * 3600))
+xlabels = range(0, int(mp.length/3600) + 6, 6)
 
 axis = 0
 ax[axis].set_title('Setpoints and Indoor Temperature')
