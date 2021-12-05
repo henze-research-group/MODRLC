@@ -90,18 +90,11 @@ fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(8, 10))
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
-
-xticks = range(0, int(mp.length), int(6 * 3600))
+    
+xticks = range(0, int(mp.length) + 6 * 3600, int(6 * 3600))
 xlabels = range(0, int(mp.length/3600) + 6, 6)
 
 axis = 0
-# ax[axis].set_title('OA Temperature')
-# mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
-# ax[axis].set_xticks(xticks)
-# ax[axis].set_xticklabels(xlabels)
-# ax[axis].set_ylabel('Temperature [C]')
-
-#axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
 mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='red')
@@ -113,7 +106,6 @@ ax[axis].set_yticks(np.arange(mp.min_indoor_t, mp.max_indoor_t, 2))
 ax[axis].set_yticklabels(np.around(np.arange(mp.min_indoor_t-273.15, mp.max_indoor_t-273.15, 2)))
 ax[axis].set_ylabel('Temperature [C]')
 ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 4, 6])), ['Setpoints', 'Real temperature (spawn)', 'Simulated temperature (MPC)'], loc='lower right')
-
 
 axis += 1
 ax[axis].set_title('Heating coil command')
