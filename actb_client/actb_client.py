@@ -118,7 +118,7 @@ class ActbClient:
         """Return the results of the simulation.
 
         """
-        return requests.get('{0}/results/{1}'.format(self.url, self.simId)).json()
+        return requests.get('{0}/results/{1}'.format(self.url, self.simId))
 
     def get_testcases(self):
         """Lists available testcases
