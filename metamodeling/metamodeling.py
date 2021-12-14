@@ -1,22 +1,120 @@
 from itertools import combinations
-
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent / 'actb_client'))
+from actb_client import ActbClient
+from historian import Conversions, Historian
+import random
 import matplotlib.pyplot as plt
 import pandas as pd
 import sippy as sp
 from sippy.functionsetSIM import *
 from sklearn.metrics import r2_score, mean_squared_error, median_absolute_error
-
+from datetime import datetime, timedelta
 
 class Metamodel:
 
-    def __init__(self, datafile, step):
+    def __init__(self, step):
 
-        self.data = self.get_dataset(datafile)
         self.step = step
+        self.historian = Historian(time_step=int(step/60))
 
+
+    def generate_data(self, configfile):
+        print('Generating data, using Spawn simulation')
+        self.config = configfile
+        self.datetime = datetime.strptime(self.config.start, '%y/%m/%d %H:%M:%S')
+        self.client = ActbClient(url=self.config.url, metamodel=self.config.metamodel)
+        u = {}
+        for sensor in self.config.sensors:
+            self.historian.add_point(sensor, None, sensor)
+        for input in self.config.inputs.keys():
+            self.historian.add_point(input, None, input)
+            if self.config.inputs[input]['type'] == 'float':
+                u[input] = self.config.inputs[input]['min']
+            else:
+                u[input] = 0
+            u[input.replace('_u', '_activate')] = 1
+        for forecast in self.config.forecasts:
+            self.historian.add_point(forecast, None, forecast)
+        for output in self.config.outputs.keys():
+            self.historian.add_point(output, None, output)
+        self.historian.add_point('timestamp', None, None)
+        self.client.select(self.config.metamodel)
+        self.client.set_step(step=self.step)
+        self.client.set_forecast_parameters(self.step, self.step)
+        initparams = {'start_time': self.config.training[0], 'warmup_period': 0}
+        self.client.initialize(**initparams)
+        self.get_freefloating_data(u)
+        print('Generating data using randomized inputs.')
+        for i in range(int(self.config.training[1] * self.config.freefloat),
+                       self.config.training[1] + self.step,
+                       self.step):
+
+            res = self.client.advance(control_u = u)
+            forecasts = self.client.get_forecasts()
+            self.historian.add_data({forecast : forecasts[forecast][0] for forecast in forecasts})
+            self.historian.add_data(res)
+            self.historian.add_data(u)
+            self.datetime += timedelta(seconds=self.step)
+            self.historian.add_datum('timestamp', self.datetime)
+            u = self.new_u(res, u)
+            print('Progress: {}%'.format(
+                round((100 * i / (self.config.training[1] + self.step)), 2)), end='\r')
+        print('Done.              ')
+        self.historian.save_csv(self.config.outpath, self.config.filename)
+        fig = plt.figure()
+        for output in self.config.outputs.keys():
+            plt.plot(self.historian.data[output])
+        plt.show()
+
+    def new_u(self, res, u):
+
+        violation = False
+        for output in self.config.outputs.keys():
+            if self.config.outputs[output]['min'] > res[output] > self.config.outputs[output]['max']:
+                violation = True
+        for input in u.keys():
+            if 'activate' not in input:
+                if self.config.inputs[input]['type'] == 'float':
+                    if violation:
+                        u[input] = self.config.inputs[input]['min']
+                    else:
+                        u[input] = max(self.config.inputs[input]['min'],
+                                   min(round(random.uniform(u[input] * (1 + self.config.var),
+                                                            u[input] * (1 - self.config.var)), 3),
+                                       self.config.inputs[input]['max']))
+
+                else:
+                    if violation:
+                        u[input] = 0
+                    else:
+                        u[input] = max(0, min(round(random.uniform(u[input] * (1 + self.config.var),
+                                                                u[input] * (1 - self.config.var)), 3),
+                                              1)
+                                       )
+        return u
+
+    def get_freefloating_data(self, u):
+        print('Generating data in free floating mode')
+        for i in range(self.config.training[0],
+                       int(self.config.training[1] * self.config.freefloat) + self.step,
+                       self.step):
+            res = self.client.advance(control_u=u)
+            forecasts = self.client.get_forecasts()
+            self.historian.add_data({forecast : forecasts[forecast][0] for forecast in forecasts})
+            self.historian.add_data(res)
+            self.historian.add_data(u)
+            self.datetime += timedelta(seconds=self.step)
+            self.historian.add_datum('timestamp', self.datetime)
+            print('Progress: {}%'.format(round(100*i/(int(self.config.training[1] * self.config.freefloat) + self.step), 2), end='\r'))
+        print('Done.              ')
     def get_dataset(self, datafile):
 
         origdata = pd.DataFrame(pd.read_csv(datafile, delimiter=','))
+        origdata.drop(['timestamp'], axis=1, inplace=True)
+        origdata.set_index(origdata.columns[0])
+        origdata.drop(origdata.columns[0], axis=1, inplace=True)
         self.include = origdata.columns
 
         return origdata
@@ -31,8 +129,8 @@ class Metamodel:
         self.testing = testing * day
         self.start_day = start_day * day
 
-    def split_dataset(self, estimate):
-
+    def split_dataset(self, datafile, estimate):
+        self.data = self.get_dataset(datafile)
         X_train = self.data[self.include].iloc[self.start_day - self.training:]
         y_train = self.data[estimate].iloc[self.start_day - self.training:]
         if self.start_day != 0 and self.start_day < self.training:
@@ -127,5 +225,8 @@ def toCelsius(a):
 
 
 def normalize_data(df):
+    print(df)
+    print(df.min())
+    print(df.max())
     normalized_df = (df - df.min()) / (df.max() - df.min())
     return normalized_df
