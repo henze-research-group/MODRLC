@@ -2,12 +2,8 @@
 
 import json
 import os
-import time
-import uuid
-from collections import OrderedDict
-
+from pathlib import Path
 import requests
-from requests_toolbelt import MultipartEncoder
 
 
 class ActbClient:
@@ -15,6 +11,7 @@ class ActbClient:
     def __init__(self, url='http://127.0.0.1:5000', metamodel=None):
         self.url = url
         self.metamodel = metamodel
+        self.jsonpath = str(Path(__file__).parent.absolute() / 'jobs.json')
         #todo: add a metamodel client
 
     def name(self):
@@ -69,8 +66,14 @@ class ActbClient:
         Returns:
             step size (str): the value of the step that was set
         """
-
+        self.step = step
         requests.put('{0}/step/{1}'.format(self.url, self.simId), data={'step' : step})
+
+    def reset(self, **kwargs):
+        self.stop()
+        self.select(self.testcase)
+        self.set_step(step = self.step)
+        return self.initialize(**kwargs)
 
     def initialize(self, **kwargs):
         """Initialize a testcase
@@ -128,7 +131,20 @@ class ActbClient:
     def select(self, testcase):
         """Selects a testcase
         """
+        self.testcase = testcase
         self.simId = requests.post('{0}/testcases/{1}/select'.format(self.url, testcase)).json()['testid']
+        if os.path.isfile(self.jsonpath):
+            with open(self.jsonpath, 'r') as data_file:
+                data = json.load(data_file)
+        else:
+            data = {testcase: []}
+        data[testcase].append({'simId' : self.simId,
+                               'url' : self.url,
+                               'placeholder' : None})
+        print(data)
+        with open(self.jsonpath, 'w') as data_file:
+            json.dump(data, data_file)
+
 
     def inputs(self):
         """Get available testcase inputs
@@ -167,3 +183,31 @@ class ActbClient:
     def set_scenario(self, elec_pricing):
         data = {'electricity_price' : elec_pricing}
         requests.put('{0}/scenario/{1}'.format(self.url, self.simId), data=data).json()
+
+    def stop(self):
+        requests.put('{0}/stop/{1}'.format(self.url, self.simId))
+        if os.path.isfile(self.jsonpath):
+            with open(self.jsonpath, 'r') as data_file:
+                data = json.load(data_file)
+        else:
+            raise UserWarning("No jobs.json file: cannot update test case list.")
+        for key, job in enumerate(data[self.testcase]):
+            if job['simId'] == self.simId:
+                data[self.testcase].pop(key)
+        with open(self.jsonpath, 'w') as data_file:
+            data = json.dump(data, data_file)
+
+    def stop_all(self):
+        if os.path.isfile(self.jsonpath):
+            with open(self.jsonpath, 'r') as data_file:
+                data = json.load(data_file)
+        else:
+            print("No jobs.json file: cannot stop all test cases.")
+            return
+        for testcase in data.keys():
+            for key, job in enumerate(data[testcase]):
+                requests.put('{0}/stop/{1}'.format(job['url'], job['simId']))
+                print("Stopped instance {} of test case {}".format(job['simId'], testcase))
+                data[testcase].pop(key)
+        with open(self.jsonpath, 'w') as data_file:
+            data = json.dump(data, data_file)
