@@ -4,7 +4,5 @@ sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / '
 from metamodeling import Metamodel
 import config_full as config
 
-
-output = str(Path(__file__).parent.absolute() / config.outpath)
 meta = Metamodel(step = 300, config=config, method='N4SID')
-meta.generate_matrices(output, generatedata=False, modelselection='')
+meta.generate_matrices(generatedata=False, modelselection='')

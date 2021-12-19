@@ -33,8 +33,7 @@ class Metamodel:
         self.testing = int((1 - training_frac) * tr_len * day)
         self.start_day = self.training
 
-
-        self.training_split = {}
+        self.training_split = dict(freefloat=[], rbc=[], randomized=[])
         self.training_split['freefloat'] = [start_sec, int(start_sec + freefloat_frac * training_frac * length)]
         self.training_split['rbc'] = [self.training_split['freefloat'][1],
                                       self.training_split['freefloat'][1] + int(rbc_frac * training_frac * length)]
@@ -44,21 +43,23 @@ class Metamodel:
 
 
 
-    def generate_matrices(self, outpath, generatedata, modelselection, override=None):
+    def generate_matrices(self, generatedata, modelselection, override=None):
 
         if generatedata:
-            self.generate_data(outpath)
-        self.split_dataset(outpath)
+            self.generate_data()
+        self.split_dataset()
         A, B, C, AK, BK, K, x = self.extract(select=modelselection, override=override)
-        np.save(os.path.join(outpath,'A'), A)
-        np.save(os.path.join(outpath,'B'), B)
-        np.save(os.path.join(outpath,'C'), C)
-        np.save(os.path.join(outpath,'AK'), AK)
-        np.save(os.path.join(outpath,'BK'), BK)
-        np.save(os.path.join(outpath,'K'), K)
-        np.save(os.path.join(outpath,'x0'), x)
+        outpath = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel')
+        np.save(os.path.join(outpath, 'A'), A)
+        np.save(os.path.join(outpath, 'B'), B)
+        np.save(os.path.join(outpath, 'C'), C)
+        np.save(os.path.join(outpath, 'AK'), AK)
+        np.save(os.path.join(outpath, 'BK'), BK)
+        np.save(os.path.join(outpath, 'K'), K)
+        np.save(os.path.join(outpath, 'x0'), x)
 
-    def generate_data(self, outpath):
+
+    def generate_data(self):
         print('Generating data, using Spawn simulation')
         self.datetime = datetime.strptime(self.config.start, '%y/%m/%d %H:%M:%S')
         self.client = ActbClient(url=self.config.url, metamodel=self.config.metamodel)
@@ -81,8 +82,8 @@ class Metamodel:
         self.get_spawn_data(self.training_split['rbc'], 'rbc')
         self.get_spawn_data(self.training_split['randomized'], 'randomized')
         self.get_spawn_data(self.testing_split, 'randomized')
-
-        self.historian.save_csv(outpath, self.config.filename)
+        outpath = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel')
+        self.historian.save_csv(outpath, 'spawnDataset')
         self.client.stop()
 
 
@@ -169,8 +170,9 @@ class Metamodel:
 
         return origdata
 
-    def split_dataset(self, filepath):
-        filepath += '/' + self.config.filename
+    def split_dataset(self):
+        filepath = str(Path(__file__).parent.absolute().parent / 'testcases' /
+                       'SpawnResources' / self.config.metamodel / 'metamodel' / 'spawnDataset.csv')
         self.data = self.get_dataset(filepath)
         self.data = self.data.loc[:, (self.data != self.data.iloc[0]).any()] # remove constant columns
         self.include = []
