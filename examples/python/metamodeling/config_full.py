@@ -15,8 +15,6 @@ training = {'start' : 0 * 24 * 3600,
 # Define the proportion of free-floating to controlled time
 freefloat = 0.15
 var = 0.2
-outpath = 'output'
-filename = metamodel + '.csv'
 
 # Fine-tune the identification process
 
