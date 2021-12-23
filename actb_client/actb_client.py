@@ -4,15 +4,79 @@ import json
 import os
 from pathlib import Path
 import requests
+import numpy as np
+import pandas as pd
 
 
 class ActbClient:
 
-    def __init__(self, url='http://127.0.0.1:5000', metamodel=None):
+    def __init__(self, url='http://127.0.0.1:80', metamodel=None):
         self.url = url
         self.metamodel = metamodel
         self.jsonpath = str(Path(__file__).parent.absolute() / 'jobs.json')
         #todo: add a metamodel client
+
+    def init_metamodel(self, additionalstates=None, start_time=0, forecast_horizon=84600):
+        # define resources and metamodel path
+        resourcesdir = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.metamodel)
+        metamodeldir = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.metamodel / 'metamodel')
+
+        # load metamodel matrices and resources
+        self.Amat = np.load(os.path.join(metamodeldir, 'A.npy'))
+        self.Bmat = np.load(os.path.join(metamodeldir, 'B.npy'))
+        self.Cmat = np.load(os.path.join(metamodeldir, 'C.npy'))
+        self.Dmat = np.zeros(self.Cmat.shape)
+        self.x0 = np.load(os.path.join(metamodeldir, 'x0.npy'))
+        datafrommodel = pd.read_csv(os.path.join(resourcesdir, 'dataFromModel.csv'), index_col=False)
+        weather = pd.read_csv(os.path.join(resourcesdir, 'weather.csv'), index_col=False)
+        emissions = pd.read_csv(os.path.join(resourcesdir, 'emissions.csv'), index_col=False)
+        prices = pd.read_csv(os.path.join(resourcesdir, 'prices.csv'), index_col=False)
+
+        spawndataset = pd.read_csv(os.path.join(metamodeldir, 'spawnDataset.csv'), index_col=False)
+        self.tvps = pd.concat([datafrommodel, weather, emissions, prices, spawndataset], axis=1)
+        lengths = [len(a) for a in [datafrommodel, weather, emissions, prices, spawndataset]]
+        self.tvps = self.tvps.iloc[min(lengths):]
+        # load metamodel config
+        with open(os.path.join(metamodeldir, 'config.json'), 'r') as configfile:
+            self.mconfig = json.load(configfile)
+        tvps = self.mconfig['tvps']
+        self.outputs = self.mconfig['outputs']
+
+        if additionalstates is not None:
+            tvps.extend(additionalstates)
+        self.tvps = self.tvps[tvps]
+        self.start_time = start_time
+        self.time = self.start_time
+        self.horizon = forecast_horizon
+
+    def extract_uvect(self, control):
+        u = []
+        index = int((self.time - self.start_time)/self.mconfig['step'])
+        for element in self.mconfig['uvect']:
+            if element in self.tvps.columns:
+                u.extend([self.tvps[element].iloc[index].values[0]])
+            elif element in control.keys():
+                u.extend([control[element]])
+            else:
+                raise AttributeError("Could not find variable {} in tvps or control vector".format(element))
+        return np.array(u)
+
+    def get_metamodel_forecast(self):
+        cur_ind = int((self.time - self.start_time)/self.mconfig['step'])
+        hor_ind = int((self.time + self.horizon - self.start_time)/self.mconfig['step'])
+        return self.tvps.iloc[cur_ind:hor_ind]
+
+    def step_metamodel(self, control):
+
+        u = self.extract_uvect(control)
+        y = self.Cmat @ self.x0
+        self.x0 = self.Amat @ self.x0 + self.Bmat @ u
+        yout = {}
+        for i, key in zip(range(len(y)), self.outputs):
+            yout[key] = y[i]
+        self.time+=self.mconfig['step']
+
+        return y
 
     def name(self):
         """Return the name of the testcase that is loaded in the ACTB.

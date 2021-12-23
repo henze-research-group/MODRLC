@@ -12,6 +12,7 @@ import sippy as sp
 from sippy.functionsetSIM import *
 from sklearn.metrics import r2_score, mean_squared_error, median_absolute_error
 from datetime import datetime, timedelta
+import json
 
 class Metamodel:
 
@@ -48,7 +49,7 @@ class Metamodel:
         if generatedata:
             self.generate_data()
         self.split_dataset()
-        A, B, C, AK, BK, K, x = self.extract(select=modelselection, override=override)
+        A, B, C, AK, BK, K, x, uvect = self.extract(select=modelselection, override=override)
         outpath = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel')
         np.save(os.path.join(outpath, 'A'), A)
         np.save(os.path.join(outpath, 'B'), B)
@@ -57,6 +58,12 @@ class Metamodel:
         np.save(os.path.join(outpath, 'BK'), BK)
         np.save(os.path.join(outpath, 'K'), K)
         np.save(os.path.join(outpath, 'x0'), x)
+        config = {'uvect' : uvect,
+                  'tvps' : [item for item in uvect if item not in self.config.inputs.keys()],
+                  'outputs' : list(self.config.outputs.keys()),
+                  'step' : self.step}
+        with open(outpath + '/' + 'config.json', 'w') as outjson:
+            json.dump(config, outjson)
 
 
     def generate_data(self):
@@ -72,7 +79,7 @@ class Metamodel:
         for output in self.config.outputs.keys():
             self.historian.add_point(output, None, output)
         self.historian.add_point('timestamp', None, None)
-        #self.client.stop_all()
+        self.client.stop_all()
         self.client.select(self.config.metamodel)
         self.client.set_step(step=self.step)
         initparams = {'start_time': self.config.training['start'], 'warmup_period': 0}
@@ -83,7 +90,7 @@ class Metamodel:
         self.get_spawn_data(self.training_split['randomized'], 'randomized')
         self.get_spawn_data(self.testing_split, 'randomized')
         outpath = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel')
-        self.historian.save_csv(outpath, 'spawnDataset')
+        self.historian.save_csv(outpath, 'spawnDataset.csv')
         self.client.stop()
 
 
@@ -287,7 +294,7 @@ class Metamodel:
             estimators = self.include
 
         repeats = 200
-        print(self.X_train[estimators].columns)
+        uvect = list(self.X_train[estimators].columns)
         X_train_sid = self.X_train[estimators].to_numpy().transpose()
         y_train_sid = self.y_train.to_numpy()
         X_test_sid = self.X_test[estimators].to_numpy().transpose()
@@ -316,7 +323,7 @@ class Metamodel:
         plt.legend()
         plt.show()
 
-        return sid.A, sid.B, sid.C, sid.A_K, sid.B_K, sid.K, x[:, -1]
+        return sid.A, sid.B, sid.C, sid.A_K, sid.B_K, sid.K, x[:, -1], uvect
 
 
 def toInt(a):
