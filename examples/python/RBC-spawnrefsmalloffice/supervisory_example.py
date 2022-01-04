@@ -4,9 +4,9 @@ import config
 
 # Parameters
 
-start_time = 3 * 24 * 3600
+start_time = 0 * 24 * 3600
 warmup = 0
-length = 24 * 3600 * 1
+length = 72 * 3600 * 1
 step = 300
 control_level = 'supervisory'
 plot = True
@@ -19,7 +19,7 @@ for i in range(int(length/step)):
     res = rbc.apply_control(res)
     if plot:
         rbc.plot()
-
+rbc.client.stop()
 final_results = rbc.get_results()
 final_kpis = rbc.get_kpis()
 rbc.save_results()

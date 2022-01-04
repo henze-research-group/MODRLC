@@ -19,6 +19,7 @@ def template_simulator(model):
     mp = ModelParameters()
     try:
         client = ActbClient(url='http://127.0.0.1:80')
+        client.stop_all()
         client.select('spawnrefsmalloffice')
         if client.name() is not None:
             print("ACTB is configured to act as simulator")
@@ -42,23 +43,6 @@ def template_simulator(model):
 
     mp.tvp_template_simulator = simulator.get_tvp_template()
     simulator.set_tvp_fun(mp.tvp_fun_simulator)
-
-    # tvp_template = simulator.get_tvp_template()
-    # def tvp_fun(t_now):
-    #     return tvp_template
-    # simulator.set_tvp_fun(tvp_fun)
-
-    # Testing the parameter configuration
-    # p_template_sim = simulator.get_p_template()
-    # def p_fun_mpc(t_now):
-    #     p_template_sim["QCon_flow"] = 1500
-    #     p_template_sim["fanP"] = 250
-    #     p_template_sim["volSenSupV_flow"] = 0.40
-    #     p_template_sim["volSenOAV_flow"] = 0.0009
-    #     p_template_sim["room_relHum"] = 0.50
-    #     p_template_sim["T_supply"] = 295
-    #     return p_template_sim
-    # simulator.set_p_fun(p_fun_mpc)
 
     simulator.setup()
 
