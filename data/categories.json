@@ -1,9 +1,8 @@
 {"weather": ["pAtm","nTot","nOpa","HGloHor",
              "HDifHor","HDirNor","ceiHei","winSpe",
-             "HHorIR","winDir","cloTim","solTim",
-             "TDewPoi","relHum","TDryBul","TWetBul",
-             "solAlt","solZen","solDec","solHouAng",
-             "lon","lat","TBlaSky"],
+             "HHorIR","winDir",
+             "TDewPoi","relHum","TDryBul"],
+
 "prices": ["PriceElectricPowerConstant",
            "PriceElectricPowerDynamic",
            "PriceElectricPowerHighlyDynamic",

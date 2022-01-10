@@ -47,6 +47,7 @@ class rulebased():
         self.zones = config.zones
         self.sensors = config.sensors
         self.start_time = start_time
+        self.client.stop_all()
         self.client.select(testcase)
         self.client.set_step(step = step)
         initparams = {'start_time' : start_time, 'warmup_period' : warmup}
@@ -54,6 +55,9 @@ class rulebased():
         self.fig, self.axes = plt.subplots(2, 1, figsize=(10,12))
         plt.ion()
         plt.show()
+
+    def stop(self):
+        self.client.stop()
 
 
     def set_dl_alarm(self, result):

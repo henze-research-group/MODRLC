@@ -33,7 +33,6 @@ mpc = template_mpc(model)
 simulator, actb_client = template_simulator(model)
 if actb_client is not None:
     results_path = 'results/som3_mpc_boptest'
-    # results_path = 'results/som3_mpc_nodr_boptest'
 else:
     results_path = 'results/som3_mpc_statefeedback'
 
@@ -44,9 +43,6 @@ os.makedirs(results_path, exist_ok=True)
 
 historian = Historian(time_step=5)
 
-# Choose one of these estimators
-# estimator = template_mhe(model)
-
 # Use the StateFeedback estimator for testing, but it
 # is very basic.
 estimator = do_mpc.estimator.StateFeedback(model)
@@ -54,14 +50,9 @@ estimator = do_mpc.estimator.StateFeedback(model)
 """
 Set initial states
 """
-np.random.seed(99)
 
-# e = np.ones([model.n_x, 1])
-# These default x0's are from a random interval in the simulation.
 mp = ModelParameters()
-print("here")
-print(mp.x0)
-print(mp.additional_x_states_inits)
+
 x0 = np.vstack((mp.x0,
                 mp.additional_x_states_inits))
 
@@ -73,6 +64,7 @@ estimator.x0 = x0
 
 # Use initial state to set the initial guess.
 mpc.set_initial_guess()
+
 if not isinstance(estimator, do_mpc.estimator.StateFeedback):
     estimator.set_initial_guess()
 
@@ -80,9 +72,6 @@ if not isinstance(estimator, do_mpc.estimator.StateFeedback):
 Setup graphic:
 """
 
-# fig, ax, graphics = do_mpc.graphics.default_plot(mpc.data, figsize=(10, 17))
-# plt.ion()
-#
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(8, 10))
@@ -91,17 +80,11 @@ mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 mhe_plot = do_mpc.graphics.Graphics(estimator.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
-xticks = range(0, int(mp.length), int(6 * 3600))
+xticks = range(0, int(mp.length) + 6 * 3600, int(6 * 3600))
 xlabels = range(0, int(mp.length/3600) + 6, 6)
 
 axis = 0
-# ax[axis].set_title('OA Temperature')
-# mpc_plot.add_line('_tvp', 'TDryBul', ax[axis])
-# ax[axis].set_xticks(xticks)
-# ax[axis].set_xticklabels(xlabels)
-# ax[axis].set_ylabel('Temperature [C]')
 
-#axis += 1
 ax[axis].set_title('Setpoints and Indoor Temperature')
 mpc_plot.add_line('_tvp', 'TSetpoint_Lower', ax[axis], color='red')
 mpc_plot.add_line('_tvp', 'TSetpoint_Upper', ax[axis], color='red')
@@ -113,7 +96,6 @@ ax[axis].set_yticks(np.arange(mp.min_indoor_t, mp.max_indoor_t, 2))
 ax[axis].set_yticklabels(np.around(np.arange(mp.min_indoor_t-273.15, mp.max_indoor_t-273.15, 2)))
 ax[axis].set_ylabel('Temperature [C]')
 ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 4, 6])), ['Setpoints', 'Real temperature (spawn)', 'Simulated temperature (MPC)'], loc='lower right')
-
 
 axis += 1
 ax[axis].set_title('Heating coil command')
@@ -160,20 +142,16 @@ u0 = np.array([[0]])
 historian.add_point('timestamp', 'Time', None)
 historian.add_point('t_indoor_measured', 'degC', 'TRooAir_y', f_conversion=Conversions.deg_k_to_c)
 historian.add_point('t_indoor_predicted', 'degC', None, f_conversion=Conversions.deg_k_to_c)
+
 if actb_client is not None:
     historian.add_point('t_indoor_predicted_after_kalman', 'degC', None, f_conversion=None)
 
-# historian.add_point('T1_Rad', 'degC', 'TRooRad_y')
-
 for k in range(int(mp.length/mp.time_step)):
-    # for k in range(10):
+
     current_time = mp.start_time_dt + datetime.timedelta(seconds=(k * 300))
     historian.add_datum('timestamp', current_time.strftime("%Y/%m/%d %H:%M:%S"))
-    print(f"{k}: {x0}")
 
     u0 = mpc.make_step(simulator._x0)
-    # if u0[0] > 0.05:
-    #     print('i am here')
 
     if actb_client is None:
         # When not using boptest, then the y_measures is all the states, no need to pull
@@ -185,18 +163,17 @@ for k in range(int(mp.length/mp.time_step)):
         x0 = estimator.make_step(y_measured)
         historian.add_datum('t_indoor_predicted', x0[7][0])
     else:
-        # y_measured, oa_room = simulator.make_step(u0)
         y_measured, x_next, simulator._x0 = simulator.make_step(u0)
-        # t + 1
 
-        # the 7th element is the predicted temperature
-        y_pred = float(simulator._x0.master[7])
+        # the 4th element is the predicted temperature
+        y_pred = float(simulator._x0.master[4])
 
         x_kalman = simulator._x0.master[0:x_state_var_cnt] + mp.K * (y_measured - y_pred)
         y_kalman = mp.c @ x_kalman  # result is in Deg C, and the historian expected it as such.
-        simulator._x0.master[0:x_state_var_cnt] = x_kalman
-        simulator._x0.master[7] = y_measured
+
         # change x0 to be x_kalman
+        simulator._x0.master[0:x_state_var_cnt] = x_kalman
+        simulator._x0.master[4] = y_measured
 
         # Store to the historian
         historian.add_datum('t_indoor_measured', y_measured)
@@ -207,9 +184,6 @@ for k in range(int(mp.length/mp.time_step)):
     historian.save_csv(results_path, 'historian.csv')
 
     if show_animation:
-        # graphics.plot_results(t_ind=k)
-        # graphics.plot_predictions(t_ind=k)
-        # graphics.reset_axes()
         mpc_plot.plot_results(t_ind=k)
         mpc_plot.plot_predictions(t_ind=k)
         mpc_plot.reset_axes()
@@ -217,14 +191,11 @@ for k in range(int(mp.length/mp.time_step)):
         sim_plot.plot_results(t_ind=k)
         sim_plot.reset_axes()
 
-        # mhe_plot.plot_results()
-        # sim_plot.plot_results()
-        # mhe_plot.reset_axes()
-        # sim_plot.reset_axes()
-
         plt.show()
         plt.pause(0.005)
         # plt.pause(30)
+
+actb_client.stop()
 
 print(f"Finished. Store results is set to {store_results}")
 input('Press any key to save the results and exit. (This will close the graph window as well.)')
@@ -245,6 +216,3 @@ if store_results:
     # then move to the right location.
     do_mpc.data.save_results([mpc], do_mpc_temp_results)
     os.rename(f'results/{do_mpc_temp_results}.pkl', f'{results_path}/do_mpc_results.pkl')
-
-
-

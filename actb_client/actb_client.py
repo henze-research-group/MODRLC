@@ -2,20 +2,84 @@
 
 import json
 import os
-import time
-import uuid
-from collections import OrderedDict
-
+from pathlib import Path
 import requests
-from requests_toolbelt import MultipartEncoder
+import numpy as np
+import pandas as pd
 
 
 class ActbClient:
 
-    def __init__(self, url='http://127.0.0.1:5000', metamodel=None):
+    def __init__(self, url='http://127.0.0.1:80', metamodel=None):
         self.url = url
         self.metamodel = metamodel
+        self.jsonpath = str(Path(__file__).parent.absolute() / 'jobs.json')
         #todo: add a metamodel client
+
+    def init_metamodel(self, additionalstates=None, start_time=0, forecast_horizon=84600):
+        # define resources and metamodel path
+
+        # todo: include actual y values to initialize at different start times. Use the actual y value and Kalman gain to set the correct x state
+
+        resourcesdir = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.metamodel)
+        metamodeldir = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.metamodel / 'metamodel')
+
+        # load metamodel matrices and resources
+        self.Amat = np.load(os.path.join(metamodeldir, 'A.npy'))
+        self.Bmat = np.load(os.path.join(metamodeldir, 'B.npy'))
+        self.Cmat = np.load(os.path.join(metamodeldir, 'C.npy'))
+        self.Dmat = np.zeros(self.Cmat.shape)
+        self.x0 = np.load(os.path.join(metamodeldir, 'x0.npy'))
+        datafrommodel = pd.read_csv(os.path.join(resourcesdir, 'dataFromModel.csv'), index_col=False)
+        weather = pd.read_csv(os.path.join(resourcesdir, 'weather.csv'), index_col=False)
+        emissions = pd.read_csv(os.path.join(resourcesdir, 'emissions.csv'), index_col=False)
+        prices = pd.read_csv(os.path.join(resourcesdir, 'prices.csv'), index_col=False)
+
+        spawndataset = pd.read_csv(os.path.join(metamodeldir, 'spawnDataset.csv'), index_col=False)
+        self.tvps = pd.concat([datafrommodel, weather, emissions, prices, spawndataset], axis=1)
+        lengths = [len(a) for a in [datafrommodel, weather, emissions, prices, spawndataset]]
+        self.tvps = self.tvps.iloc[min(lengths):]
+        # load metamodel config
+        with open(os.path.join(metamodeldir, 'config.json'), 'r') as configfile:
+            self.mconfig = json.load(configfile)
+        tvps = self.mconfig['tvps']
+        self.outputs = self.mconfig['outputs']
+
+        if additionalstates is not None:
+            tvps.extend(additionalstates)
+        self.tvps = self.tvps[tvps]
+        self.start_time = start_time
+        self.time = self.start_time
+        self.horizon = forecast_horizon
+
+    def extract_uvect(self, control):
+        u = []
+        index = int((self.time - self.start_time)/self.mconfig['step'])
+        for element in self.mconfig['uvect']:
+            if element in self.tvps.columns:
+                u.extend([self.tvps[element].iloc[index].values[0]])
+            elif element in control.keys():
+                u.extend([control[element]])
+            else:
+                raise AttributeError("Could not find variable {} in tvps or control vector".format(element))
+        return np.array(u)
+
+    def get_metamodel_forecast(self):
+        cur_ind = int((self.time - self.start_time)/self.mconfig['step'])
+        hor_ind = int((self.time + self.horizon - self.start_time)/self.mconfig['step'])
+        return self.tvps.iloc[cur_ind:hor_ind]
+
+    def step_metamodel(self, control):
+
+        u = self.extract_uvect(control)
+        y = self.Cmat @ self.x0
+        self.x0 = self.Amat @ self.x0 + self.Bmat @ u
+        yout = {}
+        for i, key in zip(range(len(y)), self.outputs):
+            yout[key] = y[i]
+        self.time+=self.mconfig['step']
+
+        return y
 
     def name(self):
         """Return the name of the testcase that is loaded in the ACTB.
@@ -69,10 +133,16 @@ class ActbClient:
         Returns:
             step size (str): the value of the step that was set
         """
-
+        self.step = step
         requests.put('{0}/step/{1}'.format(self.url, self.simId), data={'step' : step})
 
-    def initialize(self, **kwargs):
+    def reset(self, **kwargs):
+        self.stop()
+        self.select(self.testcase)
+        self.set_step(step = self.step)
+        return self.initialize(self.testcase, **kwargs)
+
+    def initialize(self,testcase, **kwargs):
         """Initialize a testcase
 
         Parameters:
@@ -84,6 +154,9 @@ class ActbClient:
             initial values (dict): the initialized conditions.
 
         """
+
+        self.stop_all()
+        self.select(testcase)
         # merge the default args with the kwargs
         default = {'start_time': 0, 'warmup_period': 0}
         data = {**default, **kwargs}
@@ -128,7 +201,22 @@ class ActbClient:
     def select(self, testcase):
         """Selects a testcase
         """
+        self.testcase = testcase
         self.simId = requests.post('{0}/testcases/{1}/select'.format(self.url, testcase)).json()['testid']
+        if os.path.isfile(self.jsonpath):
+            with open(self.jsonpath, 'r') as data_file:
+                data = json.load(data_file)
+        else:
+            data = {testcase: []}
+        if testcase not in data.keys():
+            data[testcase] = []
+        data[testcase].append({'simId' : self.simId,
+                               'url' : self.url,
+                               'placeholder' : None})
+        print(data)
+        with open(self.jsonpath, 'w') as data_file:
+            json.dump(data, data_file)
+
 
     def inputs(self):
         """Get available testcase inputs
@@ -167,3 +255,31 @@ class ActbClient:
     def set_scenario(self, elec_pricing):
         data = {'electricity_price' : elec_pricing}
         requests.put('{0}/scenario/{1}'.format(self.url, self.simId), data=data).json()
+
+    def stop(self):
+        requests.put('{0}/stop/{1}'.format(self.url, self.simId))
+        if os.path.isfile(self.jsonpath):
+            with open(self.jsonpath, 'r') as data_file:
+                data = json.load(data_file)
+        else:
+            raise UserWarning("No jobs.json file: cannot update test case list.")
+        for key, job in enumerate(data[self.testcase]):
+            if job['simId'] == self.simId:
+                data[self.testcase].pop(key)
+        with open(self.jsonpath, 'w') as data_file:
+            data = json.dump(data, data_file)
+
+    def stop_all(self):
+        if os.path.isfile(self.jsonpath):
+            with open(self.jsonpath, 'r') as data_file:
+                data = json.load(data_file)
+        else:
+            print("No jobs.json file: cannot stop all test cases.")
+            return
+        for testcase in data.keys():
+            for key, job in enumerate(data[testcase]):
+                requests.put('{0}/stop/{1}'.format(job['url'], job['simId']))
+                print("Stopped instance {} of test case {}".format(job['simId'], testcase))
+                data[testcase].pop(key)
+        with open(self.jsonpath, 'w') as data_file:
+            data = json.dump(data, data_file)

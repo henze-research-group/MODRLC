@@ -39,6 +39,9 @@ copy_testcase_from_jm:
 exec_jm:
 	docker exec -it ${IMG_NAME} /bin/bash -c "cd /usr/local/testing && ${ARGS} && exit"
 
+bash:
+	docker exec -it ${IMG_NAME} /bin/bash -c "cd / && /bin/bash && exit"
+
 stop_jm:
 	docker stop ${IMG_NAME}
 # Make sure jm image stops being used
@@ -49,6 +52,9 @@ compile_testcase_model:
 	make copy_to_jm ARGS=parsing
 	make copy_to_jm ARGS=data
 	make copy_to_jm ARGS=testcases/${TESTCASE}
+	docker cp ../testcases/SpawnResources/ ${IMG_NAME}:/
+	docker cp Routing.mo ${IMG_NAME}:/home/developer/MODELICAPATH/Modelica/Blocks/
+	docker cp Interfaces.mo ${IMG_NAME}:/home/developer/MODELICAPATH/Modelica/Blocks/
 	make exec_jm ARGS="python set_library_versions.py ${TESTCASE} && cd ${TESTCASE}/models && python compile_fmu.py"
 	make copy_testcase_from_jm ARGS=${TESTCASE}/models/wrapped.fmu
 	make copy_testcase_from_jm ARGS=${TESTCASE}/models/wrapped.mo
