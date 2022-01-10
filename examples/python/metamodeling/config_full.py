@@ -33,11 +33,11 @@ sensors = [#'senHeaPow_y',
            ]
 
 # Define the outputs that you wish to identify using the metamodeling approach.
-outputs = {#'senTemRoom_y' : {'min' : 250, 'max' : 350},
+outputs = {'senTemRoom_y' : {'min' : 250, 'max' : 350},
            'senTemRoom1_y' : {'min' : 250, 'max' : 350},
-           # 'senTemRoom2_y' : {'min' : 250, 'max' : 350},
-           # 'senTemRoom3_y' : {'min' : 250, 'max' : 350},
-           # 'senTemRoom4_y' : {'min' : 250, 'max' : 350},
+            'senTemRoom2_y' : {'min' : 250, 'max' : 350},
+            'senTemRoom3_y' : {'min' : 250, 'max' : 350},
+            'senTemRoom4_y' : {'min' : 250, 'max' : 350},
            #'senHeaPow_y' : {'min' : 0, 'max' : 14000},
            # 'senHeaPow1_y' : {'min' : 0, 'max' : 14000},
            # 'senHeaPow2_y' : {'min' : 0, 'max' : 14000},
@@ -47,8 +47,11 @@ outputs = {#'senTemRoom_y' : {'min' : 250, 'max' : 350},
 
 # Define the inputs that you will use to identify the model. The program will override these controls in the model to
 # identify the model dynamics. You need to define the type (float or bool) and the range for floats.
-inputs = {
+inputs = {   'PSZACcontroller_oveHeaCor_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
              'PSZACcontroller_oveHeaPer1_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+             'PSZACcontroller_oveHeaPer2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+             'PSZACcontroller_oveHeaPer3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+             'PSZACcontroller_oveHeaPer4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
 
           }
 
@@ -61,7 +64,7 @@ forecasts = ['TDryBul',
              # 'InternalGainsRad[core_zn]',
              # 'InternalGainsCon[core_zn]',
              # 'InternalGainsLat[core_zn]',
-             # 'Occupancy[core_zn]',
+             'Occupancy[core_zn]',
              #'InternalGainsRad[perimeter_zn_1]',
              #'InternalGainsCon[perimeter_zn_1]',
              #'InternalGainsLat[perimeter_zn_1]',
@@ -69,15 +72,15 @@ forecasts = ['TDryBul',
              # 'InternalGainsRad[perimeter_zn_2]',
              # 'InternalGainsCon[perimeter_zn_2]',
              # 'InternalGainsLat[perimeter_zn_2]',
-             # 'Occupancy[perimeter_zn_2]',
+             'Occupancy[perimeter_zn_2]',
              # 'InternalGainsRad[perimeter_zn_3]',
              # 'InternalGainsCon[perimeter_zn_3]',
              # 'InternalGainsLat[perimeter_zn_3]',
-             # 'Occupancy[perimeter_zn_3]',
+             'Occupancy[perimeter_zn_3]',
              # 'InternalGainsRad[perimeter_zn_4]',
              # 'InternalGainsCon[perimeter_zn_4]',
              # 'InternalGainsLat[perimeter_zn_4]',
-             # 'Occupancy[perimeter_zn_4]',
+             'Occupancy[perimeter_zn_4]',
              ]
 
 deactivate = {
@@ -91,10 +94,10 @@ deactivate = {
               #'PSZACcontroller_oveHeaStpPer2_u' : {'type' : 'float', 'min' : 273.15 + 14, 'max' : 273.15 + 27},
               #'PSZACcontroller_oveHeaStpPer3_u' : {'type' : 'float', 'min' : 273.15 + 14, 'max' : 273.15 + 27},
               #'PSZACcontroller_oveHeaStpPer4_u' : {'type' : 'float', 'min' : 273.15 + 14, 'max' : 273.15 + 27},
-              'PSZACcontroller_oveHeaCor_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              'PSZACcontroller_oveHeaPer2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              'PSZACcontroller_oveHeaPer3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              'PSZACcontroller_oveHeaPer4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+              #'PSZACcontroller_oveHeaCor_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+              #'PSZACcontroller_oveHeaPer2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+              #'PSZACcontroller_oveHeaPer3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+              #'PSZACcontroller_oveHeaPer4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
               # 'PSZACcontroller_oveDamCor_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
               # 'PSZACcontroller_oveDamP1_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
               # 'PSZACcontroller_oveDamP2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},

@@ -106,6 +106,8 @@ class FromEplus():
 
     def generateModelData(self):
         dataframe = pd.DataFrame(index=self.datetime_index)
+        extrasdataframe = pd.DataFrame(index=self.datetime_index)
+        extrasdataframe['time'] = self.time
         dataframe['time'] = self.time
         self.getZones()
         occdf = self.generateOccupancy()
@@ -122,12 +124,23 @@ class FromEplus():
                                                              + dataframe['PeopleInternalGainsRad[{}]'.format(zone)]
             dataframe['InternalGainsLat[{}]'.format(zone)] = dataframe['EquipInternalGainsLat[{}]'.format(zone)] \
                                                              + dataframe['PeopleInternalGainsLat[{}]'.format(zone)]
+
+            extrasdataframe['ElecLoads[{}]'.format(zone)] = dataframe['LightsInternalGainsCon[{}]'.format(zone)] \
+                                                            + dataframe['EquipInternalGainsCon[{}]'.format(zone)] \
+                                                            + dataframe['LightsInternalGainsRad[{}]'.format(zone)] \
+                                                            + dataframe['EquipInternalGainsRad[{}]'.format(zone)] \
+                                                            + dataframe['EquipInternalGainsLat[{}]'.format(zone)]
+
             drop = ['LightsInternalGainsCon[{}]'.format(zone), 'EquipInternalGainsCon[{}]'.format(zone),
                             'PeopleInternalGainsCon[{}]'.format(zone), 'LightsInternalGainsRad[{}]'.format(zone),
                             'EquipInternalGainsRad[{}]'.format(zone), 'PeopleInternalGainsRad[{}]'.format(zone),
                             'EquipInternalGainsLat[{}]'.format(zone), 'PeopleInternalGainsLat[{}]'.format(zone)]
             dataframe.drop(columns = drop, inplace=True)
+
+
+
         dataframe.to_csv(os.path.join(self.resources_dir, 'dataFromModel.csv'), index=False)
+        extrasdataframe.to_csv(os.path.join(self.resources_dir, 'extras.csv'), index=False)
 
     def generateSetpoints(self):
         setpointsDataframe = pd.DataFrame()
@@ -412,9 +425,12 @@ class FromEplus():
                 zonearea = zonesummary['Area [m2]'].values[0]
                 if equipment.design_level_calculation_method == 'watts/area':
                     wattperarea = equipment.watts_per_zone_floor_area
+                    nomgain = zonearea * wattperarea
+                elif equipment.design_level_calculation_method == 'equipmentlevel':
+                    nomgain = float(equipment.design_level)
                 else:
-                    raise NotImplementedError("Light gains calucation method not implemented yet: {}".format(equipment.design_level_calculation_method))
-                nomgain = zonearea * wattperarea
+                    raise NotImplementedError("Internal gains calucation method not implemented yet: {} in {}".format(equipment.design_level_calculation_method, equipment))
+
                 radfrac = equipment.fraction_radiant
                 latfrac = equipment.fraction_latent
 
@@ -453,7 +469,7 @@ class FromEplus():
         convert = []
         ind = 0
         for field in fields:
-            if ('for:' in field or ind == len(fields)-1) and len(buffer)>1:
+            if ('for' in field or ind == len(fields)-1) and len(buffer)>1:
                 # if the buffer is not empty, we are switching to a different day type
                 # or we could be looking at the last element of the list
                 if ind == len(fields)-1:
@@ -465,6 +481,7 @@ class FromEplus():
                     # dataset period defined in the init method.
 
                     for item in buffer[1:]:
+
                         if 'until' in item:
                             item = item.replace('until: ', '')
                             item = item.replace(':', '')

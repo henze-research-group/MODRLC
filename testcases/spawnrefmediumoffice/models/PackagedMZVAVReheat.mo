@@ -46,14 +46,14 @@ model PackagedMZVAVReheat
   Buildings.Fluid.Sensors.VolumeFlowRate senVolOut(redeclare package Medium =
         Medium)
     annotation (Placement(transformation(extent={{-168,54},{-148,74}})));
-  Buildings.Fluid.Sensors.TemperatureTwoPort senTemMix(redeclare package Medium =
-        Medium, m_flow_nominal=mFlowNom)
+  Buildings.Fluid.Sensors.TemperatureTwoPort senTemMix(redeclare package Medium
+      = Medium, m_flow_nominal=mFlowNom)
     annotation (Placement(transformation(extent={{0,54},{20,74}})));
   Buildings.Fluid.Sensors.VolumeFlowRate senVolSup(redeclare package Medium =
         Medium, m_flow_nominal=mFlowNom)
     annotation (Placement(transformation(extent={{338,54},{358,74}})));
-  Buildings.Fluid.Sensors.TemperatureTwoPort senTemSup(redeclare package Medium =
-        Medium, m_flow_nominal=mFlowNom)
+  Buildings.Fluid.Sensors.TemperatureTwoPort senTemSup(redeclare package Medium
+      = Medium, m_flow_nominal=mFlowNom)
     annotation (Placement(transformation(extent={{400,54},{420,74}})));
   Buildings.Fluid.HeatExchangers.HeaterCooler_u reheatElec1(
     redeclare package Medium = Medium,
@@ -143,27 +143,32 @@ model PackagedMZVAVReheat
         extent={{-10,-10},{10,10}},
         rotation=90,
         origin={1112,190})));
-  Buildings.Fluid.Sensors.VolumeFlowRate senVolCore(m_flow_nominal=mFlowNom)
+  Buildings.Fluid.Sensors.VolumeFlowRate senVolCore(redeclare package Medium =
+        Medium,                                     m_flow_nominal=mFlowNom)
     annotation (Placement(transformation(
         extent={{-10,-10},{10,10}},
         rotation=90,
         origin={494,228})));
-  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter1(m_flow_nominal=
+  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter1(redeclare package
+      Medium = Medium,                                    m_flow_nominal=
         mFlowNom) annotation (Placement(transformation(
         extent={{-10,-10},{10,10}},
         rotation=90,
         origin={668,228})));
-  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter2(m_flow_nominal=
+  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter2(redeclare package
+      Medium = Medium,                                    m_flow_nominal=
         mFlowNom) annotation (Placement(transformation(
         extent={{-10,-10},{10,10}},
         rotation=90,
         origin={826,228})));
-  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter3(m_flow_nominal=
+  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter3(redeclare package
+      Medium = Medium,                                    m_flow_nominal=
         mFlowNom) annotation (Placement(transformation(
         extent={{-10,-10},{10,10}},
         rotation=90,
         origin={968,228})));
-  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter4(m_flow_nominal=
+  Buildings.Fluid.Sensors.VolumeFlowRate senVolPerimeter4(redeclare package
+      Medium = Medium,                                    m_flow_nominal=
         mFlowNom) annotation (Placement(transformation(
         extent={{-10,-10},{10,10}},
         rotation=90,
@@ -270,8 +275,8 @@ model PackagedMZVAVReheat
         extent={{10,-10},{-10,10}},
         rotation=180,
         origin={966,64})));
-  Modelica.Fluid.Interfaces.FluidPort_a vavReturnCore(redeclare package Medium =
-        Medium)
+  Modelica.Fluid.Interfaces.FluidPort_a vavReturnCore(redeclare package Medium
+      = Medium)
     annotation (Placement(transformation(extent={{204,668},{224,688}}),
         iconTransformation(extent={{204,668},{224,688}})));
   Modelica.Fluid.Interfaces.FluidPort_a vavReturnPerimeter1(redeclare package
@@ -325,8 +330,8 @@ model PackagedMZVAVReheat
   Buildings.Fluid.Sensors.VolumeFlowRate senVolRet(redeclare package Medium =
         Medium, m_flow_nominal=mFlowNom)
     annotation (Placement(transformation(extent={{258,350},{238,370}})));
-  Buildings.Fluid.Sensors.TemperatureTwoPort senTemRet(redeclare package Medium =
-        Medium, m_flow_nominal=mFlowNom)
+  Buildings.Fluid.Sensors.TemperatureTwoPort senTemRet(redeclare package Medium
+      = Medium, m_flow_nominal=mFlowNom)
     annotation (Placement(transformation(extent={{202,350},{182,370}})));
   Buildings.Fluid.FixedResistances.PressureDrop resReturn(
     redeclare package Medium = Medium,
@@ -361,8 +366,8 @@ model PackagedMZVAVReheat
         fill(false, numZon))
     "All windows are closed, no zone has override switch"
     annotation (Placement(transformation(extent={{-82,600},{-62,620}})));
-  Buildings.Controls.OBC.CDL.Routing.IntegerReplicator intRep(final nout=nZones)
-    "All zones in same operation mode"
+  Buildings.Controls.OBC.CDL.Routing.IntegerScalarReplicator intRep(final nout=
+        nZones) "All zones in same operation mode"
     annotation (Placement(transformation(extent={{180,504},{188,512}})));
   Buildings.Controls.OBC.ASHRAE.G36_PR1.TerminalUnits.Controller terUniCon
     annotation (Placement(transformation(extent={{410,212},{430,232}})));
@@ -380,8 +385,8 @@ model PackagedMZVAVReheat
     annotation (Placement(transformation(extent={{558,508},{578,528}})));
   Buildings.Controls.OBC.CDL.Conversions.RealToInteger reaToInt
     annotation (Placement(transformation(extent={{594,508},{614,528}})));
-  Buildings.Fluid.Sensors.RelativePressure dpDisSupFan(redeclare package Medium =
-        Medium)  "Supply fan static discharge pressure" annotation (Placement(
+  Buildings.Fluid.Sensors.RelativePressure dpDisSupFan(redeclare package Medium
+      = Medium)  "Supply fan static discharge pressure" annotation (Placement(
         transformation(
         extent={{-10,10},{10,-10}},
         rotation=90,
@@ -403,12 +408,11 @@ model PackagedMZVAVReheat
     annotation (Placement(transformation(extent={{140,384},{160,404}})));
   Modelica.Blocks.Routing.Multiplex5 TDis "Discharge air temperatures"
     annotation (Placement(transformation(extent={{140,424},{160,444}})));
-  Buildings.Controls.OBC.CDL.Routing.BooleanReplicator booRep1(final nout=
-        numZon)
-    "Replicate signal whether the outdoor airflow is required"
+  Buildings.Controls.OBC.CDL.Routing.BooleanScalarReplicator booRep1(final nout
+      =numZon) "Replicate signal whether the outdoor airflow is required"
     annotation (Placement(transformation(extent={{544,532},{564,552}})));
-  Buildings.Controls.OBC.CDL.Routing.RealReplicator reaRep1(final nout=numZon)
-    "Replicate design uncorrected minimum outdoor airflow setpoint"
+  Buildings.Controls.OBC.CDL.Routing.RealScalarReplicator reaRep1(final nout=
+        numZon) "Replicate design uncorrected minimum outdoor airflow setpoint"
     annotation (Placement(transformation(extent={{544,568},{564,588}})));
   Buildings.Controls.OBC.ASHRAE.G36_PR1.TerminalUnits.Controller terUniCon1
     annotation (Placement(transformation(extent={{598,210},{618,230}})));
@@ -557,20 +561,25 @@ equation
           {166,535},{166,532}},      color={255,0,255}));
   connect(opeModSel.yOpeMod, intRep.u) annotation (Line(points={{190,546},{214,
           546},{214,522},{178,522},{178,508},{179.2,508}}, color={255,127,0}));
-  connect(terUniCon.yDam, damCore.y) annotation (Line(points={{432,228},{458,
-          228},{458,188},{482,188}}, color={0,0,127}));
-  connect(terUniCon.yVal, reheatElec1.u) annotation (Line(points={{432,223},{
-          454,223},{454,136},{488,136}}, color={0,0,127}));
+  connect(terUniCon.yDam, damCore.y) annotation (Line(points={{432,230.333},{
+          458,230.333},{458,188},{482,188}},
+                                     color={0,0,127}));
+  connect(terUniCon.yVal, reheatElec1.u) annotation (Line(points={{432,227},{
+          454,227},{454,136},{488,136}}, color={0,0,127}));
   connect(terUniCon.VDis_flow, senVolCore.V_flow) annotation (Line(points={{408,
-          220},{390,220},{390,206},{483,206},{483,228}}, color={0,0,127}));
-  connect(terUniCon.yDam_actual, damCore.y_actual) annotation (Line(points={{
-          408,218},{392,218},{392,208},{487,208},{487,193}}, color={0,0,127}));
-  connect(terUniCon.TDis, senTemCore.T) annotation (Line(points={{408,216},{394,
-          216},{394,210},{480,210},{480,266},{483,266}}, color={0,0,127}));
+          220.333},{390,220.333},{390,206},{483,206},{483,228}},
+                                                         color={0,0,127}));
+  connect(terUniCon.yDam_actual, damCore.y_actual) annotation (Line(points={{408,
+          218.667},{392,218.667},{392,208},{487,208},{487,193}},
+                                                             color={0,0,127}));
+  connect(terUniCon.TDis, senTemCore.T) annotation (Line(points={{408,217},{394,
+          217},{394,210},{480,210},{480,266},{483,266}}, color={0,0,127}));
   connect(senTemSup.T, terUniCon.TSupAHU) annotation (Line(points={{410,75},{
-          410,202},{396,202},{396,214},{408,214}}, color={0,0,127}));
-  connect(opeModSel.yOpeMod, terUniCon.uOpeMod) annotation (Line(points={{190,
-          546},{298,546},{298,212},{408,212}}, color={255,127,0}));
+          410,202},{396,202},{396,215.333},{408,215.333}},
+                                                   color={0,0,127}));
+  connect(opeModSel.yOpeMod, terUniCon.uOpeMod) annotation (Line(points={{190,546},
+          {298,546},{298,213.667},{408,213.667}},
+                                               color={255,127,0}));
   connect(fanVSD.y, conAHU.ySupFanSpe) annotation (Line(points={{280,76},{344,
           76},{344,436},{534,436},{534,602},{502,602}}, color={0,0,127}));
   connect(conAHU.yHea, heaGas.u) annotation (Line(points={{502,530},{522,530},{
@@ -592,7 +601,8 @@ equation
   connect(damOA.y, conAHU.yOutDamPos) annotation (Line(points={{-104,76},{-104,
           456},{506,456},{506,494},{502,494}}, color={0,0,127}));
   connect(conAHU.TSup, terUniCon.TSupAHU) annotation (Line(points={{414,544},{
-          370,544},{370,202},{396,202},{396,214},{408,214}}, color={0,0,127}));
+          370,544},{370,202},{396,202},{396,215.333},{408,215.333}},
+                                                             color={0,0,127}));
   connect(zonToSys.ySumDesZonPop, conAHU.sumDesZonPop) annotation (Line(points=
           {{284,631},{310,631},{310,630},{350,630},{350,592},{414,592}}, color=
           {0,0,127}));
@@ -624,11 +634,14 @@ equation
         points={{260,624},{252,624},{252,468},{522,468},{522,566},{502,566}},
         color={0,0,127}));
   connect(conAHU.uOpeMod, terUniCon.uOpeMod) annotation (Line(points={{414,504},
-          {356,504},{356,506},{298,506},{298,212},{408,212}}, color={255,127,0}));
-  connect(terUniCon.yZonTemResReq, TZonResReq.u[1]) annotation (Line(points={{432,218},
-          {436,218},{436,419.6},{444,419.6}},      color={255,127,0}));
-  connect(terUniCon.yZonPreResReq, PZonResReq.u[1]) annotation (Line(points={{432,214},
-          {440,214},{440,383.6},{444,383.6}},      color={255,127,0}));
+          {356,504},{356,506},{298,506},{298,213.667},{408,213.667}},
+                                                              color={255,127,0}));
+  connect(terUniCon.yZonTemResReq, TZonResReq.u[1]) annotation (Line(points={{432,
+          223.667},{436,223.667},{436,419.6},{444,419.6}},
+                                                   color={255,127,0}));
+  connect(terUniCon.yZonPreResReq, PZonResReq.u[1]) annotation (Line(points={{432,
+          220.333},{440,220.333},{440,383.6},{444,383.6}},
+                                                   color={255,127,0}));
   connect(TZonResReq.y, conAHU.uZonTemResReq) annotation (Line(points={{468,414},
           {482,414},{482,462},{402,462},{402,498},{414,498}}, color={255,127,0}));
   connect(PZonResReq.y, conAHU.uZonPreResReq) annotation (Line(points={{468,378},
@@ -704,8 +717,8 @@ equation
           {586,542},{586,638},{136,638},{136,627},{144,627}}, color={255,0,255}));
   connect(conAHU.VDesUncOutAir_flow, reaRep1.u)
     annotation (Line(points={{502,578},{542,578}}, color={0,0,127}));
-  connect(reaRep1.y, zonOutAirSet.VUncOut_flow_nominal) annotation (Line(points
-        ={{566,578},{574,578},{574,660},{132,660},{132,615},{144,615}}, color={
+  connect(reaRep1.y, zonOutAirSet.VUncOut_flow_nominal) annotation (Line(points=
+         {{566,578},{574,578},{574,660},{132,660},{132,615},{144,615}}, color={
           0,0,127}));
   connect(zonOutAirSet.TDis, TDis.y) annotation (Line(points={{144,621},{140,
           621},{140,508},{174,508},{174,434},{161,434}}, color={0,0,127}));
@@ -720,116 +733,142 @@ equation
   connect(zonOutAirSet.VDesAreBreZon_flow, zonToSys.VDesAreBreZon_flow)
     annotation (Line(points={{168,627},{214,627},{214,626},{260,626}}, color={0,
           0,127}));
-  connect(zonOutAirSet.yDesPriOutAirFra, zonToSys.uDesPriOutAirFra) annotation
-    (Line(points={{168,624},{214,624},{214,620},{260,620}}, color={0,0,127}));
+  connect(zonOutAirSet.yDesPriOutAirFra, zonToSys.uDesPriOutAirFra) annotation (
+     Line(points={{168,624},{214,624},{214,620},{260,620}}, color={0,0,127}));
   connect(zonOutAirSet.VUncOutAir_flow, zonToSys.VUncOutAir_flow) annotation (
       Line(points={{168,621},{214,621},{214,618},{260,618}}, color={0,0,127}));
   connect(zonOutAirSet.yPriOutAirFra, zonToSys.uPriOutAirFra) annotation (Line(
         points={{168,618},{214,618},{214,616},{260,616}}, color={0,0,127}));
   connect(zonOutAirSet.VPriAir_flow, zonToSys.VPriAir_flow) annotation (Line(
         points={{168,615},{214,615},{214,614},{260,614}}, color={0,0,127}));
-  connect(terUniCon.TZonHeaSet, TZonSet[1].TZonHeaSet) annotation (Line(points=
-          {{408,232},{398,232},{398,330},{278,330},{278,482},{222,482}}, color=
+  connect(terUniCon.TZonHeaSet, TZonSet[1].TZonHeaSet) annotation (Line(points={{408,
+          230.333},{398,230.333},{398,330},{278,330},{278,482},{222,482}},
+                                                                         color=
           {0,0,127}));
-  connect(TZonSet[1].TZonCooSet, terUniCon.TZonCooSet) annotation (Line(points=
-          {{222,490},{274,490},{274,324},{390,324},{390,230},{408,230}}, color=
+  connect(TZonSet[1].TZonCooSet, terUniCon.TZonCooSet) annotation (Line(points={{222,490},
+          {274,490},{274,324},{390,324},{390,228.667},{408,228.667}},    color=
           {0,0,127}));
-  connect(terUniCon1.yDam, damPerimeter1.y) annotation (Line(points={{620,226},
-          {628,226},{628,188},{656,188}}, color={0,0,127}));
-  connect(terUniCon1.yVal, reheatElec2.u) annotation (Line(points={{620,221},{
-          624,221},{624,136},{662,136}}, color={0,0,127}));
-  connect(terUniCon1.TDis, senTemPerimeter1.T) annotation (Line(points={{596,
-          214},{590,214},{590,206},{648,206},{648,266},{657,266}}, color={0,0,
+  connect(terUniCon1.yDam, damPerimeter1.y) annotation (Line(points={{620,
+          228.333},{628,228.333},{628,188},{656,188}},
+                                          color={0,0,127}));
+  connect(terUniCon1.yVal, reheatElec2.u) annotation (Line(points={{620,225},{
+          624,225},{624,136},{662,136}}, color={0,0,127}));
+  connect(terUniCon1.TDis, senTemPerimeter1.T) annotation (Line(points={{596,215},
+          {590,215},{590,206},{648,206},{648,266},{657,266}},      color={0,0,
           127}));
   connect(damPerimeter1.y_actual, terUniCon1.yDam_actual) annotation (Line(
-        points={{661,193},{661,204},{584,204},{584,216},{596,216}}, color={0,0,
+        points={{661,193},{661,204},{584,204},{584,216.667},{596,216.667}},
+                                                                    color={0,0,
           127}));
   connect(terUniCon1.VDis_flow, senVolPerimeter1.V_flow) annotation (Line(
-        points={{596,218},{582,218},{582,202},{657,202},{657,228}}, color={0,0,
+        points={{596,218.333},{582,218.333},{582,202},{657,202},{657,228}},
+                                                                    color={0,0,
           127}));
   connect(terUniCon1.TZonHeaSet, TZonSet[2].TZonHeaSet)
-    annotation (Line(points={{596,230},{222,230},{222,482}}, color={0,0,127}));
+    annotation (Line(points={{596,228.333},{222,228.333},{222,482}},
+                                                             color={0,0,127}));
   connect(terUniCon1.TZonCooSet, TZonSet[2].TZonCooSet)
-    annotation (Line(points={{596,228},{222,228},{222,490}}, color={0,0,127}));
-  connect(terUniCon1.yZonTemResReq, TZonResReq.u[2]) annotation (Line(points={{
-          620,216},{628,216},{628,342},{436,342},{436,416.8},{444,416.8}},
+    annotation (Line(points={{596,226.667},{222,226.667},{222,490}},
+                                                             color={0,0,127}));
+  connect(terUniCon1.yZonTemResReq, TZonResReq.u[2]) annotation (Line(points={{620,
+          221.667},{628,221.667},{628,342},{436,342},{436,416.8},{444,416.8}},
         color={255,127,0}));
-  connect(terUniCon1.yZonPreResReq, PZonResReq.u[2]) annotation (Line(points={{
-          620,212},{628,212},{628,336},{440,336},{440,380.8},{444,380.8}},
+  connect(terUniCon1.yZonPreResReq, PZonResReq.u[2]) annotation (Line(points={{620,
+          218.333},{628,218.333},{628,336},{440,336},{440,380.8},{444,380.8}},
         color={255,127,0}));
-  connect(terUniCon2.yDam, damPerimeter2.y) annotation (Line(points={{784,222},
-          {800,222},{800,190},{814,190}}, color={0,0,127}));
-  connect(terUniCon2.yVal, reheatElec3.u) annotation (Line(points={{784,217},{
-          788,217},{788,216},{796,216},{796,136},{820,136}}, color={0,0,127}));
-  connect(terUniCon2.TDis, senTemPerimeter2.T) annotation (Line(points={{760,
-          210},{752,210},{752,196},{808,196},{808,266},{815,266}}, color={0,0,
+  connect(terUniCon2.yDam, damPerimeter2.y) annotation (Line(points={{784,
+          224.333},{800,224.333},{800,190},{814,190}},
+                                          color={0,0,127}));
+  connect(terUniCon2.yVal, reheatElec3.u) annotation (Line(points={{784,221},{
+          788,221},{788,216},{796,216},{796,136},{820,136}}, color={0,0,127}));
+  connect(terUniCon2.TDis, senTemPerimeter2.T) annotation (Line(points={{760,211},
+          {752,211},{752,196},{808,196},{808,266},{815,266}},      color={0,0,
           127}));
   connect(terUniCon2.yDam_actual, damPerimeter2.y_actual) annotation (Line(
-        points={{760,212},{750,212},{750,195},{819,195}}, color={0,0,127}));
+        points={{760,212.667},{750,212.667},{750,195},{819,195}},
+                                                          color={0,0,127}));
   connect(terUniCon2.VDis_flow, senVolPerimeter2.V_flow) annotation (Line(
-        points={{760,214},{748,214},{748,192},{815,192},{815,228}}, color={0,0,
+        points={{760,214.333},{748,214.333},{748,192},{815,192},{815,228}},
+                                                                    color={0,0,
           127}));
   connect(terUniCon1.uOpeMod, terUniCon.uOpeMod) annotation (Line(points={{596,
-          210},{382,210},{382,212},{408,212}}, color={255,127,0}));
+          211.667},{382,211.667},{382,213.667},{408,213.667}},
+                                               color={255,127,0}));
   connect(terUniCon2.uOpeMod, terUniCon.uOpeMod) annotation (Line(points={{760,
-          206},{574,206},{574,210},{382,210},{382,212},{408,212}}, color={255,
+          207.667},{574,207.667},{574,210},{382,210},{382,213.667},{408,213.667}},
+                                                                   color={255,
           127,0}));
-  connect(terUniCon2.TZonCooSet, TZonSet[3].TZonCooSet) annotation (Line(points
-        ={{760,224},{752,224},{752,222},{222,222},{222,490}}, color={0,0,127}));
-  connect(terUniCon2.TZonHeaSet, TZonSet[3].TZonHeaSet) annotation (Line(points
-        ={{760,226},{750,226},{750,482},{222,482}}, color={0,0,127}));
-  connect(terUniCon2.yZonTemResReq, TZonResReq.u[3]) annotation (Line(points={{
-          784,212},{444,212},{444,414}}, color={255,127,0}));
-  connect(terUniCon2.yZonPreResReq, PZonResReq.u[3]) annotation (Line(points={{
-          784,208},{784,378},{444,378}}, color={255,127,0}));
-  connect(terUniCon3.yDam, damPerimeter3.y) annotation (Line(points={{924,212},
-          {940,212},{940,190},{956,190}}, color={0,0,127}));
-  connect(terUniCon3.yVal, reheatElec4.u) annotation (Line(points={{924,207},{
-          930,207},{930,206},{936,206},{936,134},{962,134}}, color={0,0,127}));
-  connect(terUniCon3.TDis, senTemPerimeter3.T) annotation (Line(points={{900,
-          200},{896,200},{896,188},{957,188},{957,268}}, color={0,0,127}));
+  connect(terUniCon2.TZonCooSet, TZonSet[3].TZonCooSet) annotation (Line(points={{760,
+          222.667},{752,222.667},{752,222},{222,222},{222,490}},
+                                                              color={0,0,127}));
+  connect(terUniCon2.TZonHeaSet, TZonSet[3].TZonHeaSet) annotation (Line(points={{760,
+          224.333},{750,224.333},{750,482},{222,482}},
+                                                    color={0,0,127}));
+  connect(terUniCon2.yZonTemResReq, TZonResReq.u[3]) annotation (Line(points={{784,
+          217.667},{444,217.667},{444,414}},
+                                         color={255,127,0}));
+  connect(terUniCon2.yZonPreResReq, PZonResReq.u[3]) annotation (Line(points={{784,
+          214.333},{784,378},{444,378}}, color={255,127,0}));
+  connect(terUniCon3.yDam, damPerimeter3.y) annotation (Line(points={{924,
+          214.333},{940,214.333},{940,190},{956,190}},
+                                          color={0,0,127}));
+  connect(terUniCon3.yVal, reheatElec4.u) annotation (Line(points={{924,211},{
+          930,211},{930,206},{936,206},{936,134},{962,134}}, color={0,0,127}));
+  connect(terUniCon3.TDis, senTemPerimeter3.T) annotation (Line(points={{900,201},
+          {896,201},{896,188},{957,188},{957,268}},      color={0,0,127}));
   connect(terUniCon3.yDam_actual, damPerimeter3.y_actual) annotation (Line(
-        points={{900,202},{894,202},{894,192},{950,192},{950,195},{961,195}},
+        points={{900,202.667},{894,202.667},{894,192},{950,192},{950,195},{961,
+          195}},
         color={0,0,127}));
   connect(terUniCon3.VDis_flow, senVolPerimeter3.V_flow) annotation (Line(
-        points={{900,204},{892,204},{892,194},{957,194},{957,228}}, color={0,0,
+        points={{900,204.333},{892,204.333},{892,194},{957,194},{957,228}},
+                                                                    color={0,0,
           127}));
   connect(terUniCon3.uOpeMod, terUniCon.uOpeMod) annotation (Line(points={{900,
-          196},{756,196},{756,206},{574,206},{574,210},{382,210},{382,212},{408,
-          212}}, color={255,127,0}));
+          197.667},{756,197.667},{756,206},{574,206},{574,210},{382,210},{382,
+          213.667},{408,213.667}},
+                 color={255,127,0}));
   connect(terUniCon3.TZonHeaSet, TZonSet[4].TZonHeaSet)
-    annotation (Line(points={{900,216},{222,216},{222,482}}, color={0,0,127}));
-  connect(TZonSet[4].TZonCooSet, terUniCon3.TZonCooSet) annotation (Line(points
-        ={{222,490},{878,490},{878,214},{900,214}}, color={0,0,127}));
-  connect(terUniCon3.yZonTemResReq, TZonResReq.u[4]) annotation (Line(points={{
-          924,202},{930,202},{930,411.2},{444,411.2}}, color={255,127,0}));
-  connect(terUniCon3.yZonPreResReq, PZonResReq.u[4]) annotation (Line(points={{
-          924,198},{924,375.2},{444,375.2}}, color={255,127,0}));
-  connect(terUniCon4.yVal, reheatElec5.u) annotation (Line(points={{1076,203},{
-          1080,203},{1080,204},{1092,204},{1092,126},{1108,126},{1108,132}},
+    annotation (Line(points={{900,214.333},{222,214.333},{222,482}},
+                                                             color={0,0,127}));
+  connect(TZonSet[4].TZonCooSet, terUniCon3.TZonCooSet) annotation (Line(points={{222,490},
+          {878,490},{878,212.667},{900,212.667}},   color={0,0,127}));
+  connect(terUniCon3.yZonTemResReq, TZonResReq.u[4]) annotation (Line(points={{924,
+          207.667},{930,207.667},{930,411.2},{444,411.2}},
+                                                       color={255,127,0}));
+  connect(terUniCon3.yZonPreResReq, PZonResReq.u[4]) annotation (Line(points={{924,
+          204.333},{924,375.2},{444,375.2}}, color={255,127,0}));
+  connect(terUniCon4.yVal, reheatElec5.u) annotation (Line(points={{1076,207},{
+          1080,207},{1080,204},{1092,204},{1092,126},{1108,126},{1108,132}},
         color={0,0,127}));
-  connect(terUniCon4.yDam, damPerimeter4.y) annotation (Line(points={{1076,208},
-          {1094,208},{1094,190},{1100,190}}, color={0,0,127}));
+  connect(terUniCon4.yDam, damPerimeter4.y) annotation (Line(points={{1076,
+          210.333},{1094,210.333},{1094,190},{1100,190}},
+                                             color={0,0,127}));
   connect(terUniCon4.yDam_actual, damPerimeter4.y_actual) annotation (Line(
-        points={{1052,198},{1046,198},{1046,180},{1098,180},{1098,195},{1105,
-          195}}, color={0,0,127}));
+        points={{1052,198.667},{1046,198.667},{1046,180},{1098,180},{1098,195},
+          {1105,195}},
+                 color={0,0,127}));
   connect(terUniCon4.TDis, senTemPerimeter4.T) annotation (Line(points={{1052,
-          196},{1048,196},{1048,182},{1101,182},{1101,266}}, color={0,0,127}));
+          197},{1048,197},{1048,182},{1101,182},{1101,266}}, color={0,0,127}));
   connect(terUniCon4.VDis_flow, senVolPerimeter4.V_flow) annotation (Line(
-        points={{1052,200},{1042,200},{1042,184},{1101,184},{1101,228}}, color=
+        points={{1052,200.333},{1042,200.333},{1042,184},{1101,184},{1101,228}},
+                                                                         color=
           {0,0,127}));
-  connect(terUniCon4.yZonTemResReq, TZonResReq.u[5]) annotation (Line(points={{
-          1076,198},{1084,198},{1084,408.4},{444,408.4}}, color={255,127,0}));
-  connect(terUniCon4.yZonPreResReq, PZonResReq.u[5]) annotation (Line(points={{
-          1076,194},{1080,194},{1080,192},{1092,192},{1092,372.4},{444,372.4}},
+  connect(terUniCon4.yZonTemResReq, TZonResReq.u[5]) annotation (Line(points={{1076,
+          203.667},{1084,203.667},{1084,408.4},{444,408.4}},
+                                                          color={255,127,0}));
+  connect(terUniCon4.yZonPreResReq, PZonResReq.u[5]) annotation (Line(points={{1076,
+          200.333},{1080,200.333},{1080,192},{1092,192},{1092,372.4},{444,372.4}},
         color={255,127,0}));
-  connect(terUniCon4.TZonCooSet, TZonSet[5].TZonCooSet) annotation (Line(points
-        ={{1052,210},{1030,210},{1030,490},{222,490}}, color={0,0,127}));
-  connect(terUniCon4.TZonHeaSet, TZonSet[5].TZonHeaSet) annotation (Line(points
-        ={{1052,212},{1052,482},{222,482}}, color={0,0,127}));
+  connect(terUniCon4.TZonCooSet, TZonSet[5].TZonCooSet) annotation (Line(points={{1052,
+          208.667},{1030,208.667},{1030,490},{222,490}},
+                                                       color={0,0,127}));
+  connect(terUniCon4.TZonHeaSet, TZonSet[5].TZonHeaSet) annotation (Line(points={{1052,
+          210.333},{1052,482},{222,482}},   color={0,0,127}));
   annotation (
     Icon(coordinateSystem(preserveAspectRatio=false, extent={{-200,0},{1160,640}})),
     Diagram(coordinateSystem(preserveAspectRatio=false, extent={{-200,0},{1160,
             640}})),
-    uses(Modelica(version="3.2.3"), Buildings(version="8.0.0")));
+    uses(Modelica(version="3.2.3"), Buildings(version="9.0.0")),
+    version="1");
 end PackagedMZVAVReheat;

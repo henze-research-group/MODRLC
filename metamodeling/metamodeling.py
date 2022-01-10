@@ -79,11 +79,10 @@ class Metamodel:
         for output in self.config.outputs.keys():
             self.historian.add_point(output, None, output)
         self.historian.add_point('timestamp', None, None)
-        self.client.stop_all()
-        self.client.select(self.config.metamodel)
-        self.client.set_step(step=self.step)
+
         initparams = {'start_time': self.config.training['start'], 'warmup_period': 0}
-        self.res = self.client.initialize(**initparams)
+        self.res = self.client.initialize(self.config.metamodel, **initparams)
+        self.client.set_step(step=self.step)
 
         self.get_spawn_data(self.training_split['freefloat'], 'freefloat')
         self.get_spawn_data(self.training_split['rbc'], 'rbc')
@@ -97,6 +96,7 @@ class Metamodel:
     def new_u(self, res, u):
 
         violation = False
+        changed = False
         for output in self.config.outputs.keys():
             if self.config.outputs[output]['min'] > res[output] > self.config.outputs[output]['max']:
                 violation = True
@@ -106,7 +106,7 @@ class Metamodel:
                     if violation:
                         u[input] = self.config.inputs[input]['min']
                     elif self.lastchange >= 3600:
-                        self.lastchange = 0
+                        changed = True
                         u[input] = max(self.config.inputs[input]['min'],
                                    min(round(random.uniform(u[input] * (1 - self.config.var),
                                                             max(self.config.var, u[input] * (1 + self.config.var))), 3),
@@ -116,11 +116,13 @@ class Metamodel:
                     if violation:
                         u[input] = 0
                     elif self.lastchange >= 3600:
-                        self.lastchange = 0
+                        changed = True
                         u[input] = max(0, min(round(random.uniform(u[input] * (1 + self.config.var),
                                                                 u[input] * (1 - self.config.var)), 3),
                                               1)
                                        )
+        if changed:
+            self.lastchange = 0
         return u
 
     def get_spawn_data(self, interval, controltype):
@@ -296,30 +298,28 @@ class Metamodel:
         repeats = 200
         uvect = list(self.X_train[estimators].columns)
         X_train_sid = self.X_train[estimators].to_numpy().transpose()
-        y_train_sid = self.y_train.to_numpy()
+        y_train_sid = self.y_train.to_numpy().transpose()
         X_test_sid = self.X_test[estimators].to_numpy().transpose()
-        y_test_sid = self.y_test.to_numpy()
-        sid = sp.system_identification(y_train_sid, X_train_sid, self.method, SS_fixed_order=4, SS_A_stability=True)#IC='AICc', SS_D_required=False)
+        y_test_sid = self.y_test.to_numpy().transpose()
+        sid = sp.system_identification(y_train_sid, X_train_sid, self.method, SS_fixed_order=12, SS_A_stability=True)#IC='AICc', SS_D_required=False)
         x, y = sp.functionsetSIM.SS_lsim_process_form(sid.A, sid.B, sid.C, sid.D, X_test_sid)
-        xp, yp = sp.functionsetSIM.SS_lsim_innovation_form(sid.A, sid.B, sid.C, sid.D, sid.K, y_test_sid.transpose(), X_test_sid)
+        xp, yp = sp.functionsetSIM.SS_lsim_innovation_form(sid.A, sid.B, sid.C, sid.D, sid.K, y_test_sid, X_test_sid)
         for i in range(repeats):
             x, y = sp.functionsetSIM.SS_lsim_process_form(sid.A, sid.B, sid.C, sid.D, X_test_sid, x[:, -1:])
-            bob = x[:, :-1]
-            rob = x[:, -2:-1]
-            xp, yp = sp.functionsetSIM.SS_lsim_innovation_form(sid.A, sid.B, sid.C, sid.D, sid.K, y_test_sid.transpose(),
-                                                               X_test_sid, xp[:, -2:-1])
+            xp, yp = sp.functionsetSIM.SS_lsim_innovation_form(sid.A, sid.B, sid.C, sid.D, sid.K, y_test_sid,
+                                                               X_test_sid, xp[:, -1:])
 
-        print('R²: ', r2_score(y_test_sid, y[0]))
-        print('MAE: ', median_absolute_error(y_test_sid.transpose(), y))
-        print('MSE: ', mean_squared_error(y_test_sid.transpose(), y))
+        print('R²: ', r2_score(y_test_sid, y))
+        print('MAE: ', median_absolute_error(y_test_sid, y))
+        print('MSE: ', mean_squared_error(y_test_sid, y))
 
         testaxis = range(len(y.transpose()))
 
         plt.figure(figsize=(20, 10))
         plt.ylabel('Temp')
         plt.plot(testaxis, y.transpose(), label='predicted - process')
-        plt.plot(testaxis, yp.transpose(), label='predicted - innovation')
-        plt.plot(testaxis, y_test_sid, label='ground truth')
+        #plt.plot(testaxis, yp.transpose(), label='predicted - innovation')
+        plt.plot(testaxis, y_test_sid.transpose(), label='ground truth')
         plt.legend()
         plt.show()
 

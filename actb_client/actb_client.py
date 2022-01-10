@@ -18,6 +18,9 @@ class ActbClient:
 
     def init_metamodel(self, additionalstates=None, start_time=0, forecast_horizon=84600):
         # define resources and metamodel path
+
+        # todo: include actual y values to initialize at different start times. Use the actual y value and Kalman gain to set the correct x state
+
         resourcesdir = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.metamodel)
         metamodeldir = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.metamodel / 'metamodel')
 
@@ -137,9 +140,9 @@ class ActbClient:
         self.stop()
         self.select(self.testcase)
         self.set_step(step = self.step)
-        return self.initialize(**kwargs)
+        return self.initialize(self.testcase, **kwargs)
 
-    def initialize(self, **kwargs):
+    def initialize(self,testcase, **kwargs):
         """Initialize a testcase
 
         Parameters:
@@ -151,6 +154,9 @@ class ActbClient:
             initial values (dict): the initialized conditions.
 
         """
+
+        self.stop_all()
+        self.select(testcase)
         # merge the default args with the kwargs
         default = {'start_time': 0, 'warmup_period': 0}
         data = {**default, **kwargs}
@@ -202,6 +208,8 @@ class ActbClient:
                 data = json.load(data_file)
         else:
             data = {testcase: []}
+        if testcase not in data.keys():
+            data[testcase] = []
         data[testcase].append({'simId' : self.simId,
                                'url' : self.url,
                                'placeholder' : None})
