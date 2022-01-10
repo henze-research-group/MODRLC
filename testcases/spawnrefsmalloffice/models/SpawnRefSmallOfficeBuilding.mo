@@ -301,7 +301,7 @@ model controller
   Buildings.Utilities.IO.SignalExchange.Overwrite oveHeaCor(description="Core zone heating coil override", u(min=0.0, max=1.0, unit="1"))
     annotation (Placement(transformation(extent={{174,60},{184,70}})));
   Buildings.Utilities.IO.SignalExchange.Overwrite oveHeaPer1(description="Perimeter zone 1 heating coil override", u(min=0.0, max=1.0, unit="1"))
-    annotation (Placement(transformation(extent={{172,-8},{182,2}})));
+    annotation (Placement(transformation(extent={{174,-8},{184,2}})));
   Buildings.Utilities.IO.SignalExchange.Overwrite oveHeaPer2(description="Perimeter zone 2 heating coil override", u(min=0.0, max=1.0, unit="1"))
     annotation (Placement(transformation(extent={{170,-94},{180,-84}})));
   Buildings.Utilities.IO.SignalExchange.Overwrite oveHeaPer3(description="Perimeter zone 3 heating coil override", u(min=0.0, max=1.0, unit="1"))
@@ -806,9 +806,11 @@ equation
   connect(oveHeaCor.y, gre1.u1) annotation (Line(points={{184.5,65},{186,65},{186,
           59},{191,59}}, color={0,0,127}));
   connect(conPID1.y, oveHeaPer1.u) annotation (Line(points={{169.2,-2},{172,-2},
-          {172,-3},{171,-3}}, color={0,0,127}));
-  connect(oveHeaPer1.y, gre3.u1) annotation (Line(points={{182.5,-3},{186,-3},{186,
-          -9},{191,-9}}, color={0,0,127}));
+            {172,-3},{173,-3}},
+                              color={0,0,127}));
+  connect(oveHeaPer1.y, gre3.u1) annotation (Line(points={{184.5,-3},{186,-3},{
+            186,-9},{191,-9}},
+                         color={0,0,127}));
   connect(conPID2.y, oveHeaPer2.u) annotation (Line(points={{167.2,-88},{168,-88},
           {168,-89},{169,-89}}, color={0,0,127}));
   connect(oveHeaPer2.y, gre5.u1) annotation (Line(points={{180.5,-89},{184,-89},
@@ -1120,7 +1122,7 @@ end controller;
 
   inner Buildings.ThermalZones.EnergyPlus.Building building(
     idfName=Modelica.Utilities.Files.loadResource(
-        "/SpawnResources/spawnrefsmalloffice/RefBldgSmallOfficeNew2004_Chicago.idf"),
+        "/SpawnResources/spawnrefsmalloffice/RefBldgSmallOfficeNew2004_v2.idf"),
     weaName=Modelica.Utilities.Files.loadResource(
         "/SpawnResources/spawnrefsmalloffice/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"),
     epwName=Modelica.Utilities.Files.loadResource(
@@ -1402,7 +1404,7 @@ end controller;
         k=20)
       annotation (Placement(transformation(extent={{-80,176},{-60,196}})));
     Buildings.Controls.OBC.CDL.Logical.TrueFalseHold truFalHol(trueHoldDuration
-        =1800)
+        =300, falseHoldDuration=0)
       annotation (Placement(transformation(extent={{-282,176},{-262,196}})));
     equation
 
@@ -1786,7 +1788,8 @@ Buildings.Utilities.IO.SignalExchange.Read senTemRoom(
       unit="K"),
     description="Core temperature",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.AirZoneTemperature,
-    zone="1") "Core zone air temperature" annotation (Placement(transformation(
+    zone="core_zn")
+              "Core zone air temperature" annotation (Placement(transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
         origin={370,348})));
@@ -1797,7 +1800,8 @@ Buildings.Utilities.IO.SignalExchange.Read senTemRoom1(
       unit="K"),
     description="Perimeter zone 1 temperature",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.AirZoneTemperature,
-    zone="2") "Perimeter zone 1 air temperature" annotation (Placement(
+    zone="perimeter_zn_1")
+              "Perimeter zone 1 air temperature" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
@@ -1809,7 +1813,8 @@ Buildings.Utilities.IO.SignalExchange.Read senTemRoom2(
       unit="K"),
     description="Perimeter zone 2 temperature",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.AirZoneTemperature,
-    zone="3") "Perimeter zone 2 air temperature" annotation (Placement(
+    zone="perimeter_zn_2")
+              "Perimeter zone 2 air temperature" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
@@ -1821,7 +1826,8 @@ Buildings.Utilities.IO.SignalExchange.Read senTemRoom3(
       unit="K"),
     description="Perimeter zone 3 temperature",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.AirZoneTemperature,
-    zone="4") "Perimeter zone 3 air temperature" annotation (Placement(
+    zone="perimeter_zn_3")
+              "Perimeter zone 3 air temperature" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
@@ -1833,7 +1839,8 @@ Buildings.Utilities.IO.SignalExchange.Read senTemRoom4(
       unit="K"),
     description="Perimeter zone 4 temperature",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.AirZoneTemperature,
-    zone="5") "Perimeter zone 4 air temperature" annotation (Placement(
+    zone="perimeter_zn_4")
+              "Perimeter zone 4 air temperature" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
@@ -1857,8 +1864,7 @@ Buildings.Utilities.IO.SignalExchange.Read senTemRoom4(
   Buildings.Controls.OBC.CDL.Continuous.Add add2
     annotation (Placement(transformation(extent={{-176,176},{-156,196}})));
 Buildings.Utilities.IO.SignalExchange.Read senHouDec(
-    y(
-      min=0,
+    y(min=0,
       max=24,
       unit="1"),
     description="Time",
@@ -2316,9 +2322,12 @@ equation
 Add overrides
 Add sensors
 Test")}),
-    uses(Buildings(version="8.0.0"), Modelica(version="3.2.3")),
+    uses(                            Modelica(version="3.2.3"), Buildings(
+          version="9.0.0")),
     experiment(
       StopTime=1604800,
       Interval=60,
-      __Dymola_Algorithm="Dassl"));
+      __Dymola_Algorithm="Dassl"),
+    version="1",
+    conversion(noneFromVersion=""));
 end SpawnRefSmallOfficeBuilding;
