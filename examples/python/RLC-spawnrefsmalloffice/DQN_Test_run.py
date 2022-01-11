@@ -45,8 +45,9 @@ def plot(zonetemp, heatingcoil, Historian, axes, plotutils):
 # Set parameters for initializing the gym environment
 
 step = 300
-episode_length = 3600*24*1                     # Set the simulation length in seconds
-start_time=24*3600*3                           # Specify the start time of the simulation
+episode_length = 3600*1*24                    # Set the simulation length in seconds
+day_no = 1  #np.random.choice([1,3,4,5,8,9,10])
+start_time=24*3600*day_no                 # Specify the start time of the simulation
 actions = ['PSZACcontroller_oveHeaPer1_u']     # Specify which control actions to actuate by specifying the keys
 kpi_zones = ["1"]                              # Select which zone KPI to be included in the reward function
 
@@ -74,9 +75,9 @@ env = BoptestGymEnv(episode_length=episode_length,
                      building_obs=building_obs,
                      forecast_obs=forecast_obs,
                      kpi_zones= kpi_zones,
-                     password =None,                                         # put your own password
-                     lower_obs_bounds=[273.15+15,  0, 273.15-12,      0],    # manually set the lower bounds for observation
-                     upper_obs_bounds=[273.15+27, 24,  273.15+5,    195.8],    # manually set the upper bounds for observation
+                     password = None,                                         # put your own password
+                     lower_obs_bounds=[273.15+15,  0, -12,      0],    # manually set the lower bounds for observation
+                     upper_obs_bounds=[273.15+27, 24,  5,    195.8],    # manually set the upper bounds for observation
                      KPI_rewards=KPI_rewards,
                      n_obs = True)                              # if set to True returns a normalized state vector between 0-1
 
@@ -85,10 +86,11 @@ state_size = env.observation_space.shape[0]
 
 print ("State_size :{}".format(state_size))
 
-episodes= 5
-last_ep= 100
+episodes= 20
+last_ep= 6
 
 Agent_1 = DQN_Agent(state_size, 5)
+
 
 # RUN TEST CASE -
 # -------------
@@ -99,8 +101,8 @@ Historian = {key: [] for key in ['time', 'states', 'rewards', 'episodes', 'actio
                                  'Total_Pow_Dem_0','Total_Pow_Dem_1','Total_Pow_Dem_2','Total_Pow_Dem_3','Total_Pow_Dem_4',
                                  'Heating_Pow_Dem_0','Heating_Pow_Dem_1','Heating_Pow_Dem_2','Heating_Pow_Dem_3','Heating_Pow_Dem_4',
                                  'Cooling_Pow_Dem_0','Cooling_Pow_Dem_1','Cooling_Pow_Dem_2','Cooling_Pow_Dem_3','Cooling_Pow_Dem_4',
-                                 'Zone_1_HC_Action','Damper_0','Damper_1','Damper_2','Damper_3','Damper_4']}
-
+                                 'Zone_1_HC_Action']}
+#'Damper_0','Damper_1','Damper_2','Damper_3','Damper_4'
 KPI_hist = {key: [] for key in kpi_list}
 KPI_hist['episodes'] = []
 KPI_hist['scores'] = []
@@ -131,8 +133,8 @@ else:
         done_m1 = mem_list_1.iloc[i][4]
         Agent_1.append_sample(state_m1, action_m1, reward_m1, next_state_m1, done_m1)
 
-    print ("Loading Weights")
-    Agent_1.model_load_weights("RL_Data_test/02_NN/DQN_" + str(last_ep) + ".h5")  # From 2nd episode
+print ("Loading Weights")
+Agent_1.model_load_weights("RL_Data_test/02_NN/DQN_" + str(last_ep) + ".h5")  # From 2nd episode
 
 
 print('\n Starting Simulation...')
@@ -148,11 +150,14 @@ plt.show()
 
 # Simulation Loop
 for e in range(last_ep,last_ep+episodes):
+    Agent_1.model_load_weights("RL_Data_test/02_NN/DQN_" + str(e) + ".h5")  # From 2nd episode
     Agent_1.update_target_model()
     score = 0
     e = e + 1
     print('\nRunning controller script...')
     state = env.reset()  # check if the reset function resets the weights as well
+
+
 
     print ("State")
     print (state)
@@ -164,6 +169,7 @@ for e in range(last_ep,last_ep+episodes):
     counter = 0
 
     for i in range(int(episode_length/step)):
+        print("Day:{}".format(day_no))
         print("episode")
         print(e)
         print("Time Step")
@@ -188,7 +194,7 @@ for e in range(last_ep,last_ep+episodes):
         print("Raw Action")
         print(raw_action_u1)
 
-        action_proc= [0,0.1,0.15,0.25,0.45]
+        action_proc= [0,0.05,0.15,0.25,0.45]
 
 
         processed_act = [action_proc[raw_action_u1]]
@@ -205,6 +211,16 @@ for e in range(last_ep,last_ep+episodes):
 
         next_state = np.reshape(next_state, [1, state_size])
         building_states = env.get_building_states()
+
+        if counter % (12) == 0:
+            Agent_1.train_model()
+
+        if counter % (12 * 4) == 0:
+            Agent_1.update_target_model()
+
+        weather_states = env.get_weather_forecast()
+
+        print ("Dry bulb temp: {}".format(weather_states['TDryBul'][0]))
 
         # Get Power
         print("Total Power;  Zone 0:{}, Zone 1:{}, Zone 2: {}, Zone 3: {}, Zone 4; {}".format(
@@ -312,6 +328,11 @@ for e in range(last_ep,last_ep+episodes):
 
     Historian_df = pd.DataFrame.from_dict(Historian)
     Historian_df.to_csv("RL_Data_test/dr_data_test_v2_" + str(e) + ".csv")
+    Agent_1.model_save_weights("RL_Data_test/02_NN/DQN_" + str(e) + ".h5")
+
+
+
+
 
 
 print('\nTest case complete.')

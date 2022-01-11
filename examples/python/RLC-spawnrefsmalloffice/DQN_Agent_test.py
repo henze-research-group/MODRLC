@@ -30,15 +30,15 @@ class DQN_Agent:
     def __init__(self,state_size,action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.learning_rate = 0.000002
-        self.memory = deque(maxlen=288*35)
+        self.learning_rate = 0.00000002
+        self.memory = deque(maxlen=288*60)
         self.target_model = self.build_model()
-        self.epsilon = 0.000001 # initial exploration
-        self.epsilon_decay = 0.99
+        self.epsilon = 0.05 # initial exploration
+        self.epsilon_decay = 0.9995
         self.train_start =288*4
         self.batch_size = 800
         self.discount_factor = 0.9995
-        self.epsilon_min = 0  # min exploration at the end
+        self.epsilon_min = 0.001  # min exploration at the end
         self.model = self.build_model()
 
 
@@ -105,7 +105,7 @@ class DQN_Agent:
             states.append(state[0])
             targets_f.append(target_f[0])
 
-        history = self.model.fit(np.array(states),np.array(targets_f),epochs =50,verbose=1)
+        history = self.model.fit(np.array(states),np.array(targets_f),epochs =20,verbose=1)
 
         loss = history.history['loss'][0]
 
