@@ -63,7 +63,7 @@ class ActbSimulator(do_mpc.model.IteratedVariables):
 
     """
 
-    def __init__(self, model, client=None):
+    def __init__(self, model, client, metamodel):
         """ Initialize the simulator class. The model gives the basic model description and is used to build the simulator. If the model is discrete-time, the simulator is a function, if the model is continuous, the simulator is an integrator.
 
         :param model: Simulation model
@@ -77,6 +77,7 @@ class ActbSimulator(do_mpc.model.IteratedVariables):
         """
         self.model = model
         do_mpc.model.IteratedVariables.__init__(self)
+        self.metamodel = metamodel
 
         # client can be None and is used throughout this class
         self.client = client
@@ -116,103 +117,39 @@ class ActbSimulator(do_mpc.model.IteratedVariables):
         self.data.init_storage()
 
     def _default_u(self):
-        return {
-            # 'oveZero_u': 0,
-            # 'oveZero_activate': 1,
-            # 'oveZero1_u': 0,
-            # 'oveZero1_activate': 1,
-            # 'oveZero2_u': 0,
-            # 'oveZero2_activate': 1,
-            # 'oveZero3_u': 0,
-            # 'oveZero3_activate': 1,
-            # 'oveZero4_u': 0,
-            # 'oveZero4_activate': 1,
-
-            # 'oveHCSet_u': 0,
-            # 'oveHCSet_activate': 0,
-            # 'oveHCSet1_u': 0,
-            # 'oveHCSet1_activate': 0,
-            # 'oveHCSet2_u': 0,
-            # 'oveHCSet2_activate': 0,
-            # 'oveHCSet3_u': 0,
-            # 'oveHCSet3_activate': 0,
-            # 'oveHCSet4_u': 0,
-            # 'oveHCSet4_activate': 0,
-            #
-            # 'oveCC_u': 0,
-            # 'oveCC_activate': 0,
-            # 'oveCC1_u': 0,
-            # 'oveCC1_activate': 1,
-            # 'oveCC2_u': 0,
-            # 'oveCC2_activate': 0,
-            # 'oveCC3_u': 0,
-            # 'oveCC3_activate': 0,
-            # 'oveCC4_u': 0,
-            # 'oveCC4_activate': 0,
-            #
-            # 'oveDSet_u': 1,
-            # 'oveDSet_activate': 0,
-            # 'oveDSet1_u': 0.5,
-            # 'oveDSet1_activate': 1,
-            # 'oveDSet2_u': 1,
-            # 'oveDSet2_activate': 0,
-            # 'oveDSet3_u': 1,
-            # 'oveDSet3_activate': 0,
-            # 'oveDSet4_u': 1,
-            # 'oveDSet4_activate': 0,
-            #
-            # 'oveVFRSet_u': 0.08,
-            # 'oveVFRSet_activate': 0,
-            # 'oveVFRSet1_u': 0.08,
-            # 'oveVFRSet1_activate': 0,
-            # 'oveVFRSet2_u': 0.08,
-            # 'oveVFRSet2_activate': 0,
-            # 'oveVFRSet3_u': 0.08,
-            # 'oveVFRSet3_activate': 0,
-            # 'oveVFRSet4_u': 0.08,
-            # 'oveVFRSet4_activate': 0,
-            #
-            # 'oveHeaSet_u': 273.15 + 21,
-            # 'oveHeaSet_activate': 0,
-            # 'oveHeaSet1_u': 287.15,
-            # 'oveHeaSet1_activate': 0,  # do not enable this
-            # 'oveHeaSet2_u': 273.15 + 21,
-            # 'oveHeaSet2_activate': 0,
-            # 'oveHeaSet3_u': 273.15 + 21,
-            # 'oveHeaSet3_activate': 0,
-            # 'oveHeaSet4_u': 273.15 + 21,
-            # 'oveHeaSet4_activate': 0,
-            #
-            # 'oveCooSet_u': 273.15 + 24,
-            # 'oveCooSet_activate': 0,
-            # 'oveCooSet1_u': 273.15 + 24,
-            # 'oveCooSet1_activate': 0,
-            # 'oveCooSet2_u': 273.15 + 24,
-            # 'oveCooSet2_activate': 0,
-            # 'oveCooSet3_u': 273.15 + 24,
-            # 'oveCooSet3_activate': 0,
-            # 'oveCooSet4_u': 273.15 + 24,
-            # 'oveCooSet4_activate': 0
-        }
+        return {}
 
     def _calculate_u(self, heating_power):
-        """Take the _u vector from do-mpc and configure it to run with the BOPTEST
+        """Take the _u vector from do-mpc and configure it to run with the ACTB
         """
-        # do-mpc vector is
-        print(f"do-mpc vector is: {float(self.sim_p_num['_u'])}")
 
         # map do-mpc to u
         u = self._default_u()
-        # NL -- make the heating value appear larger to the simulation to overcome some balance issues
-        #       sim_p_num['_u'] will be between 0 and heating_max (typ 13000). So oveHCSet1_u can be
-        #       greater than 1.
-        # u['PSZACcontroller_oveHeaPer1_u'] = max(0.05, float(self.sim_p_num['_u']))   #  / 11316.80
-        u['PSZACcontroller_oveHeaPer1_u'] = float(self.sim_p_num['_u'])   #  / 11316.80
-        u['PSZACcontroller_oveHeaPer1_activate'] = 1
-        u['PSZACcontroller_oveCooPer1_u'] = 0   #  / 11316.80
-        u['PSZACcontroller_oveCooPer1_activate'] = 1
+        new_u = [item for sublist in np.array(self.sim_p_num['_u']).tolist() for item in sublist]
 
-        print(f"Setting power to {u['PSZACcontroller_oveHeaPer1_u']}")
+        # Assign powers to heating coils
+        if self.metamodel is None:
+            inputs = ["PSZACcontroller_oveHeaCor_u",
+                      "PSZACcontroller_oveHeaPer1_u",
+                      "PSZACcontroller_oveHeaPer2_u",
+                      "PSZACcontroller_oveHeaPer3_u",
+                      "PSZACcontroller_oveHeaPer4_u"]
+        else:
+            inputs = self.client.inputs()
+
+        for index, input in enumerate(inputs):
+            u[input] = float(new_u[index])
+
+        # todo: add optional overrides in the metamodel config file and automate the task below
+        u['PSZACcontroller_oveCooCor_u'] = 0
+        u['PSZACcontroller_oveCooPer1_u'] = 0
+        u['PSZACcontroller_oveCooPer2_u'] = 0
+        u['PSZACcontroller_oveCooPer3_u'] = 0
+        u['PSZACcontroller_oveCooPer4_u'] = 0
+        keys = list(u.keys())
+        for key in keys:
+            u[key.replace('_u', '_activate')] = 1
+
         return u
 
     def _check_validity(self):
@@ -623,58 +560,37 @@ class ActbSimulator(do_mpc.model.IteratedVariables):
         self.sim_p_num['_tvp'] = tvp0
         self.sim_p_num['_w'] = w0
 
-        # Different path if using BOPTEST
-        if self.client:
-            # x_next from the N4SID is the room temperatures for all zones
-            x_next = self.simulate()
-        else:
-            x_next = self.simulate()
+        x_next = self.simulate()
 
         z0 = self.sim_z_num['_z']
         aux0 = self.sim_aux_num
 
-        if self.client:
-            # previous y_next is run, but the results are not needed.
-            old_y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
-
-            # Advance the BOPTEST simulation and return the y_next (senHeaPow1_y)
-            y_next = self.client.advance(control_u=self._calculate_u(None))
-            t_room = y_next['senTemRoom1_y']
-            print("Cooling power:", y_next['senCCPow1_y'])
-            # print(f"t_room is {t_room}; oa_room is {oa_room}; ssid model t_room is {old_y_next}")
-            #x_next[7] = t_room
-            self.data.update(_x=x_next)
-            self.data.update(_u=u0)
-            self.data.update(_z=z0)
-            self.data.update(_tvp=tvp0)
-            self.data.update(_p=p0)
-            self.data.update(_aux=aux0)
-            self.data.update(_time=t0)
-
-            self._x0.master = x_next
-            self._z0.master = z0
-            self._u0.master = u0
-            self._t0 = self._t0 + self.t_step
-
-            return t_room, x_next, x0
+        # Advance the ACTB simulation and return the y_next (senHeaPow1_y)
+        y_next = self.client.advance(control_u=self._calculate_u(None))
+        if self.metamodel is None:
+            t_offset = 0
         else:
-            # Call measurement function
-            y_next = self.model._meas_fun(x_next, u0, z0, tvp0, p0, v0)
+            t_offset = 273.15
+        t_room = [y_next['senTemRoom_y'] + t_offset,
+                  y_next['senTemRoom1_y'] + t_offset,
+                  y_next['senTemRoom2_y'] + t_offset,
+                  y_next['senTemRoom3_y'] + t_offset,
+                  y_next['senTemRoom4_y'] + t_offset]
 
-            self.data.update(_x=x0)
-            self.data.update(_u=u0)
-            self.data.update(_z=z0)
-            self.data.update(_tvp=tvp0)
-            self.data.update(_p=p0)
-            self.data.update(_aux=aux0)
-            self.data.update(_time=t0)
+        self.data.update(_x=x_next)
+        self.data.update(_u=u0)
+        self.data.update(_z=z0)
+        self.data.update(_tvp=tvp0)
+        self.data.update(_p=p0)
+        self.data.update(_aux=aux0)
+        self.data.update(_time=t0)
 
-            self._x0.master = x_next
-            self._z0.master = z0
-            self._u0.master = u0
-            self._t0 = self._t0 + self.t_step
+        self._x0.master = x_next
+        self._z0.master = z0
+        self._u0.master = u0
+        self._t0 = self._t0 + self.t_step
 
-            return y_next.full()
+        return t_room, x_next, x0
 
     def return_kpis(self):
         if self.client:
