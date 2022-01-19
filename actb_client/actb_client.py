@@ -7,6 +7,34 @@ import requests
 import numpy as np
 import pandas as pd
 
+class Portfolio:
+    def __init__(self, url='http://127.0.0.1:80', buildings={}, metamodel=None):
+        self.buildings = buildings
+        self.clients = {}
+        for building in self.buildings.keys():
+            self.clients[building] = ActbClient(url=url, metamodel=self.buildings[building]['metamodel'])
+
+    def initialize_all(self):
+        res = []
+        for client in self.clients.keys():
+            res.append(self.clients[client].initialize(self.buildings[client]['testcase'], **self.buildings[client]['initialization']))
+            self.clients[client].set_step(self.buildings[client]['step'])
+            self.clients[client].set_forecast_parameters(self.buildings[client]['forecasting']['horizon'],
+                                                         self.buildings[client]['forecasting']['interval'])
+        return res
+
+    def stop_all(self):
+        for client in self.clients.keys():
+            self.clients[client].stop()
+
+    def advance(self, id, control_u):
+        return self.clients[id].advance(control_u=control_u)
+
+    def kpis(self, id):
+        return self.clients[id].kpis()
+
+    def results(self, id):
+        return self.clients[id].results()
 
 class ActbClient:
 
@@ -16,6 +44,7 @@ class ActbClient:
         self.jsonpath = str(Path(__file__).parent.absolute() / 'jobs.json')
         if metamodel is not None:
             self.init_metamodel()
+        self.stop_all()
 
     def init_metamodel(self, additionalstates=None, start_time=0, forecast_horizon=84600):
         # define resources and metamodel path
@@ -227,7 +256,7 @@ class ActbClient:
                 self.y[i] = 0
             return self.y
 
-        self.stop_all()
+
         self.select(testcase)
         # merge the default args with the kwargs
         res = requests.put('{0}/initialize/{1}'.format(self.url, self.simId), data=data)
@@ -297,7 +326,6 @@ class ActbClient:
         data[testcase].append({'simId' : self.simId,
                                'url' : self.url,
                                'placeholder' : None})
-        print(data)
         with open(self.jsonpath, 'w') as data_file:
             json.dump(data, data_file)
 
