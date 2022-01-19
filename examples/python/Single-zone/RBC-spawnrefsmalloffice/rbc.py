@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from matplotlib import pyplot as plt
 import pandas as pd
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'actb_client'))
 from actb_client import ActbClient
 
 
@@ -28,9 +28,7 @@ class rulebased():
         self.hea_PI = [simple_PI(kp_heating, ki_heating, step) for control in self.controls['heating']]
         self.historian = {'temps' : [],
                           'power' : [],
-                          'time' : [],
-                          'lostp' : [],
-                          'upstp' : []
+                          'time' : []
                           }
         self.plotutils = {'lostp' : [min(self.get_setpoint('tempSetpoints', time)) - 273.15 for time in range(start_time, start_time + length + step, step)],
                           'histp' : [max(self.get_setpoint('tempSetpoints', time)) - 273.15 for time in range(start_time, start_time + length + step, step)],
@@ -49,6 +47,7 @@ class rulebased():
         self.zones = config.zones
         self.sensors = config.sensors
         self.start_time = start_time
+        self.client.stop_all()
         self.client.select(testcase)
         self.client.set_step(step = step)
         initparams = {'start_time' : start_time, 'warmup_period' : warmup}
@@ -57,34 +56,32 @@ class rulebased():
         plt.ion()
         plt.show()
 
+    def stop(self):
+        self.client.stop()
+
 
     def set_dl_alarm(self, result):
         dl_violation = False
         if result is not None:
-            hod = (result['time'] / 3600) % 24
-            is_dr_window = False
-            for window in self.dl['time']:
-                if window[0] <= hod <= window[1]:
-                    is_dr_window = True
-                    break
             for zone in range(len(self.zones)):
-                if result[self.sensors['heatingPower'][zone]] >= self.dl['maxpow'] and is_dr_window: #todo check max alarm level
-                    if zone == 1: #temporary fix
-                        dl_violation = True
-                        self.dl_alarm_time = 0
-                        if self.dl_alarm <= 3:
-                            self.dl_alarm +=1
-                            break
+                if result[self.sensors['heatingPower'][zone]] >= self.dl['maxpow'] and self.dl_alarm <= 3: #todo check max alarm level
+                    self.dl_alarm +=1
+                    dl_violation = True
+                    break
             if (dl_violation == False):
                 self.dl_alarm_time += self.step
-                if self.dl_alarm_time >= 3600: #todo check how long it takes for an alarm to be cancelled
+                if self.dl_alarm_time >= 1800: #todo check how long it takes for an alarm to be cancelled
                     self.dl_alarm = 0 #todo check if levels go down one at a time or not
                     self.dl_alarm_time = 0
 
     def apply_control(self, result = None):
-        if self.level == 'supervisory' and self.dl:
+
+        if self.dl is not None:
+            #todo include a function for setting a dl event depending on time
+            self.set_dl_alarm(result)
+        if self.level == 'supervisory':
             u = self.set_supervisory_controls(result)
-        elif self.level == 'lowlevel' and self.dl:
+        elif self.level == 'lowlevel':
             u = self.set_lowlevel_controls(result)
 
         return self.step_sim(u)
@@ -130,10 +127,6 @@ class rulebased():
         self.historian['temps'].append([temp - 273.15 for temp in temps])
         self.historian['power'].append(power)
         self.historian['time'].append(time)
-        self.historian['lostp'].append(lostp - self.dl_alarm - 273.15)
-        self.historian['upstp'].append(histp + self.dl_alarm - 273.15)
-        self.set_dl_alarm(result)
-
         for zone in range(len(self.zones)):
             u[self.controls['heating'][zone]] = lostp - self.dl_alarm
             u[self.controls['heating'][zone].replace('_u', '_activate')] = 1
@@ -181,11 +174,9 @@ class rulebased():
 
         return u
 
-    def plot(self, anim = 0, animate = False):
+    def plot(self, animate = False):
         temp = {}
         power = {}
-        actualstplo = {}
-        actualstpup = {}
         for zone, i in zip(self.zones, range(len(self.zones))):
             temp[zone] = [self.historian['temps'][j][i] for j in range(len(self.historian['temps']))]
             power[zone] = [self.historian['power'][j][i] for j in range(len(self.historian['power']))]
@@ -203,36 +194,27 @@ class rulebased():
         self.axes[0].set_facecolor("gainsboro")
 
         self.axes[1].set_title('Heating coil power demand (thermal)', fontweight='bold')
-        self.axes[1].set_ylim(0 , 5000)
+        self.axes[1].set_ylim(0 , 15000)
         self.axes[1].set_xlim(0, self.length / 3600)
         self.axes[1].set_xticks(range(0, int(self.length / 3600) + 6, 6))
         self.axes[1].set_ylabel('Watts [W]')
         self.axes[1].set_xlabel('Time [hours]')
-        self.axes[1].set_yticks([i for i in range(0, 5500, 500)])
+        self.axes[1].set_yticks([i for i in range(0, 16000, 1000)])
         self.axes[1].grid(which='both', linewidth=0.5, color='white')
         self.axes[1].set_facecolor("gainsboro")
 
         self.axes[0].plot(self.plotutils['time'], self.plotutils['lostp'], color='red', ls='--', label='Setpoints')
         self.axes[0].plot(self.plotutils['time'], self.plotutils['histp'], color='red', ls='--')
         for zone in self.zones:
-            if zone == 'perimeter1': #temporary
-                self.axes[0].plot(time_hours, temp[zone], label='Zone temperature')#label = zone)
-                self.axes[1].plot(time_hours, power[zone], label='Power demand')#label = zone)
-                self.axes[0].plot(time_hours, self.historian['lostp'], linestyle='--', color='black', label='Corrected setpoints')
-                self.axes[0].plot(time_hours, self.historian['upstp'], linestyle='--', color='black')
-
-        self.axes[0].axvspan(14, 18, alpha=0.5, color='red')
-        self.axes[1].axvspan(14, 18, alpha=0.5, color='red')
-        self.axes[1].axhline(y=500, xmin=0.583, xmax=0.75, color='black', linestyle='--', linewidth=2, label='Target demand limit')
-
+            self.axes[0].plot(time_hours, temp[zone], label = zone)
+            self.axes[1].plot(time_hours, power[zone], label = zone)
         self.axes[1].legend(loc = 'upper right')
         self.axes[0].legend(loc = 'upper right')
-
         plt.tight_layout()
         plt.draw()
         plt.pause(0.5)
         if animate:
-            plt.savefig("animation/anim_{}.png".format(str(anim)))
+            plt.savefig("animation/anim_{}.png".format(str(i)))
         plt.savefig('Results/RBC_{}.png'.format(self.level))
 
     def save_results(self):

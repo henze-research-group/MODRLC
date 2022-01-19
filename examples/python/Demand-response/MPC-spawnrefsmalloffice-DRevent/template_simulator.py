@@ -4,11 +4,11 @@ import requests
 import urllib3
 
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'interfaces' / 'dompc'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'interfaces' / 'dompc'))
 from actb_simulator.actb_simulator import ActbSimulator
 from template_model import ModelParameters
 
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'actb_client'))
 from actb_client import ActbClient
 
 

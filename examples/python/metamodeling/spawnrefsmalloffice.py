@@ -5,4 +5,4 @@ from metamodeling import Metamodel
 import config_full as config
 
 meta = Metamodel(step = 300, config=config, method='N4SID')
-meta.generate_matrices(generatedata=False, modelselection='')
+meta.generate_matrices(generatedata=True, modelselection='')

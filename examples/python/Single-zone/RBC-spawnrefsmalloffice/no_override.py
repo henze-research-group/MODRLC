@@ -9,11 +9,10 @@ imported from a different module.
 
 # GENERAL PACKAGE IMPORT
 # ----------------------
-import requests
 import matplotlib.pyplot as plt
 from pathlib import Path
 import sys
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent.parent / 'actb_client'))
 from actb_client import ActbClient
 
 # ----------------------
@@ -88,6 +87,7 @@ def run(plot=True, customized_kpi_config=None):
     testcase = 'spawnrefsmalloffice'
 
     client = ActbClient(url=url)
+    client.stop_all()
     client.select(testcase)
 
     # Define customized KPI if any
@@ -100,7 +100,7 @@ def run(plot=True, customized_kpi_config=None):
     # Reset test case
     print('Initializing the simulation.')
     initparams = {'start_time':start,'warmup_period':0}
-    res = client.initialize(**initparams)
+    res = client.initialize(**initparams, testcase='spawnrefsmalloffice')
 
     if res:
         print('Successfully initialized the simulation')
@@ -132,8 +132,8 @@ def run(plot=True, customized_kpi_config=None):
         kpis = client.kpis()
         xs.append(y['time']-start)
         tP1.append(y['senTemRoom1_y'])
-        lostp.append(forecast['LowerSetp[1]'][i])
-        upstp.append(forecast['UpperSetp[1]'][i])
+        lostp.append(forecast['LowerSetp[core_zn]'][i])
+        upstp.append(forecast['UpperSetp[core_zn]'][i])
         lostp = lostp[-(int(hourstoplot*3600/step)):]
         upstp = upstp[-(int(hourstoplot*3600/step)):]
         xs = xs[-(int(hourstoplot*3600/step)):]

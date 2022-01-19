@@ -55,9 +55,9 @@ are installing these libraries for your Python 3.
 3. Run the Docker containers by running ``$ make run``
 4. Run an example test controller in a separate terminal:
 
-  * ``$ cd examples/python/MPC-spawnrefsmalloffice && python main.py`` to test a MPC controller.
-  * ``$ cd examples/python/RLC-spawnrefsmalloffice && python DQN_Test_run.py`` to test a RLC controller.
-  * ``$ cd examples/python/RBC-spawnrefsmalloffice && python supervisory_example.py`` to test the RBC controller.
+  * ``$ cd examples/python/Single-zone/MPC-spawnrefsmalloffice && python main.py`` to test a MPC controller.
+  * ``$ cd examples/python/Single-zone/RLC-spawnrefsmalloffice && python DQN_Test_run.py`` to test a RLC controller.
+  * ``$ cd examples/python/Single-zone/RBC-spawnrefsmalloffice && python supervisory_example.py`` to test the RBC controller.
  
 4. Shutdown a test case container by selecting the container terminal window, ``Ctrl+C`` to close port, and ``make stop`` to stop the Docker container.
 5. Remove the test case Docker image by ``$ make remove-image``.
@@ -87,9 +87,9 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 ## Known Issues
 
 Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
-- the metamodeling framework produces models which temperature prediction is shifted by approximately 20 K.
-- the Spawn test cases cannot be initialized again after the simulation completed. You currently need to stop the Docker container
-and start it again. This will be fxed
+- on first startup of the Docker container, the container might hang or even run a simulation without user 
+input. While this issue is being investigated, just CTRL+C then `make stop` to stop the container, 
+then restart it with `make run`. Upon second startup, the container will behave as expected.
 
 ## Structure
 - ``/testcases`` contains Spawn of EnergyPlus test cases, including docs, models, and configuration settings.

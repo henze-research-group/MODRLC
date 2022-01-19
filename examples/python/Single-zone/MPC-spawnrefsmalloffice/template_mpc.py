@@ -4,7 +4,7 @@ from casadi.tools import *
 
 from template_model import ModelParameters
 
-sys.path.append('../')
+sys.path.append('../../')
 import do_mpc
 
 

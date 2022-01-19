@@ -9,15 +9,10 @@ Find SIPPY here: https://github.com/CPCLAB-UNIPI/SIPPY.git
 
 ## Running Instructions
 
-The setup is self-contained and afeter installing the python 
-dependencies using Poetry `pip install poetry; poetry install`,
-the user can simply run the block below to retrain the metamodels.
+The setup is self-contained, simply run `pip install poetry; poetry install`.
 
-```bash
-python spawnrefsmalloffice.py
-```
+To generate a metamodel using N4SID, follow the instructions found in `examples/python/metamodeling/README.md`.
+
 ## Work in progress
-
-- find out why the model prediction is almost perfect, but shifted by approx. -20°C.
-- add forward stepwise model selection
-- add license, reference, etc. for SIPPY, as it is not installable with pip and we copied the source in ./resources
+- add method for online re-training
+- add license, reference, etc. for SIPPY

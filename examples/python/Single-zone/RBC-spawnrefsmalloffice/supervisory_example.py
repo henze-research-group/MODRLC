@@ -11,7 +11,7 @@ step = 300
 control_level = 'supervisory'
 plot = True
 # create RBC object
-rbc = rulebased(url = 'http://localhost:80', config = config, step = step, level = control_level, start_time = start_time, length = length)
+rbc = rulebased(url = 'http://localhost:80', config =config, step = step, level = control_level, start_time = start_time, length = length)
 # initialize result to None
 res = None
 
