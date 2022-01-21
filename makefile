@@ -2,6 +2,9 @@
 build:
 	docker-compose build
 
+build-nocache:
+	docker-compose build --no-cache
+
 remove-image:
 	docker-compose rm -sf
 
