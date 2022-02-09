@@ -15,6 +15,7 @@ training = {'start' : 0 * 24 * 3600,
 # Define the proportion of free-floating to controlled time
 freefloat = 0.15
 var = 0.2
+subtype = 'co2'
 
 # Fine-tune the identification process
 
@@ -38,6 +39,11 @@ outputs = {'senTemRoom_y' : {'min' : 250, 'max' : 350},
             'senTemRoom2_y' : {'min' : 250, 'max' : 350},
             'senTemRoom3_y' : {'min' : 250, 'max' : 350},
             'senTemRoom4_y' : {'min' : 250, 'max' : 350},
+           'senPpmCore_y' : {'min' : 0, 'max' : 5000},
+           'senPpmPerimeter1_y' : {'min' : 0, 'max' : 5000},
+           'senPpmPerimeter2_y' : {'min' : 0, 'max' : 5000},
+           'senPpmPerimeter3_y' : {'min' : 0, 'max' : 5000},
+           'senPpmPerimeter4_y' : {'min' : 0, 'max' : 5000},
            #'senHeaPow_y' : {'min' : 0, 'max' : 14000},
            # 'senHeaPow1_y' : {'min' : 0, 'max' : 14000},
            # 'senHeaPow2_y' : {'min' : 0, 'max' : 14000},
@@ -52,7 +58,11 @@ inputs = {   'PSZACcontroller_oveHeaCor_u' : {'type' : 'float', 'min' : 0, 'max'
              'PSZACcontroller_oveHeaPer2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
              'PSZACcontroller_oveHeaPer3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
              'PSZACcontroller_oveHeaPer4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-
+             'PSZACcontroller_oveDamCor_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+             'PSZACcontroller_oveDamP1_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+             'PSZACcontroller_oveDamP2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+             'PSZACcontroller_oveDamP3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+             'PSZACcontroller_oveDamP4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
           }
 
 # Finally, add the exogenous variables available through forecasts, such as weather data or occupancy.

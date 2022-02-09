@@ -50,8 +50,9 @@ class rulebased():
         self.client.stop_all()
         self.client.select(testcase)
         self.client.set_step(step = step)
+        self.client.stop()
         initparams = {'start_time' : start_time, 'warmup_period' : warmup}
-        self.client.initialize(**initparams)
+        self.client.initialize(testcase, **initparams)
         self.fig, self.axes = plt.subplots(2, 1, figsize=(10,12))
         plt.ion()
         plt.show()

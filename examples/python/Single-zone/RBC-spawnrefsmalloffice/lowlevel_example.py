@@ -1,5 +1,5 @@
 from rbc import rulebased
-import config
+import config_single as config
 # Parameters
 
 start_time = 3 * 24 * 3600

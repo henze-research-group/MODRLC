@@ -50,7 +50,11 @@ class Metamodel:
             self.generate_data()
         self.split_dataset()
         A, B, C, AK, BK, K, x, uvect = self.extract(select=modelselection, override=override)
-        outpath = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel')
+        if self.config.subtype is not None:
+            outpath = str(Path(
+                __file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel' / self.config.subtype)
+        else:
+            outpath = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel')
         np.save(os.path.join(outpath, 'A'), A)
         np.save(os.path.join(outpath, 'B'), B)
         np.save(os.path.join(outpath, 'C'), C)
@@ -202,8 +206,8 @@ class Metamodel:
             y_train = y_train.append(self.data[self.estimate].iloc[: self.start_day])
         X_test = self.data[self.include].iloc[self.start_day: self.start_day + self.testing]
         y_test = self.data[self.estimate].iloc[self.start_day: self.start_day + self.testing]
-        y_train = y_train.apply(toCelsius)
-        y_test = y_test.apply(toCelsius)
+        #y_train = y_train.apply(toCelsius) #todo check the type of variable and apply conversion if necessary
+        #y_test = y_test.apply(toCelsius)
         #X_train = normalize_data(X_train)
         #X_test = normalize_data(X_test)
 
@@ -241,9 +245,13 @@ class Metamodel:
                         failed.append(comb[j])
                         continue
                 print('\r Testing combination {} of {}...'.format(j, len(comb)))
-            print('Best score so far: ', max(metrics, key=metrics.get), metrics[max(metrics, key=metrics.get)])
-        bestsubset = list(max(metrics, key=metrics.get))
-        print("Best combination overall:", max(metrics, key=metrics.get), metrics[max(metrics, key=metrics.get)])
+            #print('Best score so far: ', max(metrics, key=metrics.get), metrics[max(metrics, key=metrics.get)])
+        if metrics != {}:
+            bestsubset = list(max(metrics, key=metrics.get))
+            print("Best combination overall:", max(metrics, key=metrics.get), metrics[max(metrics, key=metrics.get)])
+        else:
+            print('Failed to identify the model.')
+            bestsubset = []
         return bestsubset
 
     def fss(self):
@@ -319,7 +327,7 @@ class Metamodel:
         plt.ylabel('Temp')
         plt.plot(testaxis, y.transpose(), label='predicted - process')
         #plt.plot(testaxis, yp.transpose(), label='predicted - innovation')
-        plt.plot(testaxis, y_test_sid.transpose(), label='ground truth')
+        plt.plot(testaxis, y_test_sid.transpose(), label='ground truth', linestyle='--')
         plt.legend()
         plt.show()
 
