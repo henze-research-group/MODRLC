@@ -11,53 +11,55 @@ class ModelParameters:
 
     def __init__(self):
 
+        # running configuration
+        self.time_step = 300
+        self.length = 24 * 3600 * 1
+        self.n_horizon = int(8 * 3600 / self.time_step)  # 8 hours ahead  -- 1 hour is 12 steps in the horizon
+
+        # Revert to this start time when generating final datset
+        self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
+        self.start_time_dt = datetime.datetime(2017, 1, 1, 0, 0, 0) + datetime.timedelta(
+            seconds=self.start_time)  # datetime obj represenation of start time
+        self.start_time_offset = self.start_time
+
         # Load in the N4SID matrices
-        p = Path('').resolve().parent.parent.parent / 'testcases' / 'SpawnResources' / 'spawnrefsmalloffice' / 'metamodel'
+        p = Path('').resolve().parent.parent.parent.parent / 'testcases' / 'SpawnResources' / 'spawnrefsmalloffice' / 'metamodel'
         if p.exists():
             # States are room temperatures, <to flesh out>
             self.a = np.load(p / 'A.npy')
             self.b = np.load(p / 'B.npy')
             self.c = np.load(p / 'C.npy')
             # D array is zeroed out for the length of the inputs in _u
-            self.d = np.array([[0, 0, 0, 0]])
+            self.d = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
             self.K = np.load(p / 'K.npy')
             # use the last column of the data per Thibault's comment
             self.x0 = np.transpose([np.load(p / 'x0.npy')])
-            print("Finished loading matrices")
 
-            weatherpath = p.resolve().parent / 'weather.csv'
-            pricespath = p.resolve().parent / 'prices.csv'
-            modeldatapath = p.resolve().parent / 'dataFromModel.csv'
 
-            if not weatherpath.exists():
-                raise Exception("There is no weather file. Make sure you generated it.")
-            elif not pricespath.exists():
-                raise Exception("There is no energy prices file. Make sure you generated it.")
-            elif not modeldatapath.exists():
-                raise Exception("There is no model data file. Make sure you generated it.")
+            # TODO: need to write a check to make sure these files exist.. someday
             # if not tvp_file.exists():
             #     raise Exception("There is no time varying parameter file, make sure to unzip wrapped 2.7z")
 
-            self.modeldata = pd.read_csv(modeldatapath)
-            self.weather = pd.read_csv(weatherpath)
-            self.prices = pd.read_csv(pricespath)
+            self.tvps = pd.read_csv(p.parent / 'dataFromModel.csv')
+            self.extras = pd.read_csv(p.parent / 'extras.csv')
+            self.weather = pd.read_csv(p.parent / 'weather.csv')
 
-            epoch = 1577836800 #starting in 2020
-            self.modeldata['time'] = self.modeldata['time'].apply(toEpoch, args=[epoch])
-            self.modeldata.set_index(pd.to_datetime(self.modeldata['time'], unit='s'), inplace=True)
-            self.weather['time'] = self.weather['time'].apply(toEpoch, args=[epoch])
-            self.weather.set_index(pd.to_datetime(self.weather['time'], unit='s'), inplace=True)
-            self.prices['time'] = self.prices['time'].apply(toEpoch, args=[epoch])
-            self.prices.set_index(pd.to_datetime(self.prices['time'], unit='s'), inplace=True)
-
+            # resample from E+ hourly data to 'step'
+            index = pd.DatetimeIndex(data= pd.date_range(start=datetime.datetime(2017, 1, 1, 0, 0, 0), periods=len(self.extras), freq='H'), freq='H')
+            self.tvps.set_index(index, inplace=True)
+            self.extras.set_index(index, inplace=True)
+            self.weather.set_index(index, inplace=True)
+            self.tvps = self.tvps.resample(rule=str(self.time_step) + 'S').pad()
+            self.extras = self.extras.resample(rule=str(self.time_step)+'S').pad()
+            self.weather = self.weather.resample(rule=str(self.time_step) + 'S').interpolate()
 
 
         else:
             raise Exception(f"metamodeling path does not exist at {p}")
 
         # Additional states
-        #   todo: remember which state is which. The first is the predicted temp.
-        self.additional_x_states_inits = np.array([[293], [0], [0], [0], [0]])
+        #   --  Initial T Zn1, Initial Heating Power Zn1, Previous Heating Power Zn1
+        self.additional_x_states_inits = np.array([[293], [293], [293], [293], [293], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]])
 
         # The min_x is +/- 10 for the number of rows of A which is the # of states
         self.min_x = np.array([[-30]] * self.a.shape[0])
@@ -71,14 +73,18 @@ class ModelParameters:
         self.max_setpoint_t = np.array([298])
 
         self.min_cooling = 0
-        self.max_cooling = 1
+        self.max_cooling = 0
         self.min_heating = 0
         self.max_heating = 1
+        # self.min_oa_damp_1 = 0.25
+        # self.max_oa_damp_1 = 1
+        self.min_fan_power = 0
+        self.max_fan_power = 1
 
         # These are the variables that are needed to define the u matrix.
         self.variables = []
 
-        # Weather data
+        # Weather
 
         self.variables.append({
             "type": "tvp",
@@ -87,7 +93,6 @@ class ModelParameters:
             "data_column_name": "TDryBul",
             "local_var_name": "t_dry_bulb",
         })
-
         self.variables.append({
             "type": "tvp",
             "data_source": "weather",
@@ -96,59 +101,113 @@ class ModelParameters:
             "local_var_name": "h_glo_hor",
         })
 
+        # Occupancy
+
         self.variables.append({
             "type": "tvp",
-            "data_source": "modeldata",
-            "var_name": "occupancy_ratio",
+            "data_source": "tvps",
+            "var_name": "occupancy_ratio_core",
+            "data_column_name": "Occupancy[core_zn]",
+            "local_var_name": "occupancy_ratio_core",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvps",
+            "var_name": "occupancy_ratio_perimeter1",
             "data_column_name": "Occupancy[perimeter_zn_1]",
-            "local_var_name": "occupancy_ratio",
+            "local_var_name": "occupancy_ratio_perimeter1",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvps",
+            "var_name": "occupancy_ratio_perimeter2",
+            "data_column_name": "Occupancy[perimeter_zn_2]",
+            "local_var_name": "occupancy_ratio_perimeter2",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvps",
+            "var_name": "occupancy_ratio_perimeter3",
+            "data_column_name": "Occupancy[perimeter_zn_3]",
+            "local_var_name": "occupancy_ratio_perimeter3",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvps",
+            "var_name": "occupancy_ratio_perimeter4",
+            "data_column_name": "Occupancy[perimeter_zn_4]",
+            "local_var_name": "occupancy_ratio_perimeter4",
         })
 
-       # Setpoints
+        # Electrical loads
 
         self.variables.append({
             "type": "tvp",
-            "data_source": "modeldata",
+            "data_source": "extras",
+            "var_name": "equipment_gains_core",
+            "data_column_name": "ElecLoads[core_zn]",
+            "local_var_name": "equipment_gains_core",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "extras",
+            "var_name": "equipment_gains_perimeter1",
+            "data_column_name": "ElecLoads[perimeter_zn_1]",
+            "local_var_name": "equipment_gains_perimeter1",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "extras",
+            "var_name": "equipment_gains_perimeter2",
+            "data_column_name": "ElecLoads[perimeter_zn_2]",
+            "local_var_name": "equipment_gains_perimeter2",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "extras",
+            "var_name": "equipment_gains_perimeter3",
+            "data_column_name": "ElecLoads[perimeter_zn_3]",
+            "local_var_name": "equipment_gains_perimeter3",
+        })
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "extras",
+            "var_name": "equipment_gains_perimeter4",
+            "data_column_name": "ElecLoads[perimeter_zn_4]",
+            "local_var_name": "equipment_gains_perimeter4",
+        })
+
+
+        # Setpoints
+
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "extras",
+            "var_name": "tdl",
+            "data_column_name": "tdl",
+            "local_var_name": "tdl",
+        })
+
+        self.variables.append({
+            "type": "tvp",
+            "data_source": "tvps",
             "var_name": "TSetpoint_Lower",
-            "data_column_name": "LowerSetp[perimeter_zn_1]",
+            "data_column_name": "LowerSetp[core_zn]",
             "local_var_name": "tsetpoint_lower",
         })
         self.variables.append({
             "type": "tvp",
-            "data_source": "modeldata",
+            "data_source": "tvps",
             "var_name": "TSetpoint_Upper",
-            "data_column_name": "UpperSetp[perimeter_zn_1]",
+            "data_column_name": "UpperSetp[core_zn]",
             "local_var_name": "tsetpoint_upper",
         })
 
-        # Costs
 
-        self.variables.append({
-            "type": "tvp",
-            "data_source": "prices",
-            "var_name": "ElecCost",
-            "data_column_name": "PriceElectricPowerConstant",
-            "local_var_name": "elec_cost",
-        })
-
-        # running configuration
-        self.time_step = 300
-        self.length = 24 * 3600 * 1
-        self.n_horizon = int(8 * 3600 / self.time_step)
-
-        # Revert to this start time when generating final datset
-        self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
-        self.start_time_dt = datetime.datetime(2020, 1, 1, 0, 0, 0) + datetime.timedelta(seconds=self.start_time)  # datetime obj represenation of start time
-        self.start_time_offset = self.start_time
 
         self.tvp_template = None
         self.tvp_template_mhe = None
         self.tvp_template_simulator = None
-
-        # resample if necessary
-        self.prices = self.prices.resample(str(self.time_step)+'S').pad()
-        self.weather = self.weather.resample(str(self.time_step) + 'S').interpolate()
-        self.modeldata = self.modeldata.resample(str(self.time_step) + 'S').pad()
 
     def tvp_fun(self, t_now):
         if self.tvp_template is None:
@@ -159,12 +218,10 @@ class ModelParameters:
         # populate all of the time varying parameters
         for var in self.variables:
             # determine which datafile to use
-            if var["data_source"] == "weather":
+            if var["data_source"] == "tvps":
+                data_source = self.tvps
+            elif var["data_source"] == "weather":
                 data_source = self.weather
-            elif var["data_source"] == "prices":
-                data_source = self.prices
-            elif var["data_source"] == "modeldata":
-                data_source = self.modeldata
             elif var["data_source"] == "extras":
                 data_source = self.extras
             else:
@@ -186,12 +243,11 @@ class ModelParameters:
 
         # populate all of the time varying parameters
         for var in self.variables:
-            if var["data_source"] == "weather":
+            # determine which datafile to use
+            if var["data_source"] == "tvps":
+                data_source = self.tvps
+            elif var["data_source"] == "weather":
                 data_source = self.weather
-            elif var["data_source"] == "prices":
-                data_source = self.prices
-            elif var["data_source"] == "modeldata":
-                data_source = self.modeldata
             elif var["data_source"] == "extras":
                 data_source = self.extras
             else:
@@ -214,12 +270,10 @@ class ModelParameters:
         # populate all of the time varying parameters
         for var in self.variables:
             # determine which datafile to use
-            if var["data_source"] == "weather":
+            if var["data_source"] == "tvps":
+                data_source = self.tvps
+            elif var["data_source"] == "weather":
                 data_source = self.weather
-            elif var["data_source"] == "prices":
-                data_source = self.prices
-            elif var["data_source"] == "modeldata":
-                data_source = self.modeldata
             elif var["data_source"] == "extras":
                 data_source = self.extras
             else:
@@ -236,9 +290,3 @@ class ModelParameters:
 
         return self.tvp_template_simulator
 
-
-def toEpoch(a, epoch):
-    return a + epoch
-
-def toCelsius():
-    return a - 273.15
