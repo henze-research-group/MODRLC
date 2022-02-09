@@ -65,6 +65,10 @@ model wrapped "Wrapped model"
 	Modelica.Blocks.Interfaces.RealOutput senHeaPow3_y(unit="W") = mod.senHeaPow3.y "P3 Heating Coil Power";
 	Modelica.Blocks.Interfaces.RealOutput senHeaPow4_y(unit="W") = mod.senHeaPow4.y "P4 Heating Coil Power";
 	Modelica.Blocks.Interfaces.RealOutput senCCPow_y(unit="W") = mod.senCCPow.y "Core Cooling Coil Power demand";
+	Modelica.Blocks.Interfaces.RealOutput senPpmPerimeter1_y(unit="ppm") = mod.senPpmPerimeter1.y "P1 CO2 ppm";
+	Modelica.Blocks.Interfaces.RealOutput senPpmPerimeter2_y(unit="ppm") = mod.senPpmPerimeter2.y "P2 CO2 ppm";
+	Modelica.Blocks.Interfaces.RealOutput senPpmPerimeter3_y(unit="ppm") = mod.senPpmPerimeter3.y "P3 CO2 ppm";
+	Modelica.Blocks.Interfaces.RealOutput senPpmPerimeter4_y(unit="ppm") = mod.senPpmPerimeter4.y "P4 CO2 ppm";
 	Modelica.Blocks.Interfaces.RealOutput senDay_y(unit="1") = mod.senDay.y "Day of the week - 1 to 7";
 	Modelica.Blocks.Interfaces.RealOutput senCCPow3_y(unit="W") = mod.senCCPow3.y "P3 Cooling Coil Power demand";
 	Modelica.Blocks.Interfaces.RealOutput senCCPow2_y(unit="W") = mod.senCCPow2.y "P2 Cooling Coil Power demand";
@@ -81,6 +85,7 @@ model wrapped "Wrapped model"
 	Modelica.Blocks.Interfaces.RealOutput senTemRoom_y(unit="K") = mod.senTemRoom.y "Core temperature";
 	Modelica.Blocks.Interfaces.RealOutput senFanPow_y(unit="W") = mod.senFanPow.y "Core Fan Power demand";
 	Modelica.Blocks.Interfaces.RealOutput senTemOA_y(unit="K") = mod.senTemOA.y "OA Temperature";
+	Modelica.Blocks.Interfaces.RealOutput senPpmCore_y(unit="ppm") = mod.senPpmCore.y "Core CO2 ppm";
 	// Original model
 	SpawnRefSmallOfficeBuilding mod(
 		PSZACcontroller.oveHeaPer1(uExt(y=PSZACcontroller_oveHeaPer1_u),activate(y=PSZACcontroller_oveHeaPer1_activate)),
