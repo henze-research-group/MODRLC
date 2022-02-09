@@ -89,8 +89,12 @@ class BoptestGymEnv(gym.Env):
         self.dr_obs                 = dr_obs
         self.u                      = None
         self.password               = password
+        self.testcase = testcase
+        self.initparams = {'start_time': self.start_time,
+                                 'warmup_period': self.warmup_period}
         self.client = ActbClient(url)
-        self.client.select(testcase)
+        self.client.stop_all()
+        self.client.select(self.testcase)
 
 
 
@@ -155,6 +159,8 @@ class BoptestGymEnv(gym.Env):
         self.action_space = spaces.Box(low  = np.array(self.lower_act_bounds), 
                                        high = np.array(self.upper_act_bounds), 
                                        dtype= np.float32)
+        self.client.stop_all()
+        print("here")
 
     def __str__(self):
         '''
@@ -255,13 +261,14 @@ class BoptestGymEnv(gym.Env):
         # Initialize the building simulation
         params = {'start_time': self.start_time,
                                  'warmup_period': self.warmup_period}
-        res = self.client.initialize(**params)
+        self.client.set_step(self.Ts)
+        res = self.client.reset(**params)
 
         if res:
             print('Successfully initialized the simulation')
 
         # Set simulation step
-        self.client.set_step(self.Ts)
+
 
         print('Setting simulation step to {0}.'.format(self.Ts))
 
@@ -632,7 +639,7 @@ class BoptestGymEnv(gym.Env):
 if __name__ == "__main__":
     # Instantiate the env    
     env = BoptestGymEnv()
-    obs = env.reset()
+    obs = env.reset(env.testcase, **env.initparams)
     print (env.get_summary())
     print('Observation space: {}'.format(env.observation_space))
     print('Action space: {}'.format(env.action_space))
