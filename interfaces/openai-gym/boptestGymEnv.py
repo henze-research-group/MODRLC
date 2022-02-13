@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'actb_cl
 from actb_client import ActbClient
 from custom_kpi import custom_kpi_calculator as kpicalculation
 import time as _time
-from pathlib import Path
+
 
 from collections import OrderedDict
 from pprint import pformat
@@ -31,8 +31,7 @@ class BoptestGymEnv(gym.Env):
 
     def __init__(self, 
                  url                = 'http://127.0.0.1:80',
-                 testcase = None,
-                 password           = None,
+                 testcase           = None,
                  actions            = ['oveDSet_activate'],
                  building_obs       = ['senTRoom_y'],
                  forecast_obs       = {'TDryBul': [0, 4], 'winDir': [0], 'HGloHor': [0, 1]},
@@ -46,11 +45,13 @@ class BoptestGymEnv(gym.Env):
                  forecasting_period = None,
                  DR_event           = False,
                  DR_time            = [3600 * 14, 3600 * 16],
+                 dr_power_limit     = 10000,
                  start_time         = 0,
                  warmup_period      = 0,
                  Ts                 = 900,
                  occupancy_sch      = [6,20],
                  dr_obs             = [0, 1],
+                 dr_opt             = 2,
                  kpi_zones          = ['0','1','2','3','4'],
                  KPI_rewards        = {"ener_tot": {"hyper": -1, "power": 1},
                                        "tdis_tot": {"hyper": 0, "power": 1},
@@ -88,17 +89,14 @@ class BoptestGymEnv(gym.Env):
         self.info                   = {}
         self.dr_obs                 = dr_obs
         self.u                      = None
-        self.password               = password
+        self.dr_opt                 = dr_opt
+        self.dr_power_limit         = dr_power_limit
         self.testcase = testcase
         self.initparams = {'start_time': self.start_time,
                                  'warmup_period': self.warmup_period}
         self.client = ActbClient(url)
         self.client.stop_all()
         self.client.select(self.testcase)
-
-
-
-
         
         # Avoid surpassing the end of the year during an episode
         self.end_year_margin = self.episode_length
@@ -268,8 +266,6 @@ class BoptestGymEnv(gym.Env):
             print('Successfully initialized the simulation')
 
         # Set simulation step
-
-
         print('Setting simulation step to {0}.'.format(self.Ts))
 
         # Get forecast values
@@ -406,9 +402,8 @@ class BoptestGymEnv(gym.Env):
         start_DR = self.DR_time[0] / 3600
         end_DR = self.DR_time[1] / 3600
 
-        opt = 2
 
-        if opt == 2:
+        if self.dr_opt == 2:
             count = 0
             for hr in self.dr_obs:
                 obs_hour = hour_dec + hr
@@ -433,7 +428,7 @@ class BoptestGymEnv(gym.Env):
                     dr_signal = 0
                 DR_signal.append(dr_signal)
 
-        if opt == 2:
+        if self.dr_opt == 2:
             if DR_signal[0] == 1:
                 for i in range(len(DR_signal)):
                     if (i + 1) < len(DR_signal):
@@ -468,7 +463,7 @@ class BoptestGymEnv(gym.Env):
         for forecast_obs in self.forecast_obs:
             for horizon in self.forecast_obs[forecast_obs]:
                 if (forecast_obs == 'TDryBul') or (forecast_obs== 'TDewPoi')or (forecast_obs == 'TWetBul'):
-                    observations.append(forecasts[forecast_obs][horizon] + 273.15)
+                    observations.append(forecasts[forecast_obs][horizon] + 0)
                 else:
                     observations.append(forecasts[forecast_obs][horizon])
 
@@ -495,14 +490,18 @@ class BoptestGymEnv(gym.Env):
 
         # Compute BOPTEST core kpis
         kpis = self.client.kpis()
-
         kpis_keys = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']
+        dr_kpis_keys = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot', 'power_pen']
+
+        'spawnrefsmalloffice'
 
         reward = 0
-        kpi_dict = {}
+        kpi_dict = {'spawnrefsmalloffice':  'custom_kpis_example_gym_spawnrefsmalloffice.config',
+                    'spawnrefmediumoffice': 'custom_kpis_example_gym_spawnrefmediumoffice.config'}
 
-        customized_kpi_config = str(Path(__file__).parent.absolute() / 'custom_kpi' / 'custom_kpis_example_gym.config')
 
+
+        customized_kpi_config = str(Path(__file__).parent.absolute() / 'custom_kpi' / kpi_dict[self.testcase])
         # Define customized KPI if any
         customizedkpis = []  # Initialize customzied kpi calculation list
         customizedkpis_result = {}  # Initialize tracking of customized kpi calculation results
@@ -523,7 +522,7 @@ class BoptestGymEnv(gym.Env):
 
         hour = self.building_y['senHouDec_y']
 
-        if (hour >= 6) & (hour < 20):
+        if (hour >= 6) & (hour < 22):
             upp_setpoint = 297.15
             low_setpoint = 294.15
         else:
@@ -533,9 +532,14 @@ class BoptestGymEnv(gym.Env):
         Temp_keys = [x for x in kpi_dict.keys() if "Temp" in x]
         Power_keys = [x for x in kpi_dict.keys() if "power" in x]
         power_dict = {x: kpi_dict[x] for x in Power_keys}
+        energy_dict = {}
+
+        print (power_dict)
+
+        power_dict['average_power_tot'] = sum(power_dict.values())
 
         for key in Power_keys:
-            power_dict[key] = power_dict[key] * self.Ts / (3600 * 1000)  # change to energy
+            energy_dict[key] = power_dict[key] * self.Ts / (3600 * 1000)  # change to energy
 
         for i in Temp_keys:
             if (kpi_dict[i] <= upp_setpoint) & (kpi_dict[i] >= low_setpoint):
@@ -551,31 +555,39 @@ class BoptestGymEnv(gym.Env):
         sel_kpi_tdis_keys = ["Temp_" + x + "_Dev" for x in self.kpi_zones]
         sel_kpi_ener_keys = ["Average_power_" + x for x in self.kpi_zones]
         sel_kpi_tdis = {x: kpi_tdis[x] for x in sel_kpi_tdis_keys}
-        sel_kpi_ener = {x: power_dict[x] for x in sel_kpi_ener_keys}
+        sel_kpi_ener = {x: energy_dict[x] for x in sel_kpi_ener_keys}
 
-        # print ("Debugging")
-        # print (kpi_tdis)
-        # print (sel_kpi_tdis)
-        # print (power_dict)
-        # print (sel_kpi_ener)
+
+        print ("Debugging")
+        print ("KPI_Thermal_Discount : {}".format(kpi_tdis))
+        print ("Sel_kpi_tdis: {}".format(sel_kpi_tdis))
+        print ("energy_dict : {}".format(energy_dict))
+        print ("sel_kpi_ener : {}".format(sel_kpi_ener))
+        print("power_dict : {}".format(power_dict))
+
 
         R = []
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_0_Dev'] + self.KPI_rewards['tdis_tot']["hyper"]*power_dict['Average_power_0'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_1_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_1'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_2_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_2'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_3_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_3'])
-        R.append(self.KPI_rewards['ener_tot']["hyper"] * kpi_tdis['Temp_4_Dev'] + self.KPI_rewards['tdis_tot']["hyper"] * power_dict['Average_power_4'])
+        R.append(self.KPI_rewards['tdis_tot']["hyper"] * kpi_tdis['Temp_0_Dev'] + self.KPI_rewards['ener_tot']["hyper"] * energy_dict['Average_power_0'])
+        R.append(self.KPI_rewards['tdis_tot']["hyper"] * kpi_tdis['Temp_1_Dev'] + self.KPI_rewards['ener_tot']["hyper"] * energy_dict['Average_power_1'])
+        R.append(self.KPI_rewards['tdis_tot']["hyper"] * kpi_tdis['Temp_2_Dev'] + self.KPI_rewards['ener_tot']["hyper"] * energy_dict['Average_power_2'])
+        R.append(self.KPI_rewards['tdis_tot']["hyper"] * kpi_tdis['Temp_3_Dev'] + self.KPI_rewards['ener_tot']["hyper"] * energy_dict['Average_power_3'])
+        R.append(self.KPI_rewards['tdis_tot']["hyper"] * kpi_tdis['Temp_4_Dev'] + self.KPI_rewards['ener_tot']["hyper"] * energy_dict['Average_power_4'])
 
-        self.info['rewards_0'] = R[0]
-        self.info['rewards_1'] = R[1]
-        self.info['rewards_2'] = R[2]
-        self.info['rewards_3'] = R[3]
-        self.info['rewards_4'] = R[4]
+        power_dict['power_pen'] = max(0,power_dict['average_power_tot'] - self.dr_power_limit)
+        self.info['rewards_pow_pen'] = self.KPI_rewards['power_pen']["hyper"]* power_dict['power_pen']
+
+
+        self.info['rewards_zone_0'] = R[0]
+        self.info['rewards_zone_1'] = R[1]
+        self.info['rewards_zone_2'] = R[2]
+        self.info['rewards_zone_3'] = R[3]
+        self.info['rewards_zone_4'] = R[4]
 
         for kpi_name in kpis_keys:
             self.kpi_timestep[kpi_name] = kpis[kpi_name] - self.kpi_integral_last_step[kpi_name]
             self.kpi_integral_last_step[kpi_name] = kpis[kpi_name]
 
+        # change to zone no
         if len(self.kpi_zones) <= 5:
             self.kpi_timestep['ener_tot'] = sum(sel_kpi_ener.values())
             self.kpi_timestep['tdis_tot'] = sum(sel_kpi_tdis.values())
@@ -584,6 +596,13 @@ class BoptestGymEnv(gym.Env):
         # Compute rewards
         for kpi in kpis_keys:
             reward = reward + self.KPI_rewards[kpi]["hyper"]*self.kpi_timestep[kpi]**(self.KPI_rewards[kpi]["power"])
+
+        self.individual_rewards = {"Energy": self.kpi_timestep['ener_tot'],
+                                   "Thermal_Discomfort": self.kpi_timestep['tdis_tot'],
+                                   "Power_Penalty": self.info['rewards_pow_pen']}
+
+        if self.DR_event == True :
+            reward = reward + self.info['rewards_pow_pen']
 
         return reward
 
@@ -616,6 +635,12 @@ class BoptestGymEnv(gym.Env):
     def change_rewards_weights(self,KPI_rewards):
         self.KPI_rewards = KPI_rewards
 
+    def change_dr_limit(self,dr_power_limit):
+        self.dr_power_limit = dr_power_limit
+
+    def get_individual_rewards(self):
+        return self.individual_rewards
+
     def get_building_states(self):
         return (self.building_y)
 
@@ -635,6 +660,10 @@ class BoptestGymEnv(gym.Env):
             else:
                 unit = None
             print('{0}: {1} {2}'.format(key, kpi[key], unit))
+
+    def save_episode(self,path):
+        return
+
 
 if __name__ == "__main__":
     # Instantiate the env    
