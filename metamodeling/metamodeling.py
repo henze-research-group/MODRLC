@@ -69,7 +69,7 @@ class Metamodel:
     def generate_data(self):
         print('Generating data, using Spawn simulation')
         self.datetime = datetime.strptime(self.config.start, '%y/%m/%d %H:%M:%S')
-        self.client = ActbClient(url=self.config.url, metamodel=self.config.metamodel)
+        self.client = ActbClient(url=self.config.url)#, metamodel=self.config.metamodel)
         for sensor in self.config.sensors:
             self.historian.add_point(sensor, None, sensor)
         for input in self.config.inputs.keys():

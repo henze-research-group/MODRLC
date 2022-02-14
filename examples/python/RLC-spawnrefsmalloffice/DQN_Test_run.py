@@ -1,6 +1,6 @@
 import numpy as np;import pandas as pd
 from DQN_Agent_test import DQN_Agent
-from pathlib import Path
+from pathlib import Path; from RL_functions import *
 import sys
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'interfaces' / 'openai-gym'))
 from boptestGymEnv import BoptestGymEnv
@@ -8,46 +8,10 @@ import math
 import matplotlib.pyplot as plt
 
 
-def plot(zonetemp, heatingcoil, Historian, axes, plotutils):
-
-    time_hours = [time / 3600 for time in Historian["time"]]
-    axes[0].cla()
-    axes[1].cla()
-    axes[0].set_title('Zone temperature', fontweight='bold')
-    axes[0].set_ylim(15, 27)
-    axes[0].set_xlim(0, plotutils['length'] / 3600)
-    axes[0].set_xticks(range(0, int(plotutils['length'] / 3600) + 6, 6))
-    axes[0].set_ylabel('Temperature [C]')
-    axes[0].set_yticks([i for i in range(15, 28)])
-    axes[0].grid(which='both', linewidth=0.5, color='white')
-    axes[0].set_facecolor("gainsboro")
-
-    axes[1].set_title('Heating coil power demand (thermal)', fontweight='bold')
-    axes[1].set_ylim(0, 15000)
-    axes[1].set_xlim(0, plotutils['length'] / 3600)
-    axes[1].set_xticks(range(0, int(plotutils['length'] / 3600) + 6, 6))
-    axes[1].set_ylabel('Watts [W]')
-    axes[1].set_xlabel('Time [hours]')
-    axes[1].set_yticks([i for i in range(0, 16000, 1000)])
-    axes[1].grid(which='both', linewidth=0.5, color='white')
-    axes[1].set_facecolor("gainsboro")
-
-    axes[0].plot(plotutils['time'], plotutils['lostp'], color='red', ls='--', label='Setpoints')
-    axes[0].plot(plotutils['time'], plotutils['histp'], color='red', ls='--')
-    axes[0].plot(time_hours, zonetemp, label='Zone temperature')
-    axes[1].plot(time_hours, heatingcoil)
-    axes[0].legend(loc='upper right')
-    plt.tight_layout()
-    plt.draw()
-    plt.pause(0.5)
-
 # --------------------
 # Set parameters for initializing the gym environment
 
-step = 300
-episode_length = 3600*1*24                    # Set the simulation length in seconds
-day_no = 1  #np.random.choice([1,3,4,5,8,9,10])
-start_time=24*3600*day_no                 # Specify the start time of the simulation
+
 actions = ['PSZACcontroller_oveHeaPer1_u']     # Specify which control actions to actuate by specifying the keys
 kpi_zones = ["1"]                              # Select which zone KPI to be included in the reward function
 
@@ -57,8 +21,8 @@ forecast_obs = {'TDryBul':[0],'HGloHor':[0]}   # Specify which exogenous states 
 
 # Set the weights for the different KPIs to form the reward function
 KPI_rewards = {
-    "ener_tot": {"hyper": -60, "power": 1},
-    "tdis_tot": {"hyper": -80, "power": 1},
+    "ener_tot": {"hyper": -120, "power": 1},
+    "tdis_tot": {"hyper": -160, "power": 1},
     "idis_tot": {"hyper":   0, "power": 1},
     "cost_tot": {"hyper":   0, "power": 1},
     "emis_tot": {"hyper":   0, "power": 1},
@@ -66,98 +30,82 @@ KPI_rewards = {
 # --------------------
 
 
-# Initiliaze the environment
-env = BoptestGymEnv(episode_length=episode_length,
-                    testcase='spawnrefsmalloffice',
-                     Ts=step,
-                     start_time=start_time,
-                     actions=actions,
-                     building_obs=building_obs,
-                     forecast_obs=forecast_obs,
-                     kpi_zones= kpi_zones,
-                     password = None,                                         # put your own password
-                     lower_obs_bounds=[273.15+15,  0, -12,      0],    # manually set the lower bounds for observation
-                     upper_obs_bounds=[273.15+27, 24,  5,    195.8],    # manually set the upper bounds for observation
-                     KPI_rewards=KPI_rewards,
-                     n_obs = True)                              # if set to True returns a normalized state vector between 0-1
+
 
 kpi_list = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']
-state_size = env.observation_space.shape[0]
-
-print ("State_size :{}".format(state_size))
-
-episodes= 20
-last_ep= 6
-
-Agent_1 = DQN_Agent(state_size, 5)
 
 
-# RUN TEST CASE -
-# -------------
+episodes= 1
+last_ep= 120
 
-
-Historian = {key: [] for key in ['time', 'states', 'rewards', 'episodes', 'action_1','senTemOA_y',
+Historian = {key: [] for key in ['time', 'states', 'rewards', 'episodes', 'action_1','senTemOA_y','day_no',
                                  'senTRoom_y','senTRoom1_y','senTRoom2_y','senTRoom3_y','senTRoom4_y',
                                  'Total_Pow_Dem_0','Total_Pow_Dem_1','Total_Pow_Dem_2','Total_Pow_Dem_3','Total_Pow_Dem_4',
                                  'Heating_Pow_Dem_0','Heating_Pow_Dem_1','Heating_Pow_Dem_2','Heating_Pow_Dem_3','Heating_Pow_Dem_4',
                                  'Cooling_Pow_Dem_0','Cooling_Pow_Dem_1','Cooling_Pow_Dem_2','Cooling_Pow_Dem_3','Cooling_Pow_Dem_4',
                                  'Zone_1_HC_Action']}
+
+
 #'Damper_0','Damper_1','Damper_2','Damper_3','Damper_4'
 KPI_hist = {key: [] for key in kpi_list}
 KPI_hist['episodes'] = []
 KPI_hist['scores'] = []
+KPI_hist['day_no'] = []
 # --------------------
-
-# loading previous memory buffer
-if last_ep == 0:
-    mem_list_1 = []
-else:
-    mem_list_1 = pd.read_csv("RL_Data_test/04_Mem/mem_data_" + str(last_ep) + ".csv", dtype=object)
-    mem_list_1.drop(mem_list_1.columns[0], axis=1, inplace=True)
-    mem_list_1['Action'] = mem_list_1['Action'].astype('float')
-    mem_list_1['Reward'] = mem_list_1['Reward'].astype('float')
-    mem_list_1['States'] = mem_list_1['States'].map(
-        lambda x: " ".join((x.strip('[').strip(']').replace("\n", "")).split()))
-    mem_list_1['States'] = mem_list_1['States'].map(
-        lambda x: np.reshape(np.array(x.split(' '), dtype=np.float32), (1, -1)))
-    mem_list_1['Next_State'] = mem_list_1['Next_State'].map(
-        lambda x: " ".join((x.strip('[').strip(']').replace("\n", "")).split()))
-    mem_list_1['Next_State'] = mem_list_1['Next_State'].map(
-        lambda x: np.reshape(np.array(x.split(' '), dtype=np.float32), (1, -1)))
-
-    for i in range(len(mem_list_1)):
-        state_m1 = mem_list_1.iloc[i][0];
-        action_m1 = mem_list_1.iloc[i][1]
-        reward_m1 = mem_list_1.iloc[i][2];
-        next_state_m1 = mem_list_1.iloc[i][3];
-        done_m1 = mem_list_1.iloc[i][4]
-        Agent_1.append_sample(state_m1, action_m1, reward_m1, next_state_m1, done_m1)
-
-print ("Loading Weights")
-Agent_1.model_load_weights("RL_Data_test/02_NN/DQN_" + str(last_ep) + ".h5")  # From 2nd episode
 
 
 print('\n Starting Simulation...')
-plotutils = dict(time = [i / 3600 for i in range(0, int(episode_length) + step, step)],
-                 lostp = [21 if 6 <= i / 3600 <= 20 else 15.6 for i in range(0, int(episode_length) + step, step)],
-                 histp = [24 if 6 <= i / 3600 <= 20 else 26.7 for i in range(0, int(episode_length) + step, step)],
-                 length = episode_length)
+
 zonetemp = []
 heatingcoil = []
-fig, axes = plt.subplots(2, 1, figsize=(10,10))
-plt.ion()
-plt.show()
+
 
 # Simulation Loop
 for e in range(last_ep,last_ep+episodes):
+    # Initialize the environment
+    day_no =  3
+    start_time = 24 * 3600 * day_no  # Specify the start time of the simulation
+    step = 300
+    episode_length = 3600 * 1 * 24  # Set the simulation length in seconds
+
+    env = BoptestGymEnv(episode_length=episode_length,
+                        testcase='spawnrefsmalloffice',
+                        Ts=step,
+                        start_time=start_time,
+                        actions=actions,
+                        building_obs=building_obs,
+                        forecast_obs=forecast_obs,
+                        kpi_zones=kpi_zones,
+                        lower_obs_bounds=[273.15 + 15, 0, -12, 0],  # manually set the lower bounds for observation
+                        upper_obs_bounds=[273.15 + 27, 24, 5, 195.8],  # manually set the upper bounds for observation
+                        KPI_rewards=KPI_rewards,
+                        n_obs=True)  # if set to True returns a normalized state vector between 0-1
+
+    state_size = env.observation_space.shape[0]
+
+    # Initializing the RL Agent
+    Agent_1 = DQN_Agent(state_size, 5)
+    print("State_size :{}".format(state_size))
+
+    # loading previous memory buffer
+    if last_ep == 0:
+        mem_list_1 = []
+    else:
+        mem_list_1 = mem_processor(filename="RL_Data_test/04_Mem/mem_data_" + str(e) + ".csv")
+        for i in range(len(mem_list_1)):
+            state_m1 = mem_list_1.iloc[i][0];
+            action_m1 = mem_list_1.iloc[i][1];
+            reward_m1 = mem_list_1.iloc[i][2];
+            next_state_m1 = mem_list_1.iloc[i][3];
+            done_m1 = mem_list_1.iloc[i][4]
+            Agent_1.append_sample(state_m1, action_m1, reward_m1, next_state_m1, done_m1)
+
+    print ("loading weights")
     Agent_1.model_load_weights("RL_Data_test/02_NN/DQN_" + str(e) + ".h5")  # From 2nd episode
-    Agent_1.update_target_model()
     score = 0
     e = e + 1
     print('\nRunning controller script...')
     state = env.reset()  # check if the reset function resets the weights as well
-
-
 
     print ("State")
     print (state)
@@ -256,6 +204,9 @@ for e in range(last_ep,last_ep+episodes):
             building_states['senTemRoom4_y'],
             building_states['senTemOA_y']))
 
+        print ("Forecasts")
+        print (env.get_forecasts())
+
 
         print("Exploration")
         print (Agent_1.exploration_value())
@@ -274,6 +225,7 @@ for e in range(last_ep,last_ep+episodes):
         Historian["rewards"].append(reward)
         Historian["action_1"].append(processed_act[0])
         Historian['senTemOA_y'].append(building_states['senTemOA_y'])
+        Historian['day_no'].append(day_no)
 
         Historian["senTRoom_y"].append(building_states['senTemRoom_y'])
         Historian["senTRoom1_y"].append(building_states['senTemRoom1_y'])
@@ -301,14 +253,9 @@ for e in range(last_ep,last_ep+episodes):
 
         Historian["Zone_1_HC_Action"].append(u['PSZACcontroller_oveHeaPer1_u'])
 
-        # Historian['Damper_0'].append(u['PSZACcontroller_oveDamCor_u'])
-        # Historian['Damper_1'].append(u['PSZACcontroller_oveDamP1_u'])
-        # Historian['Damper_2'].append(u['PSZACcontroller_oveDamP2_u'])
-        # Historian['Damper_3'].append(u['PSZACcontroller_oveDamP3_u'])
-        # Historian['Damper_4'].append(u['PSZACcontroller_oveDamP4_u'])
         zonetemp.extend([building_states['senTemRoom1_y'] - 273.15])
         heatingcoil.extend([building_states['senPowPer1_y']])
-        plot(zonetemp, heatingcoil, Historian, axes, plotutils)
+
 
 
     # Print KPIs
@@ -318,6 +265,7 @@ for e in range(last_ep,last_ep+episodes):
         KPI_hist[kpi_name].append(kpi[kpi_name])
     KPI_hist['episodes'].append(e)
     KPI_hist['scores'].append(score)
+    KPI_hist['day_no'].append(day_no)
     print("Agent Memory : {}".format(len(Agent_1.memory)))
 
     KPI_df = pd.DataFrame.from_dict(KPI_hist)
@@ -330,7 +278,7 @@ for e in range(last_ep,last_ep+episodes):
     Historian_df.to_csv("RL_Data_test/dr_data_test_v2_" + str(e) + ".csv")
     Agent_1.model_save_weights("RL_Data_test/02_NN/DQN_" + str(e) + ".h5")
 
-
+    env.print_KPIs()
 
 
 
@@ -339,7 +287,7 @@ print('\nTest case complete.')
 # --------------------
 # Get result data
 
-env.print_KPIs()
+
 
 
 

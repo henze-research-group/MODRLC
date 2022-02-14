@@ -75,6 +75,7 @@ class TestCase(object):
         #self.initialize(self.config_json['start_time'], self.config_json['warmup_period'])
         # Set default scenario
         self.set_scenario(self.config_json['scenario'])
+        self.elapsed_control_time_ratio = np.array([])
 
     def __initilize_data(self):
         '''Initializes objects for simulation data storage.
