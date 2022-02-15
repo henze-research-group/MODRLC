@@ -1,18 +1,17 @@
 import gym
 import requests
-import numpy as np
+import numpy as np; import pandas as pd
 import inspect
 import json,collections
-import os
+import os ; import sys
 import custom_kpi_calculator as kpicalculation
-import sys
+
 from pathlib import Path
 sys.path.append("../..")
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'actb_client'))
 from actb_client import ActbClient
 from custom_kpi import custom_kpi_calculator as kpicalculation
 import time as _time
-
 
 from collections import OrderedDict
 from pprint import pformat
@@ -91,18 +90,26 @@ class BoptestGymEnv(gym.Env):
         self.u                      = None
         self.dr_opt                 = dr_opt
         self.dr_power_limit         = dr_power_limit
-        self.testcase = testcase
+        self.testcase               = testcase
         self.initparams = {'start_time': self.start_time,
                                  'warmup_period': self.warmup_period}
         self.client = ActbClient(url)
         self.client.stop_all()
         self.client.select(self.testcase)
+
+        dir_location = str(Path(__file__).parent) +'/'+'historian_keys.csv'
+        print (dir_location)
         
         # Avoid surpassing the end of the year during an episode
         self.end_year_margin = self.episode_length
 
+        self.historian_keys = pd.read_csv(dir_location)[self.testcase]
+        self.historian = pd.DataFrame(columns=(self.historian_keys.tolist()))
 
-        
+
+
+
+
         #=============================================================
         # Get test information
         #=============================================================
@@ -185,7 +192,28 @@ class BoptestGymEnv(gym.Env):
                 s += v2 + '\n\n'
 
         return s
-    
+
+
+    def store_data(self):
+        for keys in self.historian_keys:
+            if keys in self.building_y.keys():
+                na_count = self.historian[keys].isnull().sum()
+                self.historian.loc[len(self.historian[keys])-na_count,keys] =self.building_y[keys]
+            elif keys in self.forecast_y.keys():
+                na_count = self.historian[keys].isnull().sum()
+                self.historian.loc[len(self.historian[keys])-na_count,keys] = self.forecast_y[keys][0]
+
+
+        self.historian.loc[len(self.historian['state'])-self.historian['state'].isnull().sum(),'state'] = self.get_measurements(self.building_y ,self.forecast_y)
+        self.historian.loc[len(self.historian['dr_start_time']) - self.historian['dr_start_time'].isnull().sum(),'dr_start_time'] = self.DR_time[0]
+        self.historian.loc[len(self.historian['dr_end_time']) - self.historian['dr_end_time'].isnull().sum(), 'dr_end_time'] = self.DR_time[1]
+        self.historian.loc[len(self.historian['dr_power_limit']) - self.historian['dr_power_limit'].isnull().sum(), 'dr_power_limit'] = self.dr_power_limit
+        self.historian.loc[len(self.historian['reward']) - self.historian['reward'].isnull().sum(),'reward'] = None
+        self.historian.loc[len(self.historian['action']) - self.historian['action'].isnull().sum(),'action'] = self.action
+        self.historian.loc[len(self.historian['start_time']) - self.historian['start_time'].isnull().sum(), 'start_time'] = self.start_time
+
+
+
     def get_summary(self):
         '''
         Get a summary of the environment.
@@ -282,12 +310,14 @@ class BoptestGymEnv(gym.Env):
         self.building_y = res
 
         # Get measurements at the end of the initialization period
-        meas = self.get_measurements(res, forecasts)
-        
+        meas = self.get_measurements(self.building_y ,self.forecast_y)
+
+
         return meas
 
 
-    def step(self, action):              
+    def step(self, action):
+
         # Initialize inputs to send through BOPTEST Rest API
         u = {}
         # u = { #Low-level heating coil
@@ -351,9 +381,13 @@ class BoptestGymEnv(gym.Env):
         for i, act in enumerate(self.actions):
             # Assign value
             u[act] = action[i]
-            
             # Indicate that the input is active
             u[act.replace('_u','_activate')] = 1.
+
+        self.u = u
+        self.action = action
+        self.store_data()
+
                 
         # Advance a BOPTEST simulation
         res = self.client.advance(control_u = u)
@@ -362,7 +396,7 @@ class BoptestGymEnv(gym.Env):
         # Get forecast values
         forecasts = self.client.get_forecasts()
         self.forecast_y = forecasts
-        self.u = u
+
         
         # Compute reward of this (state-action-state') tuple
         reward = self.compute_reward()
@@ -375,11 +409,15 @@ class BoptestGymEnv(gym.Env):
 
         # Get measurements at the end of this time step
         meas = self.get_measurements(res, forecasts)
-                
+
+
         return meas, reward, done, info
 
     def get_info(self):
         return self.info
+
+    def save_episode(self,filename):
+        self.historian.to_csv(filename, index=False)
 
 
     def normalize_obs(self,obs):
@@ -560,12 +598,12 @@ class BoptestGymEnv(gym.Env):
         sel_kpi_ener = {x: energy_dict[x] for x in sel_kpi_ener_keys}
 
 
-        print ("Debugging")
-        print ("KPI_Thermal_Discount : {}".format(kpi_tdis))
-        print ("Sel_kpi_tdis: {}".format(sel_kpi_tdis))
-        print ("energy_dict : {}".format(energy_dict))
-        print ("sel_kpi_ener : {}".format(sel_kpi_ener))
-        print("power_dict : {}".format(power_dict))
+        # print ("Debugging")
+        # print ("KPI_Thermal_Discount : {}".format(kpi_tdis))
+        # print ("Sel_kpi_tdis: {}".format(sel_kpi_tdis))
+        # print ("energy_dict : {}".format(energy_dict))
+        # print ("sel_kpi_ener : {}".format(sel_kpi_ener))
+        # print("power_dict : {}".format(power_dict))
 
 
         R = []
@@ -663,11 +701,9 @@ class BoptestGymEnv(gym.Env):
                 unit = None
             print('{0}: {1} {2}'.format(key, kpi[key], unit))
 
-    def save_current(self):
-
-
 
     def save_episode(self,path):
+        self.historian.to_csv(path)
         return
 
 

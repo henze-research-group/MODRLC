@@ -1,4 +1,4 @@
-﻿keys,spawnrefsmalloffice,spawnrefMEDIUMoffice
+﻿keys,spawnrefsmalloffice,spawnrefmediumoffice
 0,senHouDec_y,
 1,senTemOA_y,
 2,senTemRoom_y,
@@ -29,3 +29,17 @@
 27,start_time,
 28,dr_start_time,
 29,dr_end_time,
+30,state,
+31,reward,
+32,action,
+33,thermal_discomfort_Z0,
+34,thermal_discomfort_Z1,
+35,thermal_discomfort_Z2,
+36,thermal_discomfort_Z3,
+37,thermal_discomfort_Z4,
+38,hvac_energy_Z0,
+39,hvac_energy_Z1,
+40,hvac_energy_Z2,
+41,hvac_energy_Z3,
+42,hvac_energy_Z4,
+43,dr_power_limit,

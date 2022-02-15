@@ -38,14 +38,6 @@ kpi_list = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']
 episodes= 1
 last_ep= 120
 
-Historian = {key: [] for key in ['time', 'states', 'rewards', 'episodes', 'action_1','senTemOA_y','day_no',
-                                 'senTRoom_y','senTRoom1_y','senTRoom2_y','senTRoom3_y','senTRoom4_y',
-                                 'Total_Pow_Dem_0','Total_Pow_Dem_1','Total_Pow_Dem_2','Total_Pow_Dem_3','Total_Pow_Dem_4',
-                                 'Heating_Pow_Dem_0','Heating_Pow_Dem_1','Heating_Pow_Dem_2','Heating_Pow_Dem_3','Heating_Pow_Dem_4',
-                                 'Cooling_Pow_Dem_0','Cooling_Pow_Dem_1','Cooling_Pow_Dem_2','Cooling_Pow_Dem_3','Cooling_Pow_Dem_4',
-                                 'Zone_1_HC_Action']}
-
-
 #'Damper_0','Damper_1','Damper_2','Damper_3','Damper_4'
 KPI_hist = {key: [] for key in kpi_list}
 KPI_hist['episodes'] = []
@@ -66,7 +58,7 @@ for e in range(last_ep,last_ep+episodes):
     day_no =  3
     start_time = 24 * 3600 * day_no  # Specify the start time of the simulation
     step = 300
-    episode_length = 3600 * 1 * 24  # Set the simulation length in seconds
+    episode_length = 3600 * 1 * 1  # Set the simulation length in seconds
 
     env = BoptestGymEnv(episode_length=episode_length,
                         testcase='spawnrefsmalloffice',
@@ -91,7 +83,7 @@ for e in range(last_ep,last_ep+episodes):
     if last_ep == 0:
         mem_list_1 = []
     else:
-        mem_list_1 = mem_processor(filename="RL_Data_test/04_Mem/mem_data_" + str(e) + ".csv")
+        mem_list_1 = mem_processor(filename="RL_Data_test/01a_DQN/04_Mem/mem_data_" + str(e) + ".csv")
         for i in range(len(mem_list_1)):
             state_m1 = mem_list_1.iloc[i][0];
             action_m1 = mem_list_1.iloc[i][1];
@@ -101,7 +93,7 @@ for e in range(last_ep,last_ep+episodes):
             Agent_1.append_sample(state_m1, action_m1, reward_m1, next_state_m1, done_m1)
 
     print ("loading weights")
-    Agent_1.model_load_weights("RL_Data_test/02_NN/DQN_" + str(e) + ".h5")  # From 2nd episode
+    Agent_1.model_load_weights("RL_Data_test/01a_DQN/02_NN/DQN_" + str(e) + ".h5")  # From 2nd episode
     score = 0
     e = e + 1
     print('\nRunning controller script...')
@@ -204,10 +196,6 @@ for e in range(last_ep,last_ep+episodes):
             building_states['senTemRoom4_y'],
             building_states['senTemOA_y']))
 
-        print ("Forecasts")
-        print (env.get_forecasts())
-
-
         print("Exploration")
         print (Agent_1.exploration_value())
 
@@ -217,44 +205,6 @@ for e in range(last_ep,last_ep+episodes):
         print(score)
 
         print("\n")
-
-        # Store Data
-        Historian["time"].append(i * step)
-        Historian["states"].append(state[0])
-        Historian["episodes"].append(e)
-        Historian["rewards"].append(reward)
-        Historian["action_1"].append(processed_act[0])
-        Historian['senTemOA_y'].append(building_states['senTemOA_y'])
-        Historian['day_no'].append(day_no)
-
-        Historian["senTRoom_y"].append(building_states['senTemRoom_y'])
-        Historian["senTRoom1_y"].append(building_states['senTemRoom1_y'])
-        Historian['senTRoom2_y'].append(building_states['senTemRoom2_y'])
-        Historian['senTRoom3_y'].append(building_states['senTemRoom3_y'])
-        Historian['senTRoom4_y'].append(building_states['senTemRoom4_y'])
-
-        Historian["Total_Pow_Dem_0"].append(building_states['senPowCor_y'])
-        Historian["Total_Pow_Dem_1"].append(building_states['senPowPer1_y'])
-        Historian["Total_Pow_Dem_2"].append(building_states['senPowPer2_y'])
-        Historian["Total_Pow_Dem_3"].append(building_states['senPowPer3_y'])
-        Historian["Total_Pow_Dem_4"].append(building_states['senPowPer4_y'])
-
-        Historian["Heating_Pow_Dem_0"].append(building_states['senHeaPow_y'])
-        Historian["Heating_Pow_Dem_1"].append(building_states['senHeaPow1_y'])
-        Historian["Heating_Pow_Dem_2"].append(building_states['senHeaPow2_y'])
-        Historian["Heating_Pow_Dem_3"].append(building_states['senHeaPow3_y'])
-        Historian["Heating_Pow_Dem_4"].append(building_states['senHeaPow4_y'])
-
-        Historian["Cooling_Pow_Dem_0"].append(building_states['senCCPow_y'])
-        Historian["Cooling_Pow_Dem_1"].append(building_states['senCCPow1_y'])
-        Historian["Cooling_Pow_Dem_2"].append(building_states['senCCPow2_y'])
-        Historian["Cooling_Pow_Dem_3"].append(building_states['senCCPow3_y'])
-        Historian["Cooling_Pow_Dem_4"].append(building_states['senCCPow4_y'])
-
-        Historian["Zone_1_HC_Action"].append(u['PSZACcontroller_oveHeaPer1_u'])
-
-        zonetemp.extend([building_states['senTemRoom1_y'] - 273.15])
-        heatingcoil.extend([building_states['senPowPer1_y']])
 
 
 
@@ -269,19 +219,15 @@ for e in range(last_ep,last_ep+episodes):
     print("Agent Memory : {}".format(len(Agent_1.memory)))
 
     KPI_df = pd.DataFrame.from_dict(KPI_hist)
-    KPI_df.to_csv("RL_Data_test/01_KPI/dr_KPI_v2_" + str(e) + ".csv")
+    KPI_df.to_csv("RL_Data_test/01a_DQN/01_KPI/dr_KPI_v2_" + str(e) + ".csv")
 
     df_m_1 = pd.DataFrame(mem_list_1, columns=['States', 'Action', 'Reward', 'Next_State', 'Done'])
-    df_m_1.to_csv("RL_Data_test/04_Mem/mem_data_" + str(e) + ".csv")
+    df_m_1.to_csv("RL_Data_test/01a_DQN/04_Mem/mem_data_" + str(e) + ".csv")
 
-    Historian_df = pd.DataFrame.from_dict(Historian)
-    Historian_df.to_csv("RL_Data_test/dr_data_test_v2_" + str(e) + ".csv")
-    Agent_1.model_save_weights("RL_Data_test/02_NN/DQN_" + str(e) + ".h5")
+    Agent_1.model_save_weights("RL_Data_test/01a_DQN/02_NN/DQN_" + str(e) + ".h5")
 
     env.print_KPIs()
-
-
-
+    env.save_episode('RL_Data_test/01a_DQN/data'+str(e)+'.csv')
 
 print('\nTest case complete.')
 # --------------------
