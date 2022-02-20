@@ -33,11 +33,15 @@ mpc = template_mpc(model)
 simulator, actb_client, t_offset = template_simulator(model)#, metamodel='spawnrefsmalloffice')
 
 results_path = 'results/som3_mpc_boptest'
-
+anim_path = 'anim/'
 # delete the contents of the results path
 if os.path.exists(results_path):
     shutil.rmtree(results_path)
+if os.path.exists(anim_path):
+    shutil.rmtree(anim_path)
 os.makedirs(results_path, exist_ok=True)
+os.makedirs(anim_path, exist_ok=True)
+
 
 historian = Historian(time_step=5)
 
@@ -69,7 +73,7 @@ fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(8, 10))
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
 
-xticks = range(0, int(mp.length), int(6 * 3600))
+xticks = range(0, int(mp.length) + 6 * 3600, int(6 * 3600))
 xlabels = range(0, int(mp.length/3600) + 6, 6)
 
 axis = 0
