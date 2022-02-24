@@ -158,7 +158,7 @@ for e in range(last_ep,last_ep+episodes):
         if counter % (12 * 4) == 0:
             Agent_1.update_target_model()
 
-        weather_states = env.get_weather_forecast()
+        weather_states = env.get_forecast()
 
         print ("Dry bulb temp: {}".format(weather_states['TDryBul'][0]))
 
