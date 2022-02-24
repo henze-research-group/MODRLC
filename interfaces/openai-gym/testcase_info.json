@@ -1,0 +1,9 @@
+{
+    "spawnrefsmalloffice": [{
+            "sen_temp_keys":["senTemRoom_y","senTemRoom1_y","senTemRoom2_y","senTemRoom3_y","senTemRoom4_y"],
+            "sen_tot_pow_keys": ["senPowCor_y","senPowPer1_y","senPowPer2_y","senPowPer3_y","senPowPer4_y"]
+        }],
+    "spawnrefmediumoffice": [{
+            "sen_temp_keys": "None",
+            "sen_tot_pow_keys": "None"}]
+}
