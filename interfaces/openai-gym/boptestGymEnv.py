@@ -93,7 +93,7 @@ class BoptestGymEnv(gym.Env):
         self.building_y_previous    = []
         self.forecast_y_previous    = []
         self.info                   = {}
-        self.action            = []
+        self.action                 = []
         self.dr_obs                 = dr_obs
         self.u                      = None
         self.reward                 = None
@@ -219,27 +219,28 @@ class BoptestGymEnv(gym.Env):
                 self.historian.loc[len(self.historian[keys])-na_count,keys] = self.forecast_y_previous[keys][0]
 
         self.historian.loc[len(self.historian['state'])-self.historian['state'].isna().sum(),'state'] = self.get_measurements(self.building_y_previous ,self.forecast_y_previous)
-        self.historian.loc[len(self.historian['dr_start_time']) - self.historian['dr_start_time'].isna().sum(),'dr_start_time'] = self.DR_time[0]
-        self.historian.loc[len(self.historian['dr_end_time']) - self.historian['dr_end_time'].isna().sum(), 'dr_end_time'] = self.DR_time[1]
+        self.historian.loc[len(self.historian['dr_start_time']) - self.historian['dr_start_time'].isna().sum(),'dr_start_time'] = self.DR_time[0]/3600
+        self.historian.loc[len(self.historian['dr_end_time']) - self.historian['dr_end_time'].isna().sum(), 'dr_end_time'] = self.DR_time[1]/3600
         self.historian.loc[len(self.historian['dr_power_limit']) - self.historian['dr_power_limit'].isna().sum(), 'dr_power_limit'] = self.dr_power_limit
         self.historian.loc[len(self.historian['action']) - self.historian['action'].isna().sum(),'action'] = self.action
         self.historian.loc[len(self.historian['start_time']) - self.historian['start_time'].isna().sum(), 'start_time'] = self.start_time
         self.historian.loc[len(self.historian['reward']) - self.historian['reward'].isna().sum(), 'reward'] = self.reward
 
+        print("Self tdisc {}".format(self.kpi_tdis))
 
         for zone in range(self.no_of_zones):
             self.historian.loc[len(self.historian['thermal_discomfort_Z'+str(zone)]) - 1, 'thermal_discomfort_Z'+str(zone)] = self.kpi_tdis['Temp_'+str(zone)+'_Dev']
-            self.historian.loc[len(self.historian['hvac_energy_Z' + str(zone)]) - 1, 'hvac_energy_Z' + str(zone)] = self.kpi_tdis['Average_power_'+str(zone)]
+            self.historian.loc[len(self.historian['hvac_energy_Z' + str(zone)]) - 1, 'hvac_energy_Z' + str(zone)] = self.kpi_ener['Average_power_'+str(zone)]
+            self.historian.loc[len(self.historian['rewards_tdisc_Z' + str(zone)]) - 1, 'rewards_tdisc_Z' + str(zone)] = self.kpi_tdis["Temp_" + str(zone) + "_Dev"]* self.KPI_rewards['tdis_tot']["hyper"]
+            self.historian.loc[len(self.historian['rewards_energy_Z' + str(zone)]) - 1, 'rewards_energy_Z' + str(zone)] = self.kpi_ener['Average_power_'+str(zone)]* self.KPI_rewards['ener_tot']["hyper"]
 
 
-        print ("Check sum")
-        print (sum([value for key, value in self.building_y.items() if key in self.testcase_info[0]["sen_temp_keys"]]))
+        self.historian.loc[len(self.historian['power_pen']) - 1, 'power_pen'] = self.info['power_pen']
 
-
-        self.historian.loc[len(self.historian['meanTemp_y'])-1,'meanTemp_y'] = sum([value for key, value in self.building_y.items() if key in self.testcase_info[0]["sen_temp_keys"]])/self.no_of_zones
-        self.historian.loc[len(self.historian['maxTemp_y']) - 1, 'maxTemp_y'] = max([value for key, value in self.building_y.items() if key in self.testcase_info[0]["sen_temp_keys"]])
-        self.historian.loc[len(self.historian['minTemp_y']) - 1, 'minTemp_y'] = min([value for key, value in self.building_y.items() if key in self.testcase_info[0]["sen_temp_keys"]])
-        self.historian.loc[len(self.historian["senPowTot_y"]) - 1, "senPowTot_y"] = sum([value for key, value in self.building_y.items() if key in self.testcase_info[0]["sen_tot_pow_keys"]])
+        self.historian.loc[len(self.historian['meanTemp_y'])-1,'meanTemp_y'] = sum([value for key, value in self.building_y_previous.items() if key in self.testcase_info[0]["sen_temp_keys"]])/self.no_of_zones
+        self.historian.loc[len(self.historian['maxTemp_y']) - 1, 'maxTemp_y'] = max([value for key, value in self.building_y_previous.items() if key in self.testcase_info[0]["sen_temp_keys"]])
+        self.historian.loc[len(self.historian['minTemp_y']) - 1, 'minTemp_y'] = min([value for key, value in self.building_y_previous.items() if key in self.testcase_info[0]["sen_temp_keys"]])
+        self.historian.loc[len(self.historian["senPowTot_y"]) - 1, "senPowTot_y"] = sum([value for key, value in self.building_y_previous.items() if key in self.testcase_info[0]["sen_tot_pow_keys"]])
 
 
     def get_summary(self):
@@ -302,8 +303,7 @@ class BoptestGymEnv(gym.Env):
     def reset(self):
 
         # Initialize the building simulation
-        params = {'start_time': self.start_time,
-                                 'warmup_period': self.warmup_period}
+        params = {'start_time': self.start_time,'warmup_period': self.warmup_period}
         self.client.set_step(self.Ts)
         self.building_y  = self.client.reset(**params)
 
@@ -315,6 +315,9 @@ class BoptestGymEnv(gym.Env):
 
         # Get forecast values
         self.forecast_y = self.client.get_forecasts()
+
+        self.upper_sp = self.forecast_y['UpperSetp[core_zn]']
+        self.lower_sp = self.forecast_y['LowerSetp[core_zn]']
 
         # print ("Forecast")
         # print (self.forecast_y)
@@ -396,7 +399,36 @@ class BoptestGymEnv(gym.Env):
             # Indicate that the input is active
             u[act.replace('_u','_activate')] = 1.
 
+        self.upper_sp = self.forecast_y['UpperSetp[core_zn]'][0]
+        self.lower_sp = self.forecast_y['LowerSetp[core_zn]'][0]
+
         self.u = u
+        print ()
+
+        ''' Override for HC coils - change this into a function later'''
+
+        if self.u['PSZACcontroller_oveCooStpCor_u']<= self.lower_sp:
+            self.u['PSZACcontroller_oveHeaStpCor_u'] = self.lower_sp -3
+            self.u['PSZACcontroller_oveHeaStpCor_activate'] = 1
+
+        if self.u['PSZACcontroller_oveCooStpPer1_u']<= self.lower_sp:
+            self.u['PSZACcontroller_oveHeaStpPer1_u'] = self.lower_sp -3
+            self.u['PSZACcontroller_oveHeaStpPer1_activate'] = 1
+
+        if self.u['PSZACcontroller_oveCooStpPer2_u']<= self.lower_sp:
+            self.u['PSZACcontroller_oveHeaStpPer2_u'] = self.lower_sp -3
+            self.u['PSZACcontroller_oveHeaStpPer2_activate'] = 1
+
+        if self.u['PSZACcontroller_oveCooStpPer3_u']<= self.lower_sp:
+            self.u['PSZACcontroller_oveHeaStpPer3_u'] = self.lower_sp -3
+            self.u['PSZACcontroller_oveHeaStpPer3_activate'] = 1
+
+        if self.u['PSZACcontroller_oveCooStpPer4_u']<= self.lower_sp:
+            self.u['PSZACcontroller_oveHeaStpPer4_u'] = self.lower_sp -3
+            self.u['PSZACcontroller_oveHeaStpPer4_activate'] = 1
+
+        ''' Override for HC coils'''
+        # print ("self u vector: {}".format(self.u))
         self.action = action
 
         ''' Store the data before advancing'''
@@ -551,30 +583,22 @@ class BoptestGymEnv(gym.Env):
             for obs in DR_signal:
                 observations.append(obs)
 
-
-
         # Reformat observations
         meas = np.array(observations).astype(np.float32)
         return meas
-
-
 
     def close(self):
         pass
 
     def compute_reward(self):
-
         # Compute BOPTEST core kpis
         kpis = self.client.kpis()
         kpis_keys = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot']
         dr_kpis_keys = ['ener_tot', 'tdis_tot', 'idis_tot', 'cost_tot', 'emis_tot', 'power_pen']
 
-
-
         reward = 0
         kpi_dict = {'spawnrefsmalloffice':  'custom_kpis_example_gym_spawnrefsmalloffice.config',
                     'spawnrefmediumoffice': 'custom_kpis_example_gym_spawnrefmediumoffice.config'}
-
 
         customized_kpi_config = str(Path(__file__).parent.absolute() / 'custom_kpi' / kpi_dict[self.testcase])
         # Define customized KPI if any
@@ -597,24 +621,34 @@ class BoptestGymEnv(gym.Env):
 
         hour = self.building_y['senHouDec_y']
 
-        if (hour >= 8) & (hour < 18):
-            upp_setpoint = 297.15
-            low_setpoint = 294.15
-        else:
-            upp_setpoint = 303.15
-            low_setpoint = 288.15
+        # if (hour >= 6) & (hour < 22):
+        #     upp_setpoint = 297.15
+        #     low_setpoint = 294.15
+        # else:
+        #     upp_setpoint = 303.15
+        #     low_setpoint = 288.15
+
+        upp_setpoint = self.upper_sp
+        low_setpoint = self.lower_sp
 
         Temp_keys = [x for x in kpi_dict.keys() if "Temp" in x]
         Power_keys = [x for x in kpi_dict.keys() if "power" in x]
         power_dict = {x: kpi_dict[x] for x in Power_keys}
         energy_dict = {}
 
+        # print ("Power keys : {}".format(Power_keys))
+        # print("Temp keys : {}".format(Temp_keys))
         # print (power_dict)
 
         power_dict['average_power_tot'] = sum(power_dict.values())
 
         for key in Power_keys:
             energy_dict[key] = power_dict[key] * self.Ts / (3600 * 1000)  # change to energy
+
+        # print ("Energy dict {}".format(energy_dict))
+        # print ("Kpi Dictionary Before")
+        # print (kpi_dict)
+        # print ()
 
         for i in Temp_keys:
             if (kpi_dict[i] <= upp_setpoint) & (kpi_dict[i] >= low_setpoint):
@@ -624,16 +658,23 @@ class BoptestGymEnv(gym.Env):
             else:
                 kpi_dict[i + '_Dev'] = (low_setpoint - kpi_dict[i])*self.Ts/3600
 
-        self.kpi_tdis = kpi_dict
-        self.kpi_ener = energy_dict
+        # print("Kpi Dictionary After")
+        # print(kpi_dict)
+        # print()
+
+
+
 
         Temp_dev_keys = [x for x in kpi_dict.keys() if "Dev" in x]
         kpi_tdis = {x: kpi_dict[x] for x in Temp_dev_keys}
 
+        self.kpi_tdis = kpi_tdis
+        self.kpi_ener = energy_dict
+
         sel_kpi_tdis_keys = ["Temp_" + x + "_Dev" for x in self.kpi_zones]
         sel_kpi_ener_keys = ["Average_power_" + x for x in self.kpi_zones]
-        sel_kpi_tdis = {x: kpi_tdis[x] for x in sel_kpi_tdis_keys}
-        sel_kpi_ener = {x: energy_dict[x] for x in sel_kpi_ener_keys}
+        sel_kpi_tdis = {x: self.kpi_tdis[x] for x in sel_kpi_tdis_keys}
+        sel_kpi_ener = {x: self.kpi_ener[x] for x in sel_kpi_ener_keys}
 
 
         # print ("Debugging")
@@ -653,7 +694,8 @@ class BoptestGymEnv(gym.Env):
 
         ''' Append the power zone rewards for info '''
         power_dict['power_pen'] = max(0,power_dict['average_power_tot'] - self.dr_power_limit)
-        self.info['rewards_pow_pen'] = self.KPI_rewards['power_pen']["hyper"]* power_dict['power_pen']
+        self.info['power_pen'] = power_dict['power_pen']/1000
+        self.info['rewards_pow_pen'] = self.KPI_rewards['power_pen']["hyper"]* self.info['power_pen']
 
         for kpi_name in kpis_keys:
             self.kpi_timestep[kpi_name] = kpis[kpi_name] - self.kpi_integral_last_step[kpi_name]
@@ -664,16 +706,15 @@ class BoptestGymEnv(gym.Env):
             self.kpi_timestep['ener_tot'] = sum(sel_kpi_ener.values())
             self.kpi_timestep['tdis_tot'] = sum(sel_kpi_tdis.values())
 
-
         # Compute rewards
         for kpi in kpis_keys:
             reward = reward + self.KPI_rewards[kpi]["hyper"]*self.kpi_timestep[kpi]**(self.KPI_rewards[kpi]["power"])
 
         self.individual_rewards = {"Energy": self.kpi_timestep['ener_tot'],
                                    "Thermal_Discomfort": self.kpi_timestep['tdis_tot'],
-                                   "Power_Penalty": self.info['rewards_pow_pen']}
+                                   "Power_Penalty": self.info['power_pen']}
 
-        if self.DR_event == True :
+        if self.DR_event == True:
             reward = reward + self.info['rewards_pow_pen']
 
         return reward
@@ -842,7 +883,7 @@ class BoptestGymEnv(gym.Env):
             x1b.axvline(x=self.DR_time[0], color='k', linestyle='--', linewidth=1, dashes=(2, 2),zorder=10)
             x1b.axvline(x=self.DR_time[1], color='k', linestyle='--', label='DR Event Interval', linewidth=1,
                         dashes=(2, 2),zorder=10)
-            x1b.yaxis.set_major_locator(ticker.MultipleLocator(200))
+            x1b.yaxis.set_major_locator(ticker.MultipleLocator(500))
             x1b.grid(which='major', linewidth=2, color='white',zorder=4)
             x1b.set_facecolor("gainsboro")
             x1b.patch.set_alpha(0.4)
@@ -892,7 +933,7 @@ class BoptestGymEnv(gym.Env):
             x2b.axvline(x=self.DR_time[1], color='k', linestyle='--', label='DR Event Interval', linewidth=1, dashes=(2, 2),zorder=3)
             x2b.set_ylabel('Watts [W]')
             x2b.set_xlabel('Time [hours]')
-            x2b.yaxis.set_major_locator(ticker.MultipleLocator(1000))
+            x2b.yaxis.set_major_locator(ticker.MultipleLocator(2000))
             x2b.grid(which='both', linewidth=0.5, color='white')
             x2b.grid(which='major', linewidth=2, color='white')
             x2b.set_facecolor("gainsboro")
@@ -902,7 +943,7 @@ class BoptestGymEnv(gym.Env):
 
 
         fig.canvas.draw()
-        time.sleep(0.1)
+        # time.sleep(0.1)
         fig.savefig(plot_name, dpi=400)
         return
 
