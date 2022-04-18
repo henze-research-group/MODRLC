@@ -6,16 +6,42 @@ from pathlib import Path
 import requests
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class ActbClient:
 
-    def __init__(self, url='http://127.0.0.1:80', metamodel=None):
+    def __init__(self, url='http://127.0.0.1:80', metamodel=None, plot=None, plothorizon=None):
         self.url = url
         self.metamodel = metamodel
         self.jsonpath = str(Path(__file__).parent.absolute() / 'jobs.json')
         if metamodel is not None:
             self.init_metamodel()
+        if plot is not None:
+            self.plotting = True
+            self.initPlot(plot, plothorizon)
+        else:
+            self.plotting = False
+    def initPlot(self, variables, horizon):
+        fig, self.plot_axs = plt.subplots(len(variables), 1)
+        self.plotvars = [[[] for i in range(len(variables[j]))] for j in range(len(variables))]
+        self.plotvarnames = variables
+        self.plotaxis = []
+        self.plothorizon = horizon
+        plt.ion()
+        plt.show()
+
+    def plot(self):
+
+        for ind, vars in enumerate(self.plotvars):
+            self.plot_axs[ind].cla()
+            for ind2, var in enumerate(vars):
+                self.plot_axs[ind].plot(self.plotaxis, var, label=self.plotvarnames[ind][ind2])
+            self.plot_axs[ind].legend()
+        plt.draw()
+        plt.pause(0.5)
+
+        return None
 
     def init_metamodel(self, additionalstates=None, start_time=0, forecast_horizon=84600):
         # define resources and metamodel path
@@ -249,7 +275,24 @@ class ActbClient:
         if self.metamodel is not None:
             return self.step_metamodel(control_u)
         else:
-            return requests.post('{0}/advance/{1}'.format(self.url, self.simId), data=control_u).json()
+            keys = list(control_u.keys())
+            for key in keys:
+                control_u[key.replace('_u', '_activate')] = 1
+            result = requests.post('{0}/advance/{1}'.format(self.url, self.simId), data=control_u).json()
+            if self.plotting:
+                for row, subplot in enumerate(self.plotvarnames):
+                    for ind, name in enumerate(subplot):
+                        self.plotvars[row][ind].append(result[name])
+                    if len(self.plotvars[row][ind]) > self.plothorizon:
+                        self.plotvars[subplot[ind]].pop(0)
+                if self.plotaxis:
+                    self.plotaxis.append(self.plotaxis[-1] + self.step/3600)
+                    if len(self.plotaxis) > self.plothorizon:
+                        self.plotaxis.pop(0)
+                else:
+                    self.plotaxis.append(0)
+                self.plot()
+            return result
 
     def kpis(self):
         """Return the KPIs of the testcase.
