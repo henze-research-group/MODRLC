@@ -2,6 +2,7 @@ FROM michaelwetter/ubuntu-1804_jmodelica_trunk
 
 USER root
 ENV HOME /home/boptest
+ENV DEBIAN_FRONTEND noninteractive
 
 WORKDIR /
 
@@ -9,7 +10,7 @@ RUN apt-get update -y && apt-get install -y \
     ca-certificates curl libglu1 libjpeg8 libfreetype6 libxi6 libdbus-glib-1-2 libfontconfig1 libsm6 gdebi-core python3.8 python3-pip \
     && apt-get install -y git git-lfs
 
-RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py \
+RUN curl -k https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py \
   && python3 get-pip.py
 
 COPY worker/requirements/production.txt /boptest/

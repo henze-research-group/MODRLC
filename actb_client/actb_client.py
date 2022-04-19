@@ -262,14 +262,14 @@ class ActbClient:
         else:
             return requests.get('{0}/kpi/{1}'.format(self.url, self.simId)).json()
 
-    def results(self):
+    def results(self, data=None):
         """Return the results of the simulation.
 
         """
         if self.metamodel is not None:
             return self.mresults
         else:
-            return requests.get('{0}/results/{1}'.format(self.url, self.simId))
+            return requests.put('{0}/results/{1}'.format(self.url, self.simId), data=data).json()
 
     def get_testcases(self):
         """Lists available testcases
@@ -297,7 +297,6 @@ class ActbClient:
         data[testcase].append({'simId' : self.simId,
                                'url' : self.url,
                                'placeholder' : None})
-        print(data)
         with open(self.jsonpath, 'w') as data_file:
             json.dump(data, data_file)
 

@@ -1,6 +1,7 @@
 FROM ubuntu:focal
+ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get -y install ca-certificates curl build-essential git
+RUN apt-get update && apt-get -y install ca-certificates curl build-essential git npm
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs
 

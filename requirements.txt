@@ -6,11 +6,13 @@ requests_toolbelt
 
 matplotlib
 pandas
+opyplus
 
 ###### do-mpc ######
 
 do-mpc
 xlrd
+scipy
 
 ###### OpenAI Gym ####
 gym

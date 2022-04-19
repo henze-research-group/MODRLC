@@ -45,16 +45,19 @@ bash:
 stop_jm:
 	docker stop ${IMG_NAME}
 # Make sure jm image stops being used
-	python sleep10.py
+#python sleep10.py
 
 compile_testcase_model:
+	make stop_jm
+	python3 ../spawn-tools/generate_spawndata.py ${TESTCASE}
+	(cd ../testcases/SpawnResources/${TESTCASE}/ && cp dataFromModel.csv emissions.csv prices.csv weather.csv ../../${TESTCASE}/models/Resources/)
 	make run_jm
 	make copy_to_jm ARGS=parsing
 	make copy_to_jm ARGS=data
 	make copy_to_jm ARGS=testcases/${TESTCASE}
 	docker cp ../testcases/SpawnResources/ ${IMG_NAME}:/
-	docker cp Routing.mo ${IMG_NAME}:/home/developer/MODELICAPATH/Modelica/Blocks/
-	docker cp Interfaces.mo ${IMG_NAME}:/home/developer/MODELICAPATH/Modelica/Blocks/
+#docker cp Routing.mo ${IMG_NAME}:/home/developer/MODELICAPATH/Modelica/Blocks/
+#docker cp Interfaces.mo ${IMG_NAME}:/home/developer/MODELICAPATH/Modelica/Blocks/
 	make exec_jm ARGS="python set_library_versions.py ${TESTCASE} && cd ${TESTCASE}/models && python compile_fmu.py"
 	make copy_testcase_from_jm ARGS=${TESTCASE}/models/wrapped.fmu
 	make copy_testcase_from_jm ARGS=${TESTCASE}/models/wrapped.mo

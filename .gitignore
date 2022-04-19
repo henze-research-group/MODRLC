@@ -26,3 +26,4 @@ interfaces/dompc/.ipynb_checkpoints
 
 # ignore python example tmp files
 examples/python/tmp_*
+actb_client/jobs.json
