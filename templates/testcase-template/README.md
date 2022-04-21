@@ -1,4 +1,4 @@
-#Test case template
+# Test case template
 
 This guide explains how to set up a test case directory for compiling and simulating your own models in the ACTB.
 Each file has a description if possible (except for the JSON files) and its role is otherwise explained here.
@@ -19,7 +19,17 @@ This informs the compiler about the exact model you want to compile. Where appro
 
 ### The config.json file
 This file contains simulation parameters.
-TK add explanation for each line
+| Input | Description | Effect |
+--------|-------------|---------
+| name | Test case name | Specifies the name that appears in the Alfalfa simulation manager |
+| area | Total building surface in square meters | Certain KPIs are reported in units per square meter |
+| start_time | Simulation start time in seconds | Simulation start time |
+| warmup_period | Simulation warm-up period in seconds | Simulation warm-up period |
+| step | Simulation step in seconds | Simulation step |
+| horizon | Forecast horizon in seconds | Sets the length of the forecast horizon |
+| interval | Forecast interval in seconds | Sets the interval between forecasts |
+| scenario | Pricing scenario | Sets the pricing scenario for economic KPIs |
+
 
 ### The days.json file
 This file contains the days of peak cooling and peak heating.
