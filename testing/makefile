@@ -48,7 +48,7 @@ stop_jm:
 #python sleep10.py
 
 compile_testcase_model:
-	make stop_jm
+	-make stop_jm
 	python3 ../spawn-tools/generate_spawndata.py ${TESTCASE}
 	(cd ../testcases/SpawnResources/${TESTCASE}/ && cp dataFromModel.csv emissions.csv prices.csv weather.csv ../../${TESTCASE}/models/Resources/)
 	make run_jm
