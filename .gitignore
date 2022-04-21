@@ -1,6 +1,7 @@
 .idea
 .python-version
 .ipynb_checkpoints
+.DS_Store
 examples/python/som3_mpc1/*
 *.pyc
 *.txt

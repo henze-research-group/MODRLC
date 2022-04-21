@@ -1,3 +1,5 @@
+# Stay tuned for an updated guide.
+
 # Metamodeling with SIPPY (N4SID and Lasso Regression)
 
 This directory contains the scripts to generate the metamodels

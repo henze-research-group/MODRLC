@@ -7,10 +7,9 @@ from actb_client import ActbClient
 url = 'http://localhost:80'
 client = ActbClient(url)
 ```
-You can now interact with the client. First, select a testcase, then send the initialization command. Finally, you can step through the simulation.
+You can now interact with the client. Send the initialization command, after which you will be able to step through the simulation.
 ```
 num_steps = 10
-client.select('spawnrefsmalloffice')
 client.initialize({<your init parameters>})
 
 for i in range(num_steps):
@@ -36,3 +35,7 @@ results = client.result()
 | Set boundary condition forecast parameters in seconds                 |  set_forecast_parameters(horizon, interval) |
 | Receive current test scenario                                         |  get_scenario()                                   |
 | Set test scenario  		                                             |  set_scenario(arg) with argument ``'constant' or 'dynamic' or 'highly_dynamic'``|
+
+## Important notes
+
+The client **expects** an "initialize" command to succeed. If your script fails to initialize a test case, and you need to restart it, then the client will likely hang as it tries to "select" a test case twice. The only way to solve this is currently to stop the docker container with 'make stop' and then restart it. We will fix this soon...

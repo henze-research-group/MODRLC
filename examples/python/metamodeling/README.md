@@ -9,15 +9,11 @@ Find SIPPY here: https://github.com/CPCLAB-UNIPI/SIPPY.git
 
 ## Running Instructions
 
-The setup is self-contained and afeter installing the python 
-dependencies using Poetry `pip install poetry; poetry install`,
-the user can simply run the block below to retrain the metamodels.
-
 ```bash
 python spawnrefsmalloffice.py
 ```
 ## Work in progress
 
-- find out why the model prediction is almost perfect, but shifted by approx. -20°C.
-- add forward stepwise model selection
+- reorganize the model parameter file
+- enable saving several metamodels and later selecting them in the various controllers. Right now, we can only use one model at once.
 - add license, reference, etc. for SIPPY, as it is not installable with pip and we copied the source in ./resources

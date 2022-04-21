@@ -1,6 +1,11 @@
 License
 -------
 
+ACTB. Copyright (c) 2021-2022
+University of Colorado Boulder and
+contributors.
+All rights reserved.
+
 BOPTEST. Copyright (c) 2018-2021
 International Building Performance Simulation Association (IBPSA) and
 contributors.

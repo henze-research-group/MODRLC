@@ -1,4 +1,12 @@
-## Contributors
+## ACTB Contributors
+
+- Thibault Marzullo, University of Colorado Boulder / National Renewable Energy Laboratory
+- Nicholas Long, University of Colorado Boulder / National Renewable Energy Laboratory
+- Sourav Dey, University of Colorado Boulder
+- Jose Angel Leiva Vilaplana, University of Colorado Boulder
+- Gregor Henze, University of Colorado Boulder / National Renewable Energy Laboratory
+
+## BOPTEST Contributors
 
 Thank you to all who have provided guidance on the development of this software.  The following people have contributed directly to the development of this software and its design (in alphabetical order):
 

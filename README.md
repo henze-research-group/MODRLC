@@ -11,20 +11,20 @@ This makes the ACTB a flexible and user-friendly framework for developing and ev
 
 The ACTB is based on the BOPTEST framework available [here](https://github.com/ibpsa/project1-boptest) and the [BOPTEST OpenAI Gym interface](https://github.com/ibpsa/project1-boptest-gym).
 
-The ACTB is currently in its first release version and might undergo changes, contain broken modules, or function unexpectedly. Please report all issues in the Issues tab at the top of the page.
+The ACTB is currently in its prototype stage and might undergo changes, contain broken modules, or function unexpectedly. Please report all issues in the Issues tab at the top of the page. The project is actively maintained and we will address all problems.
 
 ## Install
 
 ### Operating systems
 
 The ACTB works with Linux and macOS out of the box, but requires an additional software layer for working on Windows. If you are a Windows user,
-please install the **Windows Subsystem for Linux (WSL)** by following the instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install).
+please install the **Windows Subsystem for Linux (WSL)** by following the instructions [here](https://docs.microsoft.com/en-us/windows/wsl/install). It is easy and convenient, and if you are a Windows 11 user, it should come pre-installed.
 You will simply need to start an instance of the WSL first, then run the commands found in the various instructions of this repository in the Linux terminal
 that will be launched.
 
 ### Docker
 
-The ACTB is packaged as a Docker container, please install Docker by following the instructions [here](https://docs.docker.com/get-docker/).
+The ACTB is packaged as a Docker container, please install Docker by following the instructions [here](https://docs.docker.com/get-docker/). On most systems, the Docker service will start automatically. If you see errors such as "the Docker daemon is not running", just start Docker manually and try again.
 
 ### Python
 
@@ -66,7 +66,7 @@ Please refer to the ReadMe file present in the ```actb_client``` directory for m
 
 ## Architecture
 
-The ACTB is based on BOPTEST-service, a merge between BOPTEST and [Alfalfa](https://github.com/NREL/alfalfa). It is supplemented by a library of high-fidelity Spawn models and two advanced controller interfaces. A metamodeling framework allows the generation of reduced order models from Spawn data, in order to provide computationally-efficient models for MPC planning models and RLC pre-training (see the RLC guide [here](TODO)).
+The ACTB is based on BOPTEST-service, a merge between BOPTEST and [Alfalfa](https://github.com/NREL/alfalfa). The ACTB is supplied with a library of high-fidelity Spawn models and two advanced controller interfaces. A metamodeling framework allows the generation of reduced order models from Spawn data, in order to provide computationally-efficient models for MPC planning models and RLC pre-training ~(see the RLC guide [here](TODO))~.
 
 ![ACTB architecture](docs/figures/ACTBarchi.png)
 ## Interfaces
@@ -87,9 +87,9 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 ## Known Issues
 
 Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
-- the metamodeling framework produces models which temperature prediction is shifted by approximately 20 K.
-- the Spawn test cases cannot be initialized again after the simulation completed. You currently need to stop the Docker container
-and start it again. This will be fxed
+- The single-zone MPC example is broken. We will soon update the prediction model and get this example back on the rails.
+~- the metamodeling framework produces models which temperature prediction is shifted by approximately 20 K.~
+~- the Spawn test cases cannot be initialized again after the simulation completed. You currently need to stop the Docker container and start it again. This will be fxed~
 
 ## Structure
 - ``/testcases`` contains Spawn of EnergyPlus test cases, including docs, models, and configuration settings.
@@ -121,3 +121,8 @@ It is developed and maintained by Dr. Thibault Marzullo, Sourav Dey, and Nichola
 
 Former project members:
 - Developer (2021-2021): José Angel Leiva Vilaplana, Masters candidate, Universitat Politecnica de Catalunya.
+
+## Publications
+Good news! The first paper describing the ACTB has been published in the Journal of Building Performance Simulation. You can find it [here](https://doi.org/10.1080/19401493.2022.2058091).
+To cite it:
+ Thibault Marzullo, Sourav Dey, Nicholas Long, José Leiva Vilaplana & Gregor Henze (2022) _A high-fidelity building performance simulation test bed for the development and evaluation of advanced controls_, Journal of Building Performance Simulation, 15:3, 379-397, DOI: 10.1080/19401493.2022.2058091 

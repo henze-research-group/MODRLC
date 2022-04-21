@@ -14,7 +14,7 @@ during a heating day.
 ### Quick start:
 
 - open a terminal window, and ``cd`` to the root directory
-- run ``sudo make run TESTCASE=spawnrefsmalloffice``
+- run ``make run``
 - in a new terminal window, ``cd`` to this directory and run the controller script of your choice:
   - ``python supervisory_example.py``
   - ``python lowlevel_example.py``

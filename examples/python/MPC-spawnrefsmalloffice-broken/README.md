@@ -1,3 +1,5 @@
+# This test case is broken until we fix the metamodel. Please use instead the DRevent version, which uses a 5-zone metamodel!
+
 # dompc examples
 
 This folder contains an implementation of the do-mpc project and some of the example projects from the

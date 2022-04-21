@@ -5,20 +5,14 @@ This folder contains three examples of a rule-based controller for the Spawn Ref
 ``supervisory_example.py`` is an example of supervisory control which overrides the heating and cooling setpoints
 during a heating day.
 
-``lowlevel_example.py`` is an example of low-level control during a heating day.
-
-``no_override.py`` simply simulates the Spawn model using the built-in rule-based controller.
-
 ## Usage:
 
 ### Quick start:
 
 - open a terminal window, and ``cd`` to the root directory
-- run ``sudo make run TESTCASE=spawnrefsmalloffice``
+- run ``make run``
 - in a new terminal window, ``cd`` to this directory and run the controller script of your choice:
   - ``python supervisory_example.py``
-  - ``python lowlevel_example.py``
-  - ``python no_override.py``
 
 ### Detailed usage:
 

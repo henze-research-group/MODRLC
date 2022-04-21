@@ -9,8 +9,7 @@ To run the RL problem that is contained in this folder, do the following.
 
 * In a seperate terminal launch the testcase from the project checkout base directory. The `spawnrefsmalloffice` model is the only one that this controller has been tested with. 
 
-  * `make build-cached TESTCASE=spawnrefsmalloffice`
-  * `make run TESTCASE=spawnrefsmalloffice`
+  * `make run`
   
 * Run the `DQN_Test_run.py` file in this folder to run the RL agent. 
 
