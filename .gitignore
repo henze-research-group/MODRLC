@@ -23,7 +23,15 @@ parser/*.json
 metamodeling/wrapped 2.csv
 metamodeling/*/SOM3N4SID_clean3*
 interfaces/dompc/.ipynb_checkpoints
+examples/python/MPC-spawnrefsmalloffice-DRevent/results/som3_mpc_boptest/historian.csv
 
 # ignore python example tmp files
 examples/python/tmp_*
 actb_client/jobs.json
+
+# For our Mac friends
+.DS_Store
+
+# Other
+get-pip.py
+
