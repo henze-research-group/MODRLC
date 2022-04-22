@@ -1,4 +1,4 @@
-import sys
+import sys, os
 from pathlib import Path
 from matplotlib import pyplot as plt
 import pandas as pd
@@ -44,14 +44,18 @@ class rulebased():
         except:
             self.dl = None
 
+        try:
+            os.mkdir('Results')
+            print("Created Results directory.")
+        except:
+            print("Results directory already exists")
+
         self.zones = config.zones
         self.sensors = config.sensors
         self.start_time = start_time
-        self.client.stop_all()
-        self.client.select(testcase)
-        self.client.set_step(step = step)
         initparams = {'start_time' : start_time, 'warmup_period' : warmup}
-        self.client.initialize(**initparams)
+        self.client.initialize(testcase, **initparams)
+        self.client.set_step(step = step)
         self.fig, self.axes = plt.subplots(2, 1, figsize=(10,12))
         plt.ion()
         plt.show()

@@ -88,7 +88,6 @@ def run(plot=True, customized_kpi_config=None):
     testcase = 'spawnrefsmalloffice'
 
     client = ActbClient(url=url)
-    client.select(testcase)
 
     # Define customized KPI if any
     customizedkpis=[] # Initialize customzied kpi calculation list
@@ -100,7 +99,7 @@ def run(plot=True, customized_kpi_config=None):
     # Reset test case
     print('Initializing the simulation.')
     initparams = {'start_time':start,'warmup_period':0}
-    res = client.initialize(**initparams)
+    res = client.initialize(testcase, **initparams)
 
     if res:
         print('Successfully initialized the simulation')
@@ -132,8 +131,8 @@ def run(plot=True, customized_kpi_config=None):
         kpis = client.kpis()
         xs.append(y['time']-start)
         tP1.append(y['senTemRoom1_y'])
-        lostp.append(forecast['LowerSetp[1]'][i])
-        upstp.append(forecast['UpperSetp[1]'][i])
+        lostp.append(forecast['LowerSetp[perimeter_zn_1]'][i])
+        upstp.append(forecast['UpperSetp[perimeter_zn_1]'][i])
         lostp = lostp[-(int(hourstoplot*3600/step)):]
         upstp = upstp[-(int(hourstoplot*3600/step)):]
         xs = xs[-(int(hourstoplot*3600/step)):]
