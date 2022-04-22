@@ -6,8 +6,12 @@ Currently, the following examples are available:
 - one model predictive controller for the Spawn small office building. It is located in the ``MPC-spawnrefsmalloffice-DRevent`` folder
 - one reinforcement learning controller for the Spawn small office building. It is located in the ``RLC-spawnrefsmalloffice`` folder
 
-Please refer to the documentation available in each folder for details on the controllers
-and their usage.
+This folder also contains a usage example for the metamodeling framework, found in the `metamodeling` folder.
+
+Finally, the `BuildingPortfolio` folder shows how to setup the ACTB for simulating several buildings at the same time,
+for developing multi-building scenarios.
+
+Please refer to the documentation available in each folder for more details.
 
 ## (TODO: cleanup)Installing Dependencies
 This project uses poetry to manage dependencies since Alfalfa-client is setup to use Poetry.

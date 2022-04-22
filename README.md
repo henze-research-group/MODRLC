@@ -88,6 +88,9 @@ It is provided with a documentation, found under ``/testcases/spawnrefsmalloffic
 
 Currently, the ACTB has some issues that we are aware of and are working towards solving. These are:
 - The single-zone MPC example is broken. We will soon update the prediction model and get this example back on the rails.
+- on first startup of the Docker container, the container might hang or even run a simulation without user 
+input. While this issue is being investigated, just CTRL+C then `make stop` to stop the container, 
+then restart it with `make run`. Upon second startup, the container will behave as expected.
 ~- the metamodeling framework produces models which temperature prediction is shifted by approximately 20 K.~
 ~- the Spawn test cases cannot be initialized again after the simulation completed. You currently need to stop the Docker container and start it again. This will be fxed~
 
