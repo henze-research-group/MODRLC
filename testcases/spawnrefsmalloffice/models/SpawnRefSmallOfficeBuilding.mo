@@ -9,7 +9,7 @@ model SpawnRefSmallOfficeBuilding
   Real OAInfP3 = 0.089 "OA infiltration in the perimeter zone 3";
   Real OAInfP4 = 0.101 "OA infiltration in the perimeter zone 4";
 
-  package Medium = Buildings.Media.Air(extraPropertiesNames={"CO2"}, C_nominal={0.0015}) "Moist Air"; // Moist air
+  package Medium = Buildings.Media.Air(extraPropertiesNames={"CO2"}) "Moist Air"; // Moist air , C_nominal={0.0015}
 model controller
   "Spawn reference small office building PSZACcontroller"
   parameter Real heaOccSet = 273.15 + 21 "Heating setpoint, occupied";
@@ -1139,7 +1139,7 @@ end controller;
 
     // Fluids - non HVAC //
   Buildings.Fluid.Sources.Outside Outside(redeclare final package Medium = Medium,
-    C=fill(0.4E-3, Medium.nC),
+    C=fill(400E-6*44.009544/28.9651159, Medium.nC),
       nPorts=10)
     "Outside environment boundary condition that uses the weather data from Spawn"
     annotation (Placement(transformation(extent={{-254,-190},{-234,-170}})));
@@ -1934,7 +1934,7 @@ Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter1(
     description="P1 CO2 ppm",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
 
-    zone="core_zn_1") "\"Perimeter zone 1 CO2ppm\"" annotation (Placement(
+    zone="perimeter_zn_1") "\"Perimeter zone 1 CO2ppm\"" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
@@ -1947,7 +1947,7 @@ Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter2(
     description="P2 CO2 ppm",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
 
-    zone="core_zn_2") "\"Perimeter zone 2 CO2ppm\"" annotation (Placement(
+    zone="perimeter_zn_2") "\"Perimeter zone 2 CO2ppm\"" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
@@ -1960,7 +1960,7 @@ Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter3(
     description="P3 CO2 ppm",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
 
-    zone="core_zn_3") "\"Perimeter zone 3 CO2ppm\"" annotation (Placement(
+    zone="perimeter_zn_3") "\"Perimeter zone 3 CO2ppm\"" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
@@ -1973,7 +1973,7 @@ Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter4(
     description="P4 CO2 ppm",
     KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
 
-    zone="core_zn_4") "\"Perimeter zone 4 CO2ppm\"" annotation (Placement(
+    zone="perimeter_zn_4") "\"Perimeter zone 4 CO2ppm\"" annotation (Placement(
         transformation(
         extent={{-10,-10},{10,10}},
         rotation=0,
