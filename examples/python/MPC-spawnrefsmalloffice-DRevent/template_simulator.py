@@ -20,13 +20,10 @@ def template_simulator(model, metamodel=None):
 
     if metamodel is None:
         client = ActbClient(url='http://127.0.0.1:80')
-        client.stop_all()
-        client.select('spawnrefsmalloffice')
-        if client.name() is not None:
-            print("ACTB is configured to act as simulator")
-            client.set_step(step=mp.time_step)
-            client.initialize(start_time=mp.start_time, testcase='spawnrefsmalloffice')
-            t_offset = -273.15
+        print("ACTB is configured to act as simulator")
+        client.initialize(start_time=mp.start_time, testcase='spawnrefsmalloffice')
+        client.set_step(step=mp.time_step)
+        t_offset = -273.15
     elif metamodel is not None or client.name() is None:
         client = ActbClient(url='http://127.0.0.1:80', metamodel=metamodel)
         client.select(metamodel)
