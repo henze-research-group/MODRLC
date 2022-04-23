@@ -9,7 +9,7 @@ model SpawnRefSmallOfficeBuilding
   Real OAInfP3 = 0.089 "OA infiltration in the perimeter zone 3";
   Real OAInfP4 = 0.101 "OA infiltration in the perimeter zone 4";
 
-  package Medium = Buildings.Media.Air "Moist Air"; // Moist air
+  package Medium = Buildings.Media.Air(extraPropertiesNames={"CO2"}) "Moist Air"; // Moist air , C_nominal={0.0015}
 model controller
   "Spawn reference small office building PSZACcontroller"
   parameter Real heaOccSet = 273.15 + 21 "Heating setpoint, occupied";
@@ -1133,11 +1133,13 @@ end controller;
   Buildings.ThermalZones.EnergyPlus.ThermalZone corZon(
     zoneName="Core_ZN",                                redeclare final package
       Medium =                                                                          Medium,
+    use_C_flow=true,
       nPorts=2) "\"Core zone\""
     annotation (Placement(transformation(extent={{60,64},{100,104}})));
 
     // Fluids - non HVAC //
   Buildings.Fluid.Sources.Outside Outside(redeclare final package Medium = Medium,
+    C=fill(400E-6*44.009544/28.9651159, Medium.nC),
       nPorts=10)
     "Outside environment boundary condition that uses the weather data from Spawn"
     annotation (Placement(transformation(extent={{-254,-190},{-234,-170}})));
@@ -1406,6 +1408,19 @@ end controller;
     Buildings.Controls.OBC.CDL.Logical.TrueFalseHold truFalHol(trueHoldDuration=
          300, falseHoldDuration=0)
       annotation (Placement(transformation(extent={{-282,176},{-262,196}})));
+    Buildings.Fluid.Sensors.PPMTwoPort senPPM(redeclare package Medium = Medium,
+        m_flow_nominal=mass_flow_nominal) annotation (Placement(transformation(
+          extent={{-10,-10},{10,10}},
+          rotation=180,
+          origin={16,-236})));
+      Modelica.Blocks.Interfaces.RealOutput yCO2ppm "Return air CO2 ppm"
+      annotation (Placement(transformation(
+          extent={{-22,-22},{22,22}},
+          rotation=270,
+          origin={16,-300}), iconTransformation(
+          extent={{-22,-22},{22,22}},
+          rotation=90,
+          origin={-278,320})));
     equation
 
       connect(sinSpeDX.port_b, hea.port_a)
@@ -1443,8 +1458,6 @@ end controller;
             -199.2},{-277,-199.2},{-277,-200},{-304,-200}}, color={0,127,255}));
     connect(eco.port_Exh, OAOutPor) annotation (Line(points={{-254,-232.8},{
             -326,-232.8},{-326,-238},{-400,-238}}, color={0,127,255}));
-    connect(eco.port_Ret, senRelHum.port_b) annotation (Line(points={{-194,
-            -232.8},{22,-232.8},{22,-238},{238,-238}}, color={0,127,255}));
       connect(fan.port_b, volSenSup.port_a) annotation (Line(points={{270,-177},{282,
               -177},{282,-178},{346,-178}}, color={0,127,255}));
       connect(zero3.y,gre7. u2) annotation (Line(points={{-381.1,7},{-376,7},{-376,23},
@@ -1491,6 +1504,12 @@ end controller;
       annotation (Line(points={{-224,186},{-260,186}}, color={255,0,255}));
     connect(truFalHol.u, uFan) annotation (Line(points={{-284,186},{-320,186},{
             -320,362},{282,362},{282,328}}, color={255,0,255}));
+    connect(senRelHum.port_b, senPPM.port_a) annotation (Line(points={{238,-238},
+            {132,-238},{132,-236},{26,-236}}, color={0,127,255}));
+    connect(eco.port_Ret, senPPM.port_b) annotation (Line(points={{-194,-232.8},
+            {-94,-232.8},{-94,-236},{6,-236}}, color={0,127,255}));
+    connect(senPPM.ppm, yCO2ppm)
+      annotation (Line(points={{16,-247},{16,-300}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-420,-260},
                 {440,220}}),     graphics={Bitmap(
             extent={{-678,-344},{682,362}},
@@ -1599,21 +1618,25 @@ Buildings.Utilities.IO.SignalExchange.Read senHeaPow(y(min=0.0, max=15000.0, uni
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon1(
       zoneName="Perimeter_ZN_1",
       redeclare final package Medium = Medium,
+    use_C_flow=true,
       nPorts=2) "Perimeter zone 1"
       annotation (Placement(transformation(extent={{62,-94},{102,-54}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon2(
       zoneName="Perimeter_ZN_2",
       redeclare final package Medium = Medium,
+    use_C_flow=true,
       nPorts=2) "Perimeter zone 2"
       annotation (Placement(transformation(extent={{56,-184},{96,-144}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon3(
       zoneName="Perimeter_ZN_3",
       redeclare final package Medium = Medium,
+    use_C_flow=true,
       nPorts=2) "Perimeter zone 3"
       annotation (Placement(transformation(extent={{54,-274},{94,-234}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon4(
       zoneName="Perimeter_ZN_4",
       redeclare final package Medium = Medium,
+    use_C_flow=true,
       nPorts=2) "Perimeter zone 4"
       annotation (Placement(transformation(extent={{52,-352},{92,-312}})));
 Buildings.Utilities.IO.SignalExchange.Read senHeaPow1(y(min=0.0, max=15000.0, unit="W"), description=
@@ -1875,6 +1898,86 @@ Buildings.Utilities.IO.SignalExchange.Read senHouDec(
           origin={-134,186})));
   Modelica.Blocks.Sources.RealExpression minutes(y=60)
       annotation (Placement(transformation(extent={{-242,178},{-222,198}})));
+  Modelica.Blocks.Sources.Constant qRadGai_flow1(k=0)
+                                                     "Radiative heat gain"
+    annotation (Placement(transformation(extent={{30,110},{50,130}})));
+  Modelica.Blocks.Sources.Constant qRadGai_flow2(k=0)
+                                                     "Radiative heat gain"
+    annotation (Placement(transformation(extent={{34,-92},{54,-72}})));
+  Modelica.Blocks.Sources.Constant qRadGai_flow3(k=0)
+                                                     "Radiative heat gain"
+    annotation (Placement(transformation(extent={{30,-184},{50,-164}})));
+  Modelica.Blocks.Sources.Constant qRadGai_flow4(k=0)
+                                                     "Radiative heat gain"
+    annotation (Placement(transformation(extent={{26,-274},{46,-254}})));
+  Modelica.Blocks.Sources.Constant qRadGai_flow5(k=0)
+                                                     "Radiative heat gain"
+    annotation (Placement(transformation(extent={{26,-350},{46,-330}})));
+Buildings.Utilities.IO.SignalExchange.Read senPpmCore(
+    y(
+      min=0.0,
+      max=10000.0,
+      unit="ppm"),
+    description="Core CO2 ppm",
+    KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
+
+    zone="core_zn") "\"Core zone CO2ppm\""
+                                       annotation (Placement(transformation(
+          extent={{-10,-10},{10,10}},
+          rotation=0,
+          origin={178,50})));
+Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter1(
+    y(
+      min=0.0,
+      max=10000.0,
+      unit="ppm"),
+    description="P1 CO2 ppm",
+    KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
+
+    zone="perimeter_zn_1") "\"Perimeter zone 1 CO2ppm\"" annotation (Placement(
+        transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=0,
+        origin={182,-32})));
+Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter2(
+    y(
+      min=0.0,
+      max=10000.0,
+      unit="ppm"),
+    description="P2 CO2 ppm",
+    KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
+
+    zone="perimeter_zn_2") "\"Perimeter zone 2 CO2ppm\"" annotation (Placement(
+        transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=0,
+        origin={188,-120})));
+Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter3(
+    y(
+      min=0.0,
+      max=10000.0,
+      unit="ppm"),
+    description="P3 CO2 ppm",
+    KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
+
+    zone="perimeter_zn_3") "\"Perimeter zone 3 CO2ppm\"" annotation (Placement(
+        transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=0,
+        origin={194,-206})));
+Buildings.Utilities.IO.SignalExchange.Read senPpmPerimeter4(
+    y(
+      min=0.0,
+      max=10000.0,
+      unit="ppm"),
+    description="P4 CO2 ppm",
+    KPIs=Buildings.Utilities.IO.SignalExchange.SignalTypes.SignalsForKPIs.CO2Concentration,
+
+    zone="perimeter_zn_4") "\"Perimeter zone 4 CO2ppm\"" annotation (Placement(
+        transformation(
+        extent={{-10,-10},{10,10}},
+        rotation=0,
+        origin={196,-294})));
 equation
 
   connect(calTim.hour, integerToReal.u) annotation (Line(points={{-276.4,164.24},
@@ -2302,6 +2405,26 @@ equation
     annotation (Line(points={{-154,186},{-146,186}}, color={0,0,127}));
   connect(div1.u2, minutes.y)
     annotation (Line(points={{-216,188},{-221,188}}, color={0,0,127}));
+  connect(qRadGai_flow1.y, corZon.C_flow[1]) annotation (Line(points={{51,120},
+          {52,120},{52,84},{58,84},{58,74}}, color={0,0,127}));
+  connect(perZon1.C_flow[1], qRadGai_flow2.y) annotation (Line(points={{60,-84},
+          {58,-84},{58,-82},{55,-82}}, color={0,0,127}));
+  connect(perZon2.C_flow[1], qRadGai_flow3.y)
+    annotation (Line(points={{54,-174},{51,-174}}, color={0,0,127}));
+  connect(perZon3.C_flow[1], qRadGai_flow4.y)
+    annotation (Line(points={{52,-264},{47,-264}}, color={0,0,127}));
+  connect(perZon4.C_flow[1], qRadGai_flow5.y) annotation (Line(points={{50,-342},
+          {48.5,-342},{48.5,-340},{47,-340}}, color={0,0,127}));
+  connect(senPpmCore.u, HVAC.yCO2ppm) annotation (Line(points={{166,50},{
+          -88.7535,50},{-88.7535,22.25}}, color={0,0,127}));
+  connect(senPpmPerimeter1.u, HVAC1.yCO2ppm) annotation (Line(points={{170,-32},
+          {-86.7535,-32},{-86.7535,-57.75}}, color={0,0,127}));
+  connect(senPpmPerimeter2.u, HVAC2.yCO2ppm) annotation (Line(points={{176,-120},
+          {-86.7535,-120},{-86.7535,-147.75}}, color={0,0,127}));
+  connect(senPpmPerimeter3.u, HVAC3.yCO2ppm) annotation (Line(points={{182,-206},
+          {-88.7535,-206},{-88.7535,-235.75}}, color={0,0,127}));
+  connect(senPpmPerimeter4.u, HVAC4.yCO2ppm) annotation (Line(points={{184,-294},
+          {-86.7535,-294},{-86.7535,-313.75}}, color={0,0,127}));
   annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{-300,-440},
             {420,360}}),       graphics={Bitmap(
           extent={{-272,-98},{280,212}},
