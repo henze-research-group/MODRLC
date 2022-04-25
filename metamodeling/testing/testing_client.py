@@ -1,7 +1,7 @@
 import sys
 import os
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'actb_client'))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent / 'actb_client'))
 from actb_client import ActbClient
 from matplotlib import pyplot as plt
 
