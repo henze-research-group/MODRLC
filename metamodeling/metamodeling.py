@@ -2,17 +2,35 @@ from itertools import combinations
 import sys
 import os
 from pathlib import Path
+from datetime import datetime, timedelta
+import json
+import uuid
+
+# ACTB
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent / 'actb_client'))
 from actb_client import ActbClient
 from historian import Conversions, Historian
+
+# Math and data
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+from joblib import dump
+
+# Machine learning
 import sippy as sp
 from sippy.functionsetSIM import *
 from sklearn.metrics import r2_score, mean_squared_error, median_absolute_error
-from datetime import datetime, timedelta
-import json
+from sklearn import linear_model
+from sklearn import svm
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import Pipeline
+
+
 
 class Metamodel:
 
@@ -42,6 +60,187 @@ class Metamodel:
                                              self.training_split['rbc'][1] + int(randomized_frac * training_frac * length)]
         self.testing_split = [self.training_split['randomized'][1], start_sec + length]
 
+    def create_id_and_folders(self):
+        self.id = uuid.uuid4().hex
+        folder_num = 1
+        while os.path.isdir(str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodels' / str(folder_num))):
+            folder_num += 1
+        self.outdir = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodels' / str(folder_num))
+        os.makedirs(self.outdir)
+        self.metaparams = {
+            'SpawnModel' : self.config.metamodel,
+            'id' : self.id,
+            'step' : self.step,
+            'outputs' : list(self.config.outputs.keys()),
+        }
+
+    def select_method(self):
+        if self.method is None:
+            print("No method specified. Please select a method in this list:\n1. N4SID (state-space model)\n2. Linear regression\n3. Polynomial linear regression\n4. LASSO regression\n5. Support vector regression\n6. Random forest regressor\n---More methods will be supported in the future.")
+            method_in = int(input("Enter your choice (1-5)"))
+            while method_in not in [1, 2, 3, 4, 5, 6]:
+                method_in = int(input("Method not recognized. Please input a number between 1 and 3."))
+            if method_in == 1:
+                self.method = 'N4SID'
+            elif method_in == 2:
+                self.method = 'LREG'
+            elif method_in == 3:
+                self.method = 'PLREG'
+            elif method_in == 4:
+                self.method = 'LASSO'
+            elif method_in == 5:
+                self.method = 'SVR'
+            else: 
+                self.method = 'CART'
+        if self.method == 'N4SID':
+            self.n4sid()
+        elif self.method == 'LREG':
+            self.linear_regression()
+        elif self.method == 'PLREG':
+            self.polynomial_regression()
+        elif self.method == 'LASSO':
+            self.lasso_regression(alpha=0.1)
+        elif self.method == 'SVR':
+            self.svr()
+        else:
+            self.rcart()
+
+    def pre_process_data(self):
+        files = os.listdir(str(Path(self.outdir).parent.absolute()))
+        if 'spawnDataset.csv' not in files:
+            print("No dataset available in the output directory for metamodel ID %s, generating new one."%(self.id))
+            self.generate_data()
+        else:
+            print("Found spawnDataset.csv in the output directory for ID %s.\nThe model will be extracted from that data. If you do not want to use that data, please delete it from the metamodel directory.")
+        self.split_dataset()
+
+    def write_metaparams(self):
+        
+        self.metaparams['uvect'] = list(self.X_train.columns)
+        self.metaparams['tvps'] = [item for item in self.metaparams['uvect'] if item not in self.config.inputs.keys()]
+        self.metaparams['method'] = self.method
+        #self.metaparams['R^2 score'] = r2
+        with open(self.outdir + '/' + 'config.json', 'w') as outjson:
+            json.dump(self.metaparams, outjson)
+
+    def n4sid(self):
+        print("You have selected N4SID. Please choose a model selection method:\n1. Best subset selection. \n\tVery long, especially for >10 inputs, but more accurate.\n2. Forward step-wise selection. \n\tFaster, but might be trapped in a local optimum\n3. None.\n\tJust use all available inputs. Sub-optimal unless you have already identified the best inputs.")
+        model_select = int(input("Your choice (1-3):"))
+        while model_select not in [1, 2, 3]:
+            model_select = int(input("Model selection method not recognized. Please input a number between 1 and 3."))
+        if model_select == 1:
+            method = 'N4SID-BSS'
+            A, B, C, AK, BK, K, x, uvect, r2 = self.extract_n4sid(select='bss')
+        elif model_select == 2:
+            method = 'N4SID-FSS'
+            A, B, C, AK, BK, K, x, uvect, r2 = self.extract_n4sid(select='fss')
+        else:
+            method = 'N4SID-NoSelection'
+            A, B, C, AK, BK, K, x, uvect, r2 = self.extract_n4sid(select='')
+        np.save(os.path.join(self.outdir, 'A'), A)
+        np.save(os.path.join(self.outdir, 'B'), B)
+        np.save(os.path.join(self.outdir, 'C'), C)
+        np.save(os.path.join(self.outdir, 'AK'), AK)
+        np.save(os.path.join(self.outdir, 'BK'), BK)
+        np.save(os.path.join(self.outdir, 'K'), K)
+        np.save(os.path.join(self.outdir, 'x0'), x)
+        self.write_metaparams(uvect, method, r2)
+
+    def linear_regression(self, **kwargs):
+
+        print("Fitting model using ordinary least squares regression")
+        lin_reg = linear_model.LinearRegression(**kwargs).fit(self.X_train, self.y_train)
+        print("Debug - Training accuracy: %.2f"%(lin_reg.score(self.X_train, self.y_train)))
+        print("The model's prediction R2 coefficient is: %.3f"%(lin_reg.score(self.X_test, self.y_test)))
+        train = lin_reg.predict(self.X_train)
+        test = lin_reg.predict(self.X_test)
+        plt.figure()
+        plt.ylabel('Prediction')
+        plt.xlabel('Steps')
+        plt.plot(self.y_test.to_numpy(), label='Ground truth')
+        plt.plot(test, label='Prediction')
+        plt.legend()
+        plt.show()
+        dump(lin_reg, self.outdir + '/' + 'lin_reg_params.joblib')
+        np.save(os.path.join(self.outdir, 'lin_coeffs'), lin_reg.coef_)
+        np.save(os.path.join(self.outdir, 'lin_intercepts'), lin_reg.intercept_)
+
+    def polynomial_regression(self, **kwargs):
+        print("Fitting model using poynomial regression")
+        degree = int(input("Please select a degree for the regression\n"))
+        pol_reg = Pipeline([('poly', PolynomialFeatures(degree=degree)),('linear', linear_model.LinearRegression())])
+        pol_reg.fit(self.X_train, self.y_train)
+        print("Debug - Training accuracy: %.2f"%(pol_reg.score(self.X_train, self.y_train)))
+        print("The model's prediction R2 coefficient is: %.3f"%(pol_reg.score(self.X_test, self.y_test)))
+        train = pol_reg.predict(self.X_train)
+        test = pol_reg.predict(self.X_test)
+        plt.figure()
+        plt.ylabel('Prediction')
+        plt.xlabel('Steps')
+        plt.plot(self.y_test.to_numpy(), label='Ground truth')
+        plt.plot(test, label='Prediction')
+        plt.legend()
+        plt.show()
+        dump(pol_reg, self.outdir + '/' + 'lin_reg_params.joblib')
+        np.save(os.path.join(self.outdir, 'lin_coeffs'), pol_reg.named_steps['linear'].coef_)
+        np.save(os.path.join(self.outdir, 'lin_intercepts'), pol_reg.named_steps['linear'].intercept_)
+        print(pol_reg.named_steps['linear'].coef_)
+        print(pol_reg.named_steps['linear'].intercept_)
+
+    def lasso_regression(self, **kwargs):
+
+        print("Fitting model using LASSO regression")
+        lasso_reg = linear_model.Lasso(**kwargs).fit(self.X_train, self.y_train)
+        print("Debug - Training accuracy: %.2f"%(lasso_reg.score(self.X_train, self.y_train)))
+        print("The model's prediction R2 coefficient is: %.3f"%(lasso_reg.score(self.X_test, self.y_test)))
+        train = lasso_reg.predict(self.X_train)
+        test = lasso_reg.predict(self.X_test)
+        plt.figure()
+        plt.ylabel('Prediction')
+        plt.xlabel('Steps')
+        plt.plot(self.y_test.to_numpy(), label='Ground truth')
+        plt.plot(test, label='Prediction')
+        plt.legend()
+        plt.show()
+        dump(lasso_reg, self.outdir + '/' + 'lasso_reg_params.joblib')
+        np.save(os.path.join(self.outdir, 'lasso_coeffs'), lasso_reg.coef_)
+        np.save(os.path.join(self.outdir, 'lasso_intercepts'), lasso_reg.intercept_)
+
+    def svr(self, **kwargs):
+
+        print('Fitting model using support vector regression')
+        svreg = svm.SVR().fit(self.X_train, self.y_train)
+        print("Debug - Training accuracy: %.2f"%(svreg.score(self.X_train, self.y_train)))
+        print("The model's prediction R2 coefficient is: %.3f"%(svreg.score(self.X_test, self.y_test)))
+        train = svreg.predict(self.X_train)
+        test = svreg.predict(self.X_test)
+        plt.figure()
+        plt.ylabel('Prediction')
+        plt.xlabel('Steps')
+        plt.plot(self.y_test.to_numpy(), label='Ground truth')
+        plt.plot(test, label='Prediction')
+        plt.legend()
+        plt.show()
+        dump(svreg, self.outdir + '/' + 'svreg_params.joblib')
+
+    def rcart(self, **kwargs):
+        X_train = self.X_train.to_numpy()
+        y_train = self.y_train.to_numpy()
+        X_test = self.X_test.to_numpy()
+        y_test = self.y_test.to_numpy()
+        randomforest = RandomForestRegressor(random_state=0)
+        randomforest.fit(X_train, y_train)
+        test = randomforest.predict(X_test)
+        plt.figure()
+        plt.ylabel('Prediction')
+        plt.xlabel('Steps')
+        plt.plot(y_test, label='Ground truth')
+        plt.plot(test, label='Prediction')
+        plt.legend()
+        plt.show()
+
+        dump(randomforest, self.outdir + '/' + 'randomforest_params.joblib')
+        
 
 
     def generate_matrices(self, generatedata, modelselection, override=None):
@@ -88,8 +287,7 @@ class Metamodel:
         self.get_spawn_data(self.training_split['rbc'], 'rbc')
         self.get_spawn_data(self.training_split['randomized'], 'randomized')
         self.get_spawn_data(self.testing_split, 'randomized')
-        outpath = str(Path(__file__).parent.absolute().parent / 'testcases' / 'SpawnResources' / self.config.metamodel / 'metamodel')
-        self.historian.save_csv(outpath, 'spawnDataset.csv')
+        self.historian.save_csv(str(Path(self.outdir).parent.absolute()), 'spawnDataset.csv')
         self.client.stop()
 
 
@@ -284,7 +482,7 @@ class Metamodel:
         print('Best score: ', scores[0])
         return selected
 
-    def extract(self, select='', override=None):
+    def extract_n4sid(self, select='', override=None):
 
         if select == 'bss':
             estimators = self.bss()
@@ -309,7 +507,8 @@ class Metamodel:
             xp, yp = sp.functionsetSIM.SS_lsim_innovation_form(sid.A, sid.B, sid.C, sid.D, sid.K, y_test_sid,
                                                                X_test_sid, xp[:, -1:])
 
-        print('R²: ', r2_score(y_test_sid, y))
+        r2 = r2_score(y_test_sid, y)
+        print('R²: ', r2)
         print('MAE: ', median_absolute_error(y_test_sid, y))
         print('MSE: ', mean_squared_error(y_test_sid, y))
 
@@ -323,7 +522,7 @@ class Metamodel:
         plt.legend()
         plt.show()
 
-        return sid.A, sid.B, sid.C, sid.A_K, sid.B_K, sid.K, x[:, -1], uvect
+        return sid.A, sid.B, sid.C, sid.A_K, sid.B_K, sid.K, x[:, -1], uvect, r2
 
 
 def toInt(a):

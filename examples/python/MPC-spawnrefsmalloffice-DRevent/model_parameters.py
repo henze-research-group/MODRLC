@@ -23,7 +23,7 @@ class ModelParameters:
         self.start_time_offset = self.start_time
 
         # Load in the N4SID matrices
-        p = Path('').resolve().parent.parent.parent / 'testcases' / 'SpawnResources' / 'spawnrefsmalloffice' / 'metamodel'
+        p = Path('').resolve().parent.parent.parent / 'testcases' / 'SpawnResources' / 'spawnrefsmalloffice' / 'metamodels' / 'N4SID-original'
         if p.exists():
             # States are room temperatures, <to flesh out>
             self.a = np.load(p / 'A.npy')
@@ -40,9 +40,9 @@ class ModelParameters:
             # if not tvp_file.exists():
             #     raise Exception("There is no time varying parameter file, make sure to unzip wrapped 2.7z")
 
-            self.tvps = pd.read_csv(p.parent / 'dataFromModel.csv')
-            self.extras = pd.read_csv(p.parent / 'extras.csv')
-            self.weather = pd.read_csv(p.parent / 'weather.csv')
+            self.tvps = pd.read_csv(p.parent.parent / 'dataFromModel.csv')
+            self.extras = pd.read_csv(p.parent.parent / 'extras.csv')
+            self.weather = pd.read_csv(p.parent.parent / 'weather.csv')
 
             # resample from E+ hourly data to 'step'
             index = pd.DatetimeIndex(data= pd.date_range(start=datetime.datetime(2017, 1, 1, 0, 0, 0), periods=len(self.extras), freq='H'), freq='H')
