@@ -8,6 +8,11 @@ build-nocache:
 remove-image:
 	docker-compose rm -sf
 
+run-many :
+	$(MAKE) run-many-detached
+	$(MAKE) provision
+	docker-compose logs -f web worker
+
 run :
 	$(MAKE) run-detached
 	$(MAKE) provision
@@ -18,6 +23,9 @@ bash:
 
 run-detached:
 	docker-compose up -d web worker
+
+run-many-detached:
+	docker-compose up -d --scale worker=${NUM} web
 
 provision:
 	docker-compose run --no-deps provision python3 -m boptest_submit ./testcases/${TESTCASE}
