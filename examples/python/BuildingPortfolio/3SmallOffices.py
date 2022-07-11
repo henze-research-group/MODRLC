@@ -49,3 +49,4 @@ for i in range(100):
 for id in buildings.keys():
     print("KPIs for building named {}:".format(id))
     print(client.kpis(id))
+    
