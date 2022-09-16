@@ -1131,6 +1131,7 @@ end controller;
     annotation (Placement(transformation(extent={{-322,72},{-302,92}})));
 
   Buildings.ThermalZones.EnergyPlus.ThermalZone corZon(
+    C_start=fill(600E-6*44.009544/28.9651159, Medium.nC),
     zoneName="Core_ZN",                                redeclare final package
       Medium =                                                                          Medium,
     use_C_flow=true,
@@ -1616,24 +1617,28 @@ Buildings.Utilities.IO.SignalExchange.Read senHeaPow(y(min=0.0, max=15000.0, uni
     "Core zone HVAC system"
     annotation (Placement(transformation(extent={{-96,-350},{-40,-320}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon1(
+      C_start=fill(600E-6*44.009544/28.9651159, Medium.nC),
       zoneName="Perimeter_ZN_1",
       redeclare final package Medium = Medium,
     use_C_flow=true,
       nPorts=2) "Perimeter zone 1"
       annotation (Placement(transformation(extent={{62,-94},{102,-54}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon2(
+      C_start=fill(600E-6*44.009544/28.9651159, Medium.nC),
       zoneName="Perimeter_ZN_2",
       redeclare final package Medium = Medium,
     use_C_flow=true,
       nPorts=2) "Perimeter zone 2"
       annotation (Placement(transformation(extent={{56,-184},{96,-144}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon3(
+      C_start=fill(600E-6*44.009544/28.9651159, Medium.nC),
       zoneName="Perimeter_ZN_3",
       redeclare final package Medium = Medium,
     use_C_flow=true,
       nPorts=2) "Perimeter zone 3"
       annotation (Placement(transformation(extent={{54,-274},{94,-234}})));
   Buildings.ThermalZones.EnergyPlus.ThermalZone perZon4(
+      C_start=fill(600E-6*44.009544/28.9651159, Medium.nC),
       zoneName="Perimeter_ZN_4",
       redeclare final package Medium = Medium,
     use_C_flow=true,
@@ -1806,6 +1811,7 @@ Buildings.Utilities.IO.SignalExchange.Read senPowPer4(
           rotation=0,
           origin={376,-388})));
 Buildings.Utilities.IO.SignalExchange.Read senTemRoom(
+
     y(min=240.0,
       max=320.0,
       unit="K"),
