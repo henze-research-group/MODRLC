@@ -14,7 +14,7 @@ class ModelParameters:
         # running configuration
         self.time_step = 300
         self.length = 24 * 3600 * 1
-        self.n_horizon = int(8 * 3600 / self.time_step)  # 8 hours ahead  -- 1 hour is 12 steps in the horizon
+        self.n_horizon = int(3 * 3600 / self.time_step)  # 8 hours ahead  -- 1 hour is 12 steps in the horizon
 
         # Revert to this start time when generating final datset
         self.start_time = 3 * 24 * 60 * 60  # 3 days * 24 hours * 60 minutes * 60 seconds -- start of day 4.
@@ -35,13 +35,13 @@ class ModelParameters:
             # use the last column of the data per Thibault's comment
             self.x0 = np.transpose([np.load(p / 'x0.npy')])
             #input("Are you happy with this X? {}".format(self.x0.shape))
-            self.k1 = np.matrix([63.3820598]*5)
-            self.k2 = np.matrix([0.813545658]*5)
-            self.k3 = np.matrix([271.14357]*5)
-            self.k4 = np.matrix([0.814834210]*5)
-            self.k5 = np.matrix([5067.28855]*5)
-            self.k6 = np.matrix([17253.1871]*5)
-            self.oaco2 = np.matrix([397.5]*5)
+            self.k1 = 63.3820598#np.matrix([63.3820598]*5)
+            self.k2 = 0.813545658#np.matrix([0.813545658]*5)
+            self.k3 = 271.14357#np.matrix([271.14357]*5)
+            self.k4 = 0.814834210#np.matrix([0.814834210]*5)
+            self.k5 = 5067.28855#np.matrix([5067.28855]*5)
+            self.k6 = 17253.1871#np.matrix([17253.1871]*5)
+            self.oaco2 = 397.5#np.matrix([397.5]*5)
 
             # TODO: need to write a check to make sure these files exist.. someday
             # if not tvp_file.exists():
@@ -83,7 +83,7 @@ class ModelParameters:
                 # Other cost functions: total demand, elec cost, discomfort, IAQ
                 #[0], [0], [0], [0], 
                 # Previous change in CO2 due to occupants
-                [0], [0], [0], [0], [0], 
+                [0], [0], [0], [0], [0],
                 # Previous change in CO2 due to ventilation
                 [0], [0], [0], [0], [0], 
                 # Previous levels of CO2

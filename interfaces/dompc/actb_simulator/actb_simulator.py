@@ -129,11 +129,17 @@ class ActbSimulator(do_mpc.model.IteratedVariables):
 
         # Assign powers to heating coils
         if self.metamodel is None:
-            inputs = ["PSZACcontroller_oveHeaCor_u",
-                      "PSZACcontroller_oveHeaPer1_u",
-                      "PSZACcontroller_oveHeaPer2_u",
-                      "PSZACcontroller_oveHeaPer3_u",
-                      "PSZACcontroller_oveHeaPer4_u"]
+            inputs = [  "PSZACcontroller_oveHeaCor_u",
+                        "PSZACcontroller_oveHeaPer1_u",
+                        "PSZACcontroller_oveHeaPer2_u",
+                        "PSZACcontroller_oveHeaPer3_u",
+                        "PSZACcontroller_oveHeaPer4_u",
+                        "PSZACcontroller_oveDamCor_u",
+                        "PSZACcontroller_oveDamP1_u",
+                        "PSZACcontroller_oveDamP2_u",
+                        "PSZACcontroller_oveDamP3_u",
+                        "PSZACcontroller_oveDamP4_u",
+            ]
         else:
             inputs = self.client.inputs()
 
@@ -571,11 +577,20 @@ class ActbSimulator(do_mpc.model.IteratedVariables):
             t_offset = 0
         else:
             t_offset = 273.15
-        t_room = [y_next['senTemRoom_y'] + t_offset,
-                  y_next['senTemRoom1_y'] + t_offset,
-                  y_next['senTemRoom2_y'] + t_offset,
-                  y_next['senTemRoom3_y'] + t_offset,
-                  y_next['senTemRoom4_y'] + t_offset]
+        t_room = [
+                    y_next['senPpmCore_y'],
+                    y_next['senPpmPerimeter1_y'],
+                    y_next['senPpmPerimeter2_y'],
+                    y_next['senPpmPerimeter3_y'],
+                    y_next['senPpmPerimeter4_y'],
+                    y_next['senTemRoom_y'] + t_offset,
+                    y_next['senTemRoom1_y'] + t_offset,
+                    y_next['senTemRoom2_y'] + t_offset,
+                    y_next['senTemRoom3_y'] + t_offset,
+                    y_next['senTemRoom4_y'] + t_offset,
+
+
+                  ]
 
         self.data.update(_x=x_next)
         self.data.update(_u=u0)

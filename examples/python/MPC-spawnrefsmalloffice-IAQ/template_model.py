@@ -30,8 +30,6 @@ def template_model():
     t_indoor_perimeter2 = model.set_variable(var_type='_x', var_name='t_indoor_perimeter2', shape=(1, 1))
     t_indoor_perimeter3 = model.set_variable(var_type='_x', var_name='t_indoor_perimeter3', shape=(1, 1))
     t_indoor_perimeter4 = model.set_variable(var_type='_x', var_name='t_indoor_perimeter4', shape=(1, 1))
-    
-
 
     cf_heating_power_core = model.set_variable(var_type='_x', var_name='cf_heating_power_core', shape=(1, 1))
     cf_heating_power_perimeter1 = model.set_variable(var_type='_x', var_name='cf_heating_power_perimeter1', shape=(1, 1))
@@ -110,26 +108,47 @@ def template_model():
 
     )
 
+    # If the coils are on, fans are on. Else, nope. This helps with the CO2 model's accuracy
+    #fans = vertcat(
+    #    if_else((floor(heating_power_core*1000) /1000) ** 2 != 0., 1., 0.),
+    #    if_else((floor(heating_power_perimeter1*1000) /1000) ** 2 != 0., 1., 0.),
+    #    if_else((floor(heating_power_perimeter2*1000) /1000) ** 2 != 0., 1., 0.),
+    #    if_else((floor(heating_power_perimeter3*1000) /1000) ** 2 != 0., 1., 0.),
+    #    if_else((floor(heating_power_perimeter4*1000) /1000) ** 2 != 0., 1., 0.),
+    #)
+
+    # fans = vertcat(
+    #     if_else(floor(heating_power_core * 100) != 0, 1., 0.),
+    #     if_else(floor(heating_power_perimeter1 * 100) != 0, 1., 0.),
+    #     if_else(floor(heating_power_perimeter2 * 100) != 0, 1., 0.),
+    #     if_else(floor(heating_power_perimeter3 * 100) != 0, 1., 0.),
+    #     if_else(floor(heating_power_perimeter4 * 100) != 0, 1., 0.),
+    # )
     # This first order ODE solves the CO2 concentration given the OA fraction and the occupant density
-    ppl_next = (ppl - prev_people) / mp.k5.T
-    oa_next = (damper - prev_oa) / mp.k6.T
+    ppl_next = mp.time_step * (ppl - prev_people) / mp.k5
+    oa_next = mp.time_step * (damper - prev_oa) / mp.k6
+
+    model.set_rhs("prev_people", ppl_next)
+    model.set_rhs("prev_oa", oa_next)
 
     #- k1 * oavol * (co2 - 397.5) - k2 * (co2 - 397.5) + k3 * ppco2 + k4
 
-    doa = - mp.k1 * oa_next.T * (cur_co2.T - mp.oaco2)
-    dinf = - mp.k2 * (cur_co2.T - mp.oaco2)
-    dppl = mp.k3 * ppl_next.T
-    co2_next = cur_co2.T + doa + dppl + dinf + mp.k4
+    doa = - mp.k1 * oa_next * (cur_co2 - mp.oaco2)
+    dinf = - mp.k2 * (cur_co2 - mp.oaco2)
+    dppl = mp.k3 * ppl_next
 
-    model.set_rhs("prev_people", ppl_next)
-    model.set_rhs("prev_oa", oa_next.T)
-    #model.set_rhs("prev_co2", co2_next)
+    model.set_expression(expr_name='doa', expr=doa)
+    model.set_expression(expr_name='dinf', expr=dinf)
+    model.set_expression(expr_name='dppl', expr=dppl)
+
+    co2_next = cur_co2 + doa + dppl + mp.k4 #+ dinf
+
 
     model.set_rhs("co2_core", co2_next[0])
     model.set_rhs("co2_perimeter1", co2_next[1])
     model.set_rhs("co2_perimeter2", co2_next[2])
     model.set_rhs("co2_perimeter3", co2_next[3])
-    model.set_rhs("co2_perimeter4", co2_next[4]) 
+    model.set_rhs("co2_perimeter4", co2_next[4])
 
     # LTI equations
     x_next = mp.a @ _x + mp.b @ u_array
@@ -193,9 +212,10 @@ def template_model():
 
     # Thermal discomfort
 
-    discomfort_cost = sum1(fmax(indoor_temps - upperbounds, 0) ** 2 + fmax(lowerbounds - indoor_temps, 0) ** 2)
+    discomfort_cost = sum1((fmax(indoor_temps - upperbounds, 0)**2 + fmax(lowerbounds - indoor_temps, 0)**2) * ppl * 0.36)
 
-    iaq_cost = sum1(fmax(indoor_co2 - co2setpoints, 0) ** 2)
+
+    iaq_cost = sum1(fmax(indoor_co2 - co2setpoints, 0) ** 2 * ppl * 1.29)
 
 
     # Demand limit
@@ -222,8 +242,8 @@ def template_model():
 
     # weighting factors
     w_power = 1
-    w_discomfort = 1
-    w_iaq = 0.1
+    w_discomfort = 2
+    w_iaq = 2
 
     # Cost function
     cost_function = w_power * elec_cost + \

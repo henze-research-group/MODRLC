@@ -6,15 +6,15 @@ url = 'http://127.0.0.1:80' #ACTB url, this default should work in all cases
 # Training and testing periods
 start = ('20/01/01 00:00:00') #YMD HMS
 training = {'start' : 0 * 24 * 3600,
-            'length' : 30 * 24 * 3600,
+            'length' : 15 * 24 * 3600,
             'training' : 0.9,
-            'freefloat' : 0.2,
+            'freefloat' : 0,
             'rbc' : 0.,
-            'randomized' : 0.8}
+            'randomized' : 1.0}
 
 # Define the proportion of free-floating to controlled time
 freefloat = 0.15
-var = 0.2
+var = 0.1
 
 # Fine-tune the identification process
 
@@ -52,7 +52,11 @@ inputs = {   'PSZACcontroller_oveHeaCor_u' : {'type' : 'float', 'min' : 0, 'max'
              'PSZACcontroller_oveHeaPer2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
              'PSZACcontroller_oveHeaPer3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
              'PSZACcontroller_oveHeaPer4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-
+             'PSZACcontroller_oveDamCor_u' : {'type' : 'float', 'min' : 0, 'max' : 0.5},
+             'PSZACcontroller_oveDamP1_u' : {'type' : 'float', 'min' : 0, 'max' : 0.5},
+             'PSZACcontroller_oveDamP2_u' : {'type' : 'float', 'min' : 0, 'max' : 0.5},
+             'PSZACcontroller_oveDamP3_u' : {'type' : 'float', 'min' : 0, 'max' : 0.5},
+             'PSZACcontroller_oveDamP4_u' : {'type' : 'float', 'min' : 0, 'max' : 0.5},
           }
 
 # Finally, add the exogenous variables available through forecasts, such as weather data or occupancy.
@@ -98,10 +102,6 @@ deactivate = {
               #'PSZACcontroller_oveHeaPer2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
               #'PSZACcontroller_oveHeaPer3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
               #'PSZACcontroller_oveHeaPer4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              # 'PSZACcontroller_oveDamCor_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              # 'PSZACcontroller_oveDamP1_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              # 'PSZACcontroller_oveDamP2_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              # 'PSZACcontroller_oveDamP3_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
-              # 'PSZACcontroller_oveDamP4_u' : {'type' : 'float', 'min' : 0, 'max' : 1},
+
 
 }

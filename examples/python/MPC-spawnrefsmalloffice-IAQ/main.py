@@ -32,7 +32,7 @@ model = template_model()
 mpc = template_mpc(model)
 simulator, actb_client, t_offset = template_simulator(model)#, metamodel='spawnrefsmalloffice')
 
-results_path = 'results/som3_mpc_boptest'
+results_path = '2days/som3_mpc_boptest'
 anim_path = 'anim/'
 # delete the contents of the results path
 if os.path.exists(results_path):
@@ -68,7 +68,7 @@ Setup graphic:
 
 color = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-fig, ax = plt.subplots(nrows=5, ncols=1, figsize=(8, 10))
+fig, ax = plt.subplots(nrows=5, ncols=1, figsize=(13, 10))
 
 mpc_plot = do_mpc.graphics.Graphics(mpc.data)
 sim_plot = do_mpc.graphics.Graphics(simulator.data)
@@ -93,7 +93,21 @@ ax[axis].set_xticklabels(xlabels)
 ax[axis].set_yticks(np.arange(mp.min_indoor_t, mp.max_indoor_t, 2))
 ax[axis].set_yticklabels(np.around(np.arange(mp.min_indoor_t-273.15, mp.max_indoor_t-273.15, 2)))
 ax[axis].set_ylabel('Temperature [C]')
-ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 4, 6, 8, 10, 12])), ['Setpoints', 'Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], loc='lower right')
+ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 4, 6, 8, 10, 12])), ['Setpoints', 'Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], bbox_to_anchor=(1.2, 1.), fancybox=True, shadow=True)
+
+axis += 1
+ax[axis].set_title('CO2 concentrations')
+mpc_plot.add_line('_tvp', 'co2_setpoint_core', ax[axis])
+
+mpc_plot.add_line('_x', 'co2_core', ax[axis])
+mpc_plot.add_line('_x', 'co2_perimeter1', ax[axis])
+mpc_plot.add_line('_x', 'co2_perimeter2', ax[axis])
+mpc_plot.add_line('_x', 'co2_perimeter3', ax[axis])
+mpc_plot.add_line('_x', 'co2_perimeter4', ax[axis])
+ax[axis].set_xticks(xticks)
+ax[axis].set_xticklabels(xlabels)
+ax[axis].set_ylabel('CO2 concentration [ppm]')
+ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6, 8, 10])), ['Upper setpoint', 'Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], bbox_to_anchor=(1.2, 1.), fancybox=True, shadow=True)
 
 
 axis += 1
@@ -108,7 +122,7 @@ ax[axis].set_xticklabels(xlabels)
 ax[axis].set_yticks(np.arange(0, 1.2, 0.2))
 ax[axis].set_yticklabels(np.arange(0, 120, 20))
 ax[axis].set_ylabel('Heating coil power [%]')
-ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6, 8])), ['Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], loc='lower right')
+ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6, 8])), ['Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], bbox_to_anchor=(1.2, 1.), fancybox=True, shadow=True)
 
 axis += 1
 ax[axis].set_title('OA damper command')
@@ -122,22 +136,28 @@ ax[axis].set_xticklabels(xlabels)
 ax[axis].set_yticks(np.arange(0, 1.2, 0.2))
 ax[axis].set_yticklabels(np.arange(0, 120, 20))
 ax[axis].set_ylabel('OA fraction [%]')
-ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6, 8])), ['Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], loc='lower right')
+ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6, 8])), ['Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], bbox_to_anchor=(1.2, 1.), fancybox=True, shadow=True)
 
 
-axis += 1
-ax[axis].set_title('CO2 concentrations')
-mpc_plot.add_line('_tvp', 'co2_setpoint_core', ax[axis])
-mpc_plot.add_line('_x', 'co2_core', ax[axis])
-mpc_plot.add_line('_x', 'co2_perimeter1', ax[axis])
-mpc_plot.add_line('_x', 'co2_perimeter2', ax[axis])
-mpc_plot.add_line('_x', 'co2_perimeter3', ax[axis])
-mpc_plot.add_line('_x', 'co2_perimeter4', ax[axis])
-ax[axis].set_xticks(xticks)
-ax[axis].set_xticklabels(xlabels)
-ax[axis].set_ylabel('CO2 concentration [ppm]')
-ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6, 8, 10])), ['Upper setpoint', 'Core zone', 'South perimeter', 'East perimeter', 'North perimeter', 'West perimeter'], loc='lower right')
 
+# axis += 1
+# ax[axis].set_title('Occupancy')
+# mpc_plot.add_line('_tvp', 'occupancy_ratio_core', ax[axis])
+# mpc_plot.add_line('_tvp', 'occupancy_ratio_perimeter1', ax[axis])
+# mpc_plot.add_line('_tvp', 'occupancy_ratio_perimeter2', ax[axis])
+# mpc_plot.add_line('_tvp', 'occupancy_ratio_perimeter3', ax[axis])
+# mpc_plot.add_line('_tvp', 'occupancy_ratio_perimeter4', ax[axis])
+# ax[axis].set_xticks(xticks)
+# ax[axis].set_xticklabels(xlabels)
+# ax[axis].set_ylabel('Number of people')
+# axis += 1
+# ax[axis].set_title('Derivatives')
+# mpc_plot.add_line('_aux', 'doa', ax[axis], color='red')
+# mpc_plot.add_line('_aux', 'dinf', ax[axis], color='blue')
+# mpc_plot.add_line('_aux', 'dppl', ax[axis], color='green')
+# ax[axis].set_xticks(xticks)
+# ax[axis].set_xticklabels(xlabels)
+# ax[axis].set_ylabel('Number of people')
 # axis += 1
 # ax[axis].set_title('Horizontal irradiation')
 # mpc_plot.add_line('_tvp', 'HGloHor', ax[axis])
@@ -156,7 +176,7 @@ ax[axis].set_xticks(xticks)
 ax[axis].set_xticklabels(xlabels)
 ax[axis].set_xlabel('Time [hours]')
 ax[axis].set_ylabel('Cost [$]')
-ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6])), ['Total cost', 'Discomfort cost', 'Energy cost', 'IAQ Cost'], loc='upper right')
+ax[axis].legend(list(map(ax[axis].get_lines().__getitem__, [0, 2, 4, 6])), ['Total cost', 'Discomfort cost', 'Energy cost', 'IAQ Cost'], bbox_to_anchor=(1.2, 1.), fancybox=True, shadow=True)
 
 for ax_i in ax:
     ax_i.axvline(1.0)
@@ -241,8 +261,8 @@ for k in range(int(mp.length/mp.time_step)):
     x_kalman = simulator._x0.master[0:x_state_var_cnt] + mp.K @ [a - b for a, b in zip(y_measured[5:], y_pred[5:])]
     y_kalman = mp.c @ x_kalman  # result is in Deg C, and the historian expected it as such.
     simulator._x0.master[0:x_state_var_cnt] = x_kalman
-    simulator._x0.master[18:23] = y_measured[:5]
-    simulator._x0.master[23:28] = y_kalman + np.array([273.15]*5)#simulator._x0.master[27:32] + np.array([273.15]*5)
+    simulator._x0.master[x_state_var_cnt:x_state_var_cnt + 5] = y_measured[:5]
+    simulator._x0.master[x_state_var_cnt + 5:x_state_var_cnt + 10] = y_kalman + np.array([273.15]*5)#y_measured[5:]##simulator._x0.master[27:32] + np.array([273.15]*5)
 
     # Store to the historian
     historian.add_datum('t_indoor_measured_core', y_measured[0])

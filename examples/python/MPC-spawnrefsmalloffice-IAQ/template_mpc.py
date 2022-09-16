@@ -23,7 +23,7 @@ def template_mpc(model):
         't_step': mp.time_step,
         'state_discretization': 'discrete',
         'store_full_solution': True,
-        #'nlpsol_opts': {'ipopt.linear_solver': 'MA27'}
+        'nlpsol_opts': {'ipopt.linear_solver': 'MA57',  'ipopt.max_iter': 2000, 'ipopt.acceptable_tol': 0.2}
     }
 
     mpc.set_param(**setup_mpc)
@@ -39,16 +39,16 @@ def template_mpc(model):
     mpc.set_tvp_fun(mp.tvp_fun)
 
     # set the penalty term for control, we want smooth changes
-    mpc.set_rterm(heating_power_core=0.5, 
-    heating_power_perimeter1=0.5,
-    heating_power_perimeter2=0.5,
-    heating_power_perimeter3=0.5,
-    heating_power_perimeter4=0.5,
-    damper_core=0.5,
-    damper_perimeter1=0.5,
-    damper_perimeter2=0.5,
-    damper_perimeter3=0.5,
-    damper_perimeter4=0.5)
+    mpc.set_rterm(heating_power_core=0.1,
+    heating_power_perimeter1=0.3,
+    heating_power_perimeter2=0.3,
+    heating_power_perimeter3=0.3,
+    heating_power_perimeter4=0.3,
+    damper_core=0.1,
+    damper_perimeter1=0.1,
+    damper_perimeter2=0.1,
+    damper_perimeter3=0.1,
+    damper_perimeter4=0.1)
 
 
     mpc.bounds['lower', '_x', 'x'] = mp.min_x
