@@ -376,7 +376,7 @@ class FromEplus():
                 occdataframe['PeopleInternalGainsLat[{}]'.format(people.zone_or_zonelist_name.name)] = \
                 latentFractionPpl[people.zone_or_zonelist_name.name]
                 occdataframe['UpperCO2[{}]'.format(people.zone_or_zonelist_name.name)] = \
-                    np.where(occdataframe['Occupancy[{}]'.format(people.zone_or_zonelist_name.name)] > 0, 800, 1500) #800ppm for offices, ASHRAE Standard 62
+                    np.where(occdataframe['Occupancy[{}]'.format(people.zone_or_zonelist_name.name)] > 0, 650, 1500) #800ppm for offices, ASHRAE Standard 62
                 #todo: find a way to extract the CO2 levels from some IDFs if available.
 
         while len(occdataframe) <= len(self.datetime_index):

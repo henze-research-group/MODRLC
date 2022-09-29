@@ -379,7 +379,7 @@ class Metamodel:
 
     def split_dataset(self):
         filepath = str(Path(__file__).parent.absolute().parent / 'testcases' /
-                       'SpawnResources' / self.config.metamodel / 'metamodel' / 'spawnDataset.csv')
+                       'SpawnResources' / self.config.metamodel / 'metamodels' / 'spawnDataset.csv')
         self.data = self.get_dataset(filepath)
         self.data = self.data.loc[:, (self.data != self.data.iloc[0]).any()] # remove constant columns
         self.include = []
