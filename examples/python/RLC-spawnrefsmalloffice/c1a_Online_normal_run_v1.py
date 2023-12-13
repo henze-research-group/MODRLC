@@ -65,10 +65,10 @@ args = parser.parse_args()
 
 
 
-last_ep =186
-episodes = 100
+last_ep =0
+episodes = 2
 batch_size = args.batch_size
-epochs = 20
+epochs = 10
 
 
 for episode in range(last_ep+1,last_ep+episodes+1):
@@ -85,11 +85,9 @@ for episode in range(last_ep+1,last_ep+episodes+1):
 
      state_dim = custom_observation_space.shape[0]
      action_dim = custom_action_space.shape[0]
-     path = 'RL_Data/01_Normal_run_v2/'
+     path = 'RL_Data/01_Normal_run_600_v1/'
 
-     print (state_dim,action_dim)
-
-
+    
      score = 0
      agent = SAC(custom_observation_space.shape[0], custom_action_space, args)
      # agent = Agent(action_dim, state_dim,replay_buffer_size=288*400,hidden_dim=[500,800,500],path=path)    
@@ -140,9 +138,9 @@ for episode in range(last_ep+1,last_ep+episodes+1):
                done = df.iloc[i]['done']
                # print ("state:{}".format(state))
                memory.push(state,action,reward,next_state,done)
-     
 
-     lstm_name = path_NN+'05_LSTM/lstm_'+str(last_ep)+'.h5'
+     print ("check 451")
+     
 
      '''data for episode'''
      df = pd.DataFrame(columns=['states','action','next_states','reward','done'],dtype=np.float64)
@@ -197,7 +195,7 @@ for episode in range(last_ep+1,last_ep+episodes+1):
 
                if cur_soc==0 and unprocessed_act[1]<0:
                     # unprocessed_act = [unprocessed_act[0],0]
-                    r_mod = 200*unprocessed_act[1]
+                    r_mod = 200*unprocessed_act[1] # reward penalty to discourage the agent to discharge when state of charge of battery is already at zero 
                else:
                     r_mod = 0 
 
