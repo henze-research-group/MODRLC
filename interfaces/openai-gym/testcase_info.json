@@ -1,0 +1,11 @@
+{
+    "spawnrefsmalloffice": [{
+            "sen_temp_keys":["senTemRoom_y","senTemRoom1_y","senTemRoom2_y","senTemRoom3_y","senTemRoom4_y"],
+            "sen_tot_pow_keys": ["senPowCor_y","senPowPer1_y","senPowPer2_y","senPowPer3_y","senPowPer4_y"],
+            "u_cool_stp":["PSZACcontroller_oveCooStpCor_u","PSZACcontroller_oveCooStpPer1_u","PSZACcontroller_oveCooStpPer2_u","PSZACcontroller_oveCooStpPer3_u","PSZACcontroller_oveCooStpPer4_u"],
+            "u_htg_stp":["PSZACcontroller_oveHeaStpCor_u","PSZACcontroller_oveHeaStpPer1_u","PSZACcontroller_oveHeaStpPer2_u","PSZACcontroller_oveHeaStpPer3_u","PSZACcontroller_oveHeaStpPer4_u"]
+        }],
+    "spawnrefmediumoffice": [{
+            "sen_temp_keys": "None",
+            "sen_tot_pow_keys": "None"}]
+}
