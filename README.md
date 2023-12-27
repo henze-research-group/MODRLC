@@ -29,10 +29,10 @@ The ACTB is packaged as a Docker container, please install Docker by following t
 ### Python
 
 While the Docker container comes with Python and all the dependencies installed, if you are running a controller script externally
-you will need to install Python and a few libraries. For Python, please install **Python 3.6** by following these links for [Linux](https://docs.python-guide.org/starting/install3/linux/),
+you will need to install Python and a few libraries. For Python, please install **Python 3.9** by following these links for [Linux](https://docs.python-guide.org/starting/install3/linux/),
 [macOS](https://docs.python-guide.org/starting/install3/osx/), or [Windows](https://docs.python.org/3/using/windows.html).
 
-Note: If you have several versions of Python installed, make sure you are running Python 3.6 by replacing `python` 
+Note: If you have several versions of Python installed, make sure you are running Python 3.9 by replacing `python` 
 commands with `python3` whenever the command is present in the instructions.
 
 ### Libraries

@@ -16,4 +16,4 @@ scipy
 
 ###### OpenAI Gym ####
 gym
-tensorflow >= 2.0, <=2.5
+tensorflow == 2.13.0

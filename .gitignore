@@ -1,5 +1,4 @@
 .idea
-.python-version
 .ipynb_checkpoints
 examples/python/som3_mpc1/*
 *.pyc
