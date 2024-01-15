@@ -22,6 +22,11 @@ please install the **Windows Subsystem for Linux (WSL)** by following the instru
 You will simply need to start an instance of the WSL first, then run the commands found in the various instructions of this repository in the Linux terminal
 that will be launched.
 
+## Windows 11 Install make.exe 
+Follow these instructions
+(https://medium.com/@samsorrahman/how-to-run-a-makefile-in-windows-b4d115d7c516). 
+
+make bul
 ### Docker
 
 The ACTB is packaged as a Docker container, please install Docker by following the instructions [here](https://docs.docker.com/get-docker/).
