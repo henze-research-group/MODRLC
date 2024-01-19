@@ -256,6 +256,7 @@ class ActbClient:
                 self.y[i] = 0
             return self.y
 
+        self.stop_all()
         self.select(testcase)
         # merge the default args with the kwargs
         res = requests.put('{0}/initialize/{1}'.format(self.url, self.simId), data=data)
