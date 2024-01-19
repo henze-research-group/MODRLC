@@ -5,7 +5,16 @@ import pandas as pd
 coordinates = [(42.8, -88.0, 'Chicago', 182, 'Etc/GMT+6')]         
 
 
-def get_pv_output(temp_air,dni,dhi,ghi,w_sp,no_of_modules,surface_tilt,azimuth):
+def get_pv_output(
+          temp_air,
+          dni,
+          dhi,
+          ghi,
+          w_sp,
+          no_of_modules=84,
+          surface_tilt=46,
+          azimuth=180
+):
      energies = {}
      if temp_air<-10:
           temp_air= -10

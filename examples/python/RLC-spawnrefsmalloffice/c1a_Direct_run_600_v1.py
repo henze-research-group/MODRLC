@@ -92,6 +92,8 @@ else:
 
 
 path_NN = path+'02_NN/'
+if not os.path.exists(path_NN):
+    os.makedirs(path_NN)
 
 training_batch =12
 epochs = 15
@@ -120,9 +122,9 @@ if surr_model_activate==True:
 
 
 for episode in range(last_ep+1,last_ep+episodes+1):
-    cmd1 = "sudo sysctl vm.drop_caches=1"
-    cmd2 = "sudo sysctl vm.drop_caches=2"
-    cmd3 = "sudo sysctl vm.drop_caches=3"
+    cmd1 = "sysctl vm.drop_caches=1"
+    cmd2 = "sysctl vm.drop_caches=2"
+    cmd3 = "sysctl vm.drop_caches=3"
 
     os.system(cmd1);os.system(cmd2);os.system(cmd3)    
     # path = 'RL_Data/02_Online_run_v2/'
@@ -174,31 +176,34 @@ for episode in range(last_ep+1,last_ep+episodes+1):
 
     '''SAC and Surr models Related'''  
     
+    checkpoint_path = path_NN + "checkpoints/"
+    if not os.path.exists(checkpoint_path):
+        os.makedirs(checkpoint_path)
+
     if last_ep>0:
         if test==False:
-            agent_2.load_checkpoint(ckpt_path=path_NN+"checkpoints/sac_checkpoint_"+str(last_ep)+"_")                                          
+            agent_2.load_checkpoint(ckpt_path=checkpoint_path + "sac_checkpoint_" + str(last_ep) + "_")
     elif test==True:     
-        agent_2.load_checkpoint(ckpt_path=path_NN+"checkpoints/sac_checkpoint_"+str(0)+"_")
+        agent_2.load_checkpoint(ckpt_path=checkpoint_path + "sac_checkpoint_" + str(0) + "_")
 
-      
-    
         #load surr models 
     '''SAC and Surr models Related'''     
 
-    
-    file_names = os.listdir(path+'04_Mem/')
-    print ("file names: {}".format(file_names))
-    for file_name in file_names[0:]:
-        df = pd.read_pickle(path+"04_Mem/"+str(file_name))
-        print ("loading: {}".format(file_name))
-        for i in range(len(df)):
-            state = df.iloc[i]['states']
-            reward = df.iloc[i]['reward']
-            action = df.iloc[i]['action']
-            next_state = df.iloc[i]['next_states']
-            done = df.iloc[i]['done']
-            # print ("state:{}".format(state))
-            memory.push(state,action,reward,next_state,done)
+    memory_path = path + '04_Mem/'
+    if os.path.isdir('new_folder'):
+        file_names = os.listdir(memory_path)
+        print ("file names: {}".format(file_names))
+        for file_name in file_names[0:]:
+            df = pd.read_pickle(memory_path + str(file_name))
+            print ("loading: {}".format(file_name))
+            for i in range(len(df)):
+                state = df.iloc[i]['states']
+                reward = df.iloc[i]['reward']
+                action = df.iloc[i]['action']
+                next_state = df.iloc[i]['next_states']
+                done = df.iloc[i]['done']
+                # print ("state:{}".format(state))
+                memory.push(state,action,reward,next_state,done)
 
 
     '''data for episode'''    
@@ -390,12 +395,12 @@ for episode in range(last_ep+1,last_ep+episodes+1):
         extra_info['act_02'].append(act_02)           
         extra_info['pv_pow'].append(dc_power)           
         extra_info['batt_pow_prov'].append(batt_pow_prov) 
-        # extra_info['other_info'].append(other_info)                 
+        extra_info['other_info'].append(other_info)                 
 
         reward,cost,energy_cost,tdisc_cost,ppen_cost,energy_sold_cost,mod_reward,single_reward = calc_reward_function(sen_hou=next_agent_states[0][1],
                                                                                                     DR_time = DR_time,
                                                                                                     next_temp =np.array([next_agent_states[0][0]]),
-                                                                                                    individual_rewards= individual_rewards,                                                                                                   
+                                                                                                    individual_rewards= individual_rewards,
                                                                                                     extra_info=extra_info,
                                                                                                     i=i
                                                                                                     )
@@ -456,7 +461,7 @@ for episode in range(last_ep+1,last_ep+episodes+1):
         tot_energy_cost += energy_cost
         tot_tdisc_cost  +=  tdisc_cost 
         tot_ppen_cost += ppen_cost
-        tot_energy_sold_cost += energy_sold_cost        
+        tot_energy_sold_cost += energy_sold_cost
         score += reward
 
                
@@ -500,7 +505,6 @@ for episode in range(last_ep+1,last_ep+episodes+1):
             for kpi_name in kpi_list:
                 KPI_hist[kpi_name].append(kpi[kpi_name])
 
-                  
             KPI_hist['episodes'].append(episode)
             KPI_hist['scores'].append(score)
             KPI_hist['total_cost'].append(total_cost)
@@ -516,22 +520,36 @@ for episode in range(last_ep+1,last_ep+episodes+1):
             KPI_hist['DR_duration'].append(dr_rand_end-dr_rand_start)   
 
             KPI_df = pd.DataFrame.from_dict(KPI_hist)
-            KPI_df.to_csv(path+"01_KPI/KPI_" + str(episode) + "_SAC.csv") 
-    
+
+            kpi_dir = path + "01_KPI/"
+            if not os.path.exists(kpi_dir):
+                os.makedirs(kpi_dir)
+            KPI_df.to_csv(kpi_dir + "KPI_" + str(episode) + "_SAC.csv") 
+
             # if test==False and w_guid!=0 :
             #     agent_1.save_models(episode=episode)
+
+            checkpoint_path = path_NN + "checkpoints/"
+            if not os.path.exists(checkpoint_path):
+                os.makedirs(checkpoint_path)
             agent_2.save_checkpoint(env_name=episode,
-                                     ckpt_path=path_NN+"checkpoints/sac_checkpoint_"+str(episode)+"_")
-            
-           
-            df.to_pickle(path+"04_Mem/mem"+str(episode)+".pkl")           
+                                     ckpt_path=checkpoint_path + "sac_checkpoint_" + str(episode) + "_")
+
+            mem_dir = path + "04_Mem/"
+            if not os.path.exists(mem_dir):
+                os.makedirs(mem_dir)
+            df.to_pickle(mem_dir + "mem" + str(episode) + ".pkl")
+
             env.print_KPIs()
-            env.save_episode(filename = path+"03_Data/data_"+str(episode)+".csv",extra_info=extra_info)
+
+            data_path = path + "03_Data/"
+            if not os.path.exists(data_path):
+                os.makedirs(data_path)
+
+            env.save_episode(filename = data_path + "data_" + str(episode) + ".csv", extra_info=extra_info)
+            
             last_ep = episode
             # env.plot_episode(path+"05_Plot/plot_"+str(episode)+".jpg", [0, 1, 2, 3, 4,'tot'])
-
-            
-            
 
             # Print KPIs
 
