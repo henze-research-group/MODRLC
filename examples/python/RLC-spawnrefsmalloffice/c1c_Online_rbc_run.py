@@ -12,7 +12,7 @@ from pathlib import Path
 from c7_reward_calc import *
 from c8_variables import * 
 from c9_RL_functions import * 
-import sys
+import sys,os
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent.parent.parent / 'interfaces' / 'openai-gym'))
 from boptestGymEnv import BoptestGymEnv
 import pvlib
@@ -34,7 +34,7 @@ for episode in range(last_ep+1,last_ep+episodes+1):
      start_time = 24 * 3600 * day_no
      count = 0
      lstm_count = 0      
-     total_cost, tot_energy_cost, tot_tdisc_cost, tot_ppen_cost = 0,0,0,0
+     total_cost, tot_energy_cost, tot_tdisc_cost, tot_ppen_cost, tot_energy_sold_cost = 0,0,0,0,0
      env = BoptestGymEnv(episode_length=episode_length,
                          Ts=step,
                          testcase='spawnrefsmalloffice',
@@ -95,7 +95,7 @@ for episode in range(last_ep+1,last_ep+episodes+1):
           '''Agent Related'''
           mean_temp_n = (state_n[0] + state_n[1] + state_n[2] + state_n[3] + state_n[4])/5
           agent_state_n = np.array([mean_temp_n,state_n[5],state_n[6],state_n[7],state_n[8],state_n[9],state_n[10],state_n[11],cur_soc_n])
-          processed_action,act_01,act_02 = rbc_action_online(hours=hours,DR_time=DR_time,sp=sp) 
+          processed_action,act_01,act_02 = rbc_action_online(hours=hours,DR_time=DR_time,sp=sp,cur_soc_n=cur_soc_n)
           '''Agent Related'''            
 
           '''Advance Simulation'''
@@ -103,15 +103,23 @@ for episode in range(last_ep+1,last_ep+episodes+1):
           '''Advance Simulation'''
 
           ''' PV Lib '''
-          ac_power = get_pv_output(temp_air=temp_air,dni=dni,dhi=dhi,ghi=ghi,w_sp=w_sp)         
+          ac_power = get_pv_output(
+               temp_air=temp_air,
+               dni=dni,
+               dhi=dhi,
+               ghi=ghi,
+               w_sp=w_sp
+          )
           dc_power = ac_power*0.95
           ''' PV Lib '''
 
 
           ''' Battery Calculation  '''
-          # plug_power = calc_plug_power(day_no=day_no,sen_hou=hours,step=step)
-          tot_power = building_states['senPowCor_y'] + building_states['senPowPer1_y'] + building_states['senPowPer2_y'] + \
-                    building_states['senPowPer3_y'] + building_states['senPowPer4_y'] 
+          plug_power = calc_plug_power(day_no=day_no,sen_hou=hours,step=step)
+          tot_hvac_pow = building_states['senPowCor_y'] + building_states['senPowPer1_y'] + building_states['senPowPer2_y'] + \
+                    building_states['senPowPer3_y'] + building_states['senPowPer4_y']
+          # Consider adding `plug_power` here like in `c1a_Direct_run_600_v1.py`
+          tot_power = tot_hvac_pow
 
           
           cur_soc,batt_pow_prov,net_grid_power,pow_sold,other_info = battery_calc(act_02=act_02,                                                         
@@ -148,33 +156,39 @@ for episode in range(last_ep+1,last_ep+episodes+1):
 
           extra_info['price'].append(price)
           extra_info['net_grid_energy'].append(net_grid_energy)
+          extra_info['plug_power'].append(plug_power)
           extra_info['net_grid_power'].append(net_grid_power)          
           extra_info['tot_building_power'].append(tot_power)
           extra_info['score'].append(score)   
           extra_info['cur_soc'].append(cur_soc) 
-               
-
-          reward,cost,energy_cost,tdisc_cost,ppen_cost,mod_reward = calc_reward_function(sen_hou=next_agent_state[1],
-                                                                                                    DR_time = DR_time,
-                                                                                                    next_temp =np.array([next_agent_state[0]]),
-                                                                                                    individual_rewards= individual_rewards,                                                                                                   
-                                                                                                    extra_info=extra_info
-                                                                                                    )
-
-          
-          print ("mod reward: {}".format(mod_reward))  
-          
-          extra_info['mod_reward'].append(reward)  
-          extra_info['r_tdisc'].append(mod_reward['r_tdisc']) 
-          extra_info['r_energy'].append(mod_reward['r_energy']) 
-          extra_info['r_ppen'].append(mod_reward['r_ppen']) 
-          # extra_info['r_curtpv'].append(mod_reward['r_curtpv']) 
           extra_info['act_01'].append(act_01) 
           extra_info['act_02'].append(act_02)           
           extra_info['pv_pow'].append(dc_power) 
           extra_info['pow_sold'].append(pow_sold) 
           extra_info['batt_pow_prov'].append(batt_pow_prov) 
           extra_info['other_info'].append(other_info) 
+
+          reward,cost,energy_cost,tdisc_cost,ppen_cost,energy_sold_cost,mod_reward,single_reward = calc_reward_function(
+               sen_hou=next_agent_state[1],
+               DR_time = DR_time,
+               next_temp =np.array([next_agent_state[0]]),
+               individual_rewards= individual_rewards,
+               extra_info=extra_info,
+               i=i
+          )
+
+          print ("mod reward: {}".format(mod_reward))  
+
+          extra_info['mod_reward'].append(reward)  
+          extra_info['r_tdisc'].append(mod_reward['r_tdisc']) 
+          extra_info['r_energy'].append(mod_reward['r_energy']) 
+          extra_info['r_ppen'].append(mod_reward['r_ppen']) 
+          extra_info['r_energy_sold'].append(mod_reward['r_energy_sold'])
+
+          extra_info['cost_tdisc'].append(single_reward['cost_tdisc']) 
+          extra_info['cost_energy'].append(single_reward['cost_energy']) 
+          extra_info['cost_ppen'].append(single_reward['cost_ppen']) 
+          extra_info['cost_energy_sold'].append(single_reward['cost_energy_sold']) 
 
           # print ("extra info after reward calc: {}".format(extra_info))   
 
@@ -186,6 +200,7 @@ for episode in range(last_ep+1,last_ep+episodes+1):
           tot_tdisc_cost  +=  tdisc_cost 
           tot_ppen_cost += ppen_cost
           # tot_curt_cost += curt_cost
+          tot_energy_sold_cost += energy_sold_cost
           score += reward
           '''Agent Related'''          
 
@@ -200,32 +215,40 @@ for episode in range(last_ep+1,last_ep+episodes+1):
                kpi = (env.get_KPIs())
                for kpi_name in kpi_list:
                     KPI_hist[kpi_name].append(kpi[kpi_name])
-               
+
                KPI_hist['episodes'].append(episode)
                KPI_hist['scores'].append(score)
                KPI_hist['total_cost'].append(total_cost)
                KPI_hist['day_no'].append(day_no)
                KPI_hist['energy_total_cost'].append(tot_energy_cost)
                KPI_hist['tdisc_total_cost'].append(tot_tdisc_cost)
+
+               KPI_hist['energy_sold_total_cost'].append(tot_energy_sold_cost)
+               KPI_hist['ppen_total_cost'].append(tot_ppen_cost)
+
                KPI_hist['DR_start_time'].append(dr_rand_start)
                KPI_hist['DR_end_time'].append(dr_rand_end)
-               KPI_hist['DR_duration'].append(dr_rand_end-dr_rand_start)     
+               KPI_hist['DR_duration'].append(dr_rand_end-dr_rand_start)
 
                KPI_df = pd.DataFrame.from_dict(KPI_hist)
-               KPI_df.to_csv(path+"01_KPI/KPI_" + str(episode) + ".csv")              
+
+               kpi_dir = path + "01_KPI/"
+               if not os.path.exists(kpi_dir):
+                    os.makedirs(kpi_dir)
+               KPI_df.to_csv(kpi_dir + "KPI_" + str(episode) + ".csv")
                            
                              
                print ()
                print ()
 
                env.print_KPIs()
-               env.save_episode(filename = path+"03_Data/data_"+str(episode)+".csv",extra_info=extra_info)
-               env.plot_episode(path+"05_Plot/plot_"+str(episode)+".jpg", [0, 1, 2, 3, 4,'tot'])
 
-        
+               data_dir = path + "03_Data/"
+               if not os.path.exists(data_dir):
+                    os.makedirs(data_dir)
+               env.save_episode(filename = data_dir + "data_"+str(episode)+".csv",extra_info=extra_info)
 
-        
-
-        
-
-
+               plot_dir = path + "05_Plot/"
+               if not os.path.exists(plot_dir):
+                    os.makedirs(plot_dir)
+               env.plot_episode(plot_dir + "plot_" + str(episode) + ".jpg", [0, 1, 2, 3, 4, 'tot'])

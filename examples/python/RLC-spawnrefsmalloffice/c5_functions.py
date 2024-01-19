@@ -343,7 +343,7 @@ def init_extra_info():
   extra_info['cost_energy']=[]
   extra_info['cost_ppen']=[]
   extra_info['cost_energy_sold']=[]
-  # extra_info['other_info'] = [] 
+  extra_info['other_info'] = []
   return extra_info
 
 
