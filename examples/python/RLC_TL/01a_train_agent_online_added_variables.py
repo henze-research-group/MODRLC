@@ -1,6 +1,3 @@
-print ("sanity check ")
-
-
 import b1_sac_agent 
 
 from variables import * 
