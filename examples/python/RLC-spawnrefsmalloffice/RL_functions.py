@@ -72,3 +72,13 @@ def KPI_df_init():
     KPI_hist['day_no'] = []; KPI_hist['DR_start_time'] = []; KPI_hist['DR_end_time'] = []; KPI_hist['DR_duration'] = []
 
     return KPI_hist
+
+
+def df_avg_temp(df,i,key):
+    t_mean = (float(df[key].iloc[i][0])+float(df[key].iloc[i][1])+float(df[key].iloc[i][2])+\
+    float(df[key].iloc[i][3])+ float(df[key].iloc[i][4]))/5
+    return t_mean 
+
+
+
+    
