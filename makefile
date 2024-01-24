@@ -79,7 +79,7 @@ provision:
 # Stop and remove Docker containers, networks, images, and volumes.
 # `docker-compose down` stops the running containers and removes them along with their networks, images, and optionally, volumes.
 # This command is essential for cleanly shutting down your Dockerized environment and ensuring no residual resources are left.
-stop all MODRLC docker servers running:
+stop:
 	docker-compose down
 
 # Compile a specific testcase.
