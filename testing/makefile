@@ -18,7 +18,7 @@ remove_jm_image:
 
 run_jm:
 	$(COMMAND_RUN)
-	docker cp . ${IMG_NAME}:/usr/local/testing
+	docker cp ../boptest-service/boptest/testing/ ${IMG_NAME}:/usr/local/testing
 
 copy_to_jm:
 	docker cp ../${ARGS} ${IMG_NAME}:/usr/local/testing
@@ -52,8 +52,8 @@ compile_testcase_model:
 	python3 ../spawn-tools/generate_spawndata.py ${TESTCASE}
 	(cd ../testcases/SpawnResources/${TESTCASE}/ && cp dataFromModel.csv emissions.csv prices.csv weather.csv ../../${TESTCASE}/models/Resources/)
 	make run_jm
-	make copy_to_jm ARGS=parsing
-	make copy_to_jm ARGS=data
+	make copy_to_jm ARGS=boptest-service/boptest/parsing
+	make copy_to_jm ARGS=boptest-service/boptest/data
 	make copy_to_jm ARGS=testcases/${TESTCASE}
 	docker cp ../testcases/SpawnResources/ ${IMG_NAME}:/
 #docker cp Routing.mo ${IMG_NAME}:/home/developer/MODELICAPATH/Modelica/Blocks/
@@ -65,8 +65,8 @@ compile_testcase_model:
 
 generate_testcase_data:
 	make run_jm
-	make copy_to_jm ARGS=parsing
-	make copy_to_jm ARGS=data
+	make copy_to_jm ARGS=boptest-service/boptest/parsing
+	make copy_to_jm ARGS=boptest-service/boptest/data
 	make copy_to_jm ARGS=testcases/${TESTCASE}
 	make exec_jm ARGS="cd ${TESTCASE}/models && python generate_data.py"
 	docker cp ${IMG_NAME}:/usr/local/testing/testcases/${TESTCASE}/models/Resources ../testcases/${TESTCASE}/models/
