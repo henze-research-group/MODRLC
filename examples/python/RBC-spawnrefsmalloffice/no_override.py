@@ -108,8 +108,13 @@ def run(plot=True, customized_kpi_config=None):
     client.set_step(step = step)
     # Set the forecast for plotting utility
     client.set_forecast_parameters(length, step)
-    forecast = client.get_forecasts()
 
+    forecast_point_names = ['LowerSetp[perimeter_zn_1]', 'UpperSetp[perimeter_zn_1]']
+    forecast = client.get_forecasts(
+        horizon = length,
+        interval = step,
+        point_names = forecast_point_names
+    )
 
     print('\nRunning test case...')
     # Initialize u
