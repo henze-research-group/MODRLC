@@ -39,6 +39,8 @@ class BoptestGymEnv(gym.Env):
                  testcase           = None,
                  actions            = ['oveDSet_activate'],
                  building_obs       = ['senTRoom_y'],
+                 forecast_horizon   = 24*3600,
+                 forecast_interval  = 3600,
                  forecast_obs       = {'TDryBul': [0, 4], 'winDir': [0], 'HGloHor': [0, 1]},
                  lower_obs_bounds   = None,
                  upper_obs_bounds   = None,
@@ -72,6 +74,18 @@ class BoptestGymEnv(gym.Env):
         self.actions                = actions
         self.building_obs           = building_obs
         self.forecast_obs           = forecast_obs
+        # This is a temporary solution until all callsites can indicate which forecast points
+        # are necessary for whatever calculation is happening. This combines the keys from
+        # `forecast_obs` with all other point names used from the forecasts API.
+        self.forecast_point_names   = list(forecast_obs.keys()) + [
+            'UpperSetp[core_zn]',
+            'LowerSetp[core_zn]',
+            'HDirNor',
+            'HDifHor',
+            'winSpe'
+        ]
+        self.forecast_horizon       = forecast_horizon
+        self.forecast_interval      = forecast_interval
         self.lower_obs_bounds       = lower_obs_bounds
         self.upper_obs_bounds       = upper_obs_bounds
         self.episode_length         = episode_length
@@ -165,9 +179,6 @@ class BoptestGymEnv(gym.Env):
 
         # Default forecast parameters
         self.forecast_def = self.client.get_forecast_parameters()
-        print('Default Forecast Interval:\t{0} '.format(self.forecast_def['interval']))
-        print('Default Forecast Horizon:\t{0} '.format(self.forecast_def['horizon']))
-        print("\n")
 
         # Define gym observation space
         self.observation_space = spaces.Box(low  = np.array(self.lower_obs_bounds),
@@ -343,7 +354,7 @@ class BoptestGymEnv(gym.Env):
         print('Setting simulation step to {0}.'.format(self.Ts))
 
         # Get forecast values
-        self.forecast_y = self.client.get_forecasts()
+        self.forecast_y = self.get_updated_forecast()
 
         self.upper_sp = self.forecast_y['UpperSetp[core_zn]']
         self.lower_sp = self.forecast_y['LowerSetp[core_zn]']
@@ -416,7 +427,7 @@ class BoptestGymEnv(gym.Env):
 
         '''Advance the simulation'''
         self.building_y = self.client.advance(control_u = u)
-        self.forecast_y = self.client.get_forecasts()
+        self.forecast_y = self.get_updated_forecast()
 
         # Compute reward of this (state-action-state') tuple
         self.reward = self.compute_reward()
@@ -547,6 +558,13 @@ class BoptestGymEnv(gym.Env):
 
     def get_forecast(self):
         return (self.forecast_y)
+
+    def get_updated_forecast(self):
+        return self.client.get_forecasts(
+            horizon = self.forecast_horizon,
+            interval = self.forecast_interval,
+            point_names = self.forecast_point_names
+        )
 
     def get_states(self, building_y, forecasts):
         # Get reults at the end of the simulation step
@@ -708,7 +726,7 @@ class BoptestGymEnv(gym.Env):
 
         # Get predictions if this is a predictive agent
         if self.is_predictive:
-            self.forecast_y = self.client.get_forecasts()
+            self.forecast_y = self.get_updated_forecast()
             for var in self.forecasting_vars:
                 for i in range(self.fore_n):
                     observations.append(self.forecast_y[var][i])
