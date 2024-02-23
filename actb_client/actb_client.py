@@ -156,7 +156,7 @@ class ActbClient:
         if self.metamodel is not None:
             return "Metamodel: {}".format(self.metamodel)
         else:
-            return requests.get('{0}/name/{1}'.format(self.url, self.simId)).json()
+            return requests.get('{0}/name/{1}'.format(self.url, self.simId)).json()['payload']
 
     def inputs(self):
         """Return the list of inputs for the ACTB testcase that has been loaded
@@ -172,7 +172,7 @@ class ActbClient:
                 return None
 
         else:
-            return requests.get('{0}/inputs/{1}'.format(self.url, self.simId)).json()
+            return requests.get('{0}/inputs/{1}'.format(self.url, self.simId)).json()['payload']
 
     def measurements(self):
         """Return a list of measurements available in the loaded ACTB testcase
@@ -183,7 +183,7 @@ class ActbClient:
         if self.metamodel is not None:
             return self.y
         else:
-            return requests.get('{0}/measurements/{1}'.format(self.url, self.simId)).json()
+            return requests.get('{0}/measurements/{1}'.format(self.url, self.simId)).json()['payload']
 
     def get_step(self, test_id=None):
         """Return the timestep configuration.
@@ -203,7 +203,7 @@ class ActbClient:
                 print("Metamodel needs to be initialized first.")
                 return None
         else:
-            return requests.get('{0}/step/{1}'.format(self.url, self.simId)).json()
+            return requests.get('{0}/step/{1}'.format(self.url, self.simId)).json()['payload']
 
     def set_step(self, step=60):
         """Set the step duration the simulation through time at step level defined
@@ -261,9 +261,9 @@ class ActbClient:
         # merge the default args with the kwargs
         res = requests.put('{0}/initialize/{1}'.format(self.url, self.simId), data=data)
         if res:
-            return res.json()
+            return res.json()['payload']
         else:
-            result = {"status": "error", "message": "unable to submit simulation"}
+            result = {"status": "error", "message": "unable to submit simulation: '{}'".format(res.reason)}
             raise Exception(result)
 
     def advance(self, control_u={}):
@@ -278,7 +278,7 @@ class ActbClient:
         if self.metamodel is not None:
             return self.step_metamodel(control_u)
         else:
-            return requests.post('{0}/advance/{1}'.format(self.url, self.simId), data=control_u).json()
+            return requests.post('{0}/advance/{1}'.format(self.url, self.simId), data=control_u).json()['payload']
 
     def kpis(self):
         """Return the KPIs of the testcase.
@@ -289,7 +289,7 @@ class ActbClient:
         if self.metamodel is not None:
             return self.get_metamodel_kpis()
         else:
-            return requests.get('{0}/kpi/{1}'.format(self.url, self.simId)).json()
+            return requests.get('{0}/kpi/{1}'.format(self.url, self.simId)).json()['payload']
 
     def results(self, data=None):
         """Return the results of the simulation.
@@ -298,7 +298,7 @@ class ActbClient:
         if self.metamodel is not None:
             return self.mresults
         else:
-            return requests.put('{0}/results/{1}'.format(self.url, self.simId), data=data).json()
+            return requests.put('{0}/results/{1}'.format(self.url, self.simId), data=data).json()['payload']
 
     def get_testcases(self):
         """Lists available testcases
@@ -306,7 +306,7 @@ class ActbClient:
         if self.metamodel is not None:
             return None
         else:
-            return requests.get('{0}/testcases'.format(self.url))
+            return requests.get('{0}/testcases'.format(self.url))['payload']
 
     def select(self, testcase):
         """Selects a testcase
@@ -316,6 +316,7 @@ class ActbClient:
 
         self.testcase = testcase
         self.simId = requests.post('{0}/testcases/{1}/select'.format(self.url, testcase)).json()['testid']
+
         if os.path.isfile(self.jsonpath):
             with open(self.jsonpath, 'r') as data_file:
                 data = json.load(data_file)
@@ -329,25 +330,35 @@ class ActbClient:
         with open(self.jsonpath, 'w') as data_file:
             json.dump(data, data_file)
 
-    def get_forecasts(self):
+    def get_forecasts(self, horizon, interval, point_names):
         """Request a forecast
+
+        Parameters:
+            horizon: int or float
+                Forecast horizon in seconds.
+            interval: int or float
+                Forecast interval in seconds.
+            point_names : list of str
+                List of forecast point names for which to get data.
+
         Returns:
-            Forecast at the current timestep, using the default or customized horizon and interval
+            Forecast at the current timestep, using the input horizon and interval
         """
         if self.metamodel is not None:
             return self.get_metamodel_forecast()
         else:
-            return requests.get('{0}/forecast/{1}'.format(self.url, self.simId)).json()
+            data = {'point_names': point_names, 'horizon' : horizon, 'interval' : interval}
+            return requests.put('{0}/forecast/{1}'.format(self.url, self.simId), data=data).json()['payload']
 
     def get_forecast_parameters(self):
-        """Get the current forecast parameters
+        """Get the forecast point names and metadata
         Returns:
-            Current forecast horizon and interval
+            Boundary condition forecast available point names and metadata.
         """
         if self.metamodel is not None:
             return {'horizon' : self.horizon, 'interval' : self.mconfig['step']}
         else:
-            return requests.get('{0}/forecast_parameters/{1}'.format(self.url, self.simId)).json()
+            return requests.get('{0}/forecast_points/{1}'.format(self.url, self.simId)).json()['payload']
 
     def set_forecast_parameters(self, horizon, interval):
         """Set new forecast parameters
@@ -368,7 +379,7 @@ class ActbClient:
             print("Get Scenario method not available when using the metamodel.")
             return None
         else:
-            return requests.get('{0}/scenario/{1}'.format(self.url, self.simId)).json()
+            return requests.get('{0}/scenario/{1}'.format(self.url, self.simId)).json()['payload']
 
     def set_scenario(self, elec_pricing):
         if self.metamodel is not None:

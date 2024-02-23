@@ -64,6 +64,9 @@ stop_jm:
 	python sleep10.py
 
 compile_testcase_model:
+# ACTB ########################################################################
+	python3 ../../../spawn-tools/generate_spawndata.py ${TESTCASE}
+###############################################################################
 	make run_jm
 	make copy_to_jm ARGS=parsing
 	make copy_to_jm ARGS=data

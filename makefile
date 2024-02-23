@@ -34,6 +34,6 @@ stop:
 	docker-compose down
 
 compile_testcase:
-	(cd testing && make compile_testcase_model TESTCASE=${TESTCASE})
+	(cd boptest-service/boptest/testing && make compile_testcase_model TESTCASE=${TESTCASE})
 
 .PHONY: build run run-detached remove-image stop provision
