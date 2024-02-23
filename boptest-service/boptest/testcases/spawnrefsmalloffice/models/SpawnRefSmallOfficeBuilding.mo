@@ -1122,11 +1122,11 @@ end controller;
 
   inner Buildings.ThermalZones.EnergyPlus.Building building(
     idfName=Modelica.Utilities.Files.loadResource(
-        "/SpawnResources/spawnrefsmalloffice/RefBldgSmallOfficeNew2004_v2.idf"),
+        "Resources/RefBldgSmallOfficeNew2004_v2.idf"),
     weaName=Modelica.Utilities.Files.loadResource(
-        "/SpawnResources/spawnrefsmalloffice/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"),
+        "Resources/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"),
     epwName=Modelica.Utilities.Files.loadResource(
-        "/SpawnResources/spawnrefsmalloffice/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"),
+        "Resources/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"),
     computeWetBulbTemperature=false)
     annotation (Placement(transformation(extent={{-322,72},{-302,92}})));
 

@@ -86,6 +86,32 @@ model wrapped "Wrapped model"
 	Modelica.Blocks.Interfaces.RealOutput senFanPow_y(unit="W") = mod.senFanPow.y "Core Fan Power demand";
 	Modelica.Blocks.Interfaces.RealOutput senTemOA_y(unit="K") = mod.senTemOA.y "OA Temperature";
 	Modelica.Blocks.Interfaces.RealOutput senPpmCore_y(unit="ppm") = mod.senPpmCore.y "Core CO2 ppm";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaPer1_y(unit="1") = mod.PSZACcontroller.oveHeaPer1.y "Perimeter zone 1 heating coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaStpPer2_y(unit="K") = mod.PSZACcontroller.oveHeaStpPer2.y "Perimeter zone 2 heating setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaStpPer3_y(unit="K") = mod.PSZACcontroller.oveHeaStpPer3.y "Perimeter zone 3 heating setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaStpPer1_y(unit="K") = mod.PSZACcontroller.oveHeaStpPer1.y "Perimeter zone 1 heating setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaPer2_y(unit="1") = mod.PSZACcontroller.oveHeaPer2.y "Perimeter zone 2 heating coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaStpPer4_y(unit="K") = mod.PSZACcontroller.oveHeaStpPer4.y "Perimeter zone 4 heating setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveDemandLimitLevel_y(unit="1") = mod.PSZACcontroller.oveDemandLimitLevel.y "Demand limit level";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooCor_y(unit="1") = mod.PSZACcontroller.oveCooCor.y "Core zone cooling coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaCor_y(unit="1") = mod.PSZACcontroller.oveHeaCor.y "Core zone heating coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveDamP1_y(unit="m3/s") = mod.PSZACcontroller.oveDamP1.y "Perimeter zone 1 damper override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveDamP3_y(unit="m3/s") = mod.PSZACcontroller.oveDamP3.y "Perimeter zone 3 damper override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveDamP2_y(unit="m3/s") = mod.PSZACcontroller.oveDamP2.y "Perimeter zone 2 damper override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveDamP4_y(unit="m3/s") = mod.PSZACcontroller.oveDamP4.y "Perimeter zone 4 damper override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooStpPer4_y(unit="K") = mod.PSZACcontroller.oveCooStpPer4.y "Perimeter zone 4 cooling setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooStpPer3_y(unit="K") = mod.PSZACcontroller.oveCooStpPer3.y "Perimeter zone 3 cooling setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooStpPer2_y(unit="K") = mod.PSZACcontroller.oveCooStpPer2.y "Perimeter zone 2 cooling setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooStpPer1_y(unit="K") = mod.PSZACcontroller.oveCooStpPer1.y "Perimeter zone 1 cooling setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooStpCor_y(unit="K") = mod.PSZACcontroller.oveCooStpCor.y "Core zone cooling setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaStpCor_y(unit="K") = mod.PSZACcontroller.oveHeaStpCor.y "Core zone heating setpoint override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveDamCor_y(unit="m3/s") = mod.PSZACcontroller.oveDamCor.y "Core zone damper override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaPer4_y(unit="1") = mod.PSZACcontroller.oveHeaPer4.y "Perimeter zone 1 heating coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooPer4_y(unit="1") = mod.PSZACcontroller.oveCooPer4.y "Perimeter zone 4 cooling coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooPer3_y(unit="1") = mod.PSZACcontroller.oveCooPer3.y "Perimeter zone 3 cooling coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooPer2_y(unit="1") = mod.PSZACcontroller.oveCooPer2.y "Perimeter zone 2 cooling coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveCooPer1_y(unit="1") = mod.PSZACcontroller.oveCooPer1.y "Perimeter zone 1 cooling coil override";
+	Modelica.Blocks.Interfaces.RealOutput PSZACcontroller_oveHeaPer3_y(unit="1") = mod.PSZACcontroller.oveHeaPer3.y "Perimeter zone 3 heating coil override";
 	// Original model
 	SpawnRefSmallOfficeBuilding mod(
 		PSZACcontroller.oveHeaPer1(uExt(y=PSZACcontroller_oveHeaPer1_u),activate(y=PSZACcontroller_oveHeaPer1_activate)),
