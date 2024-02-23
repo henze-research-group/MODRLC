@@ -11,7 +11,7 @@ class FromEplus():
 
     def __init__(self,
                  resources_dir,
-                 testcase,
+                 excluded_resources_dir,
                  start_year="2017",
                  num_years = 3,
                  period=3600,
@@ -22,6 +22,8 @@ class FromEplus():
         ----------
         resources_dir: string
             path to test case Resources directory
+        excluded_resources_dir: string
+            path to test case ExcludedResources directory
         start_time: string, default is "20170101 00:00:00"
             Pandas date-time indicating the starting
             time of the data frame.
@@ -33,11 +35,11 @@ class FromEplus():
 
         '''
         self.debug = debug
-        self.testcase = testcase
 
         self.start_year = start_year
         self.num_years = num_years
-        self.resources_dir = os.path.join(resources_dir, testcase)
+        self.resources_dir = resources_dir
+        self.excluded_resources_dir = excluded_resources_dir
         self.period = period
 
         # search for weather file and IDF
@@ -140,7 +142,7 @@ class FromEplus():
 
 
         dataframe.to_csv(os.path.join(self.resources_dir, 'dataFromModel.csv'), index=False)
-        extrasdataframe.to_csv(os.path.join(self.resources_dir, 'extras.csv'), index=False)
+        extrasdataframe.to_csv(os.path.join(self.excluded_resources_dir, 'extras.csv'), index=False)
 
     def generateSetpoints(self):
         setpointsDataframe = pd.DataFrame()

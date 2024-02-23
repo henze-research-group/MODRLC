@@ -66,7 +66,6 @@ stop_jm:
 compile_testcase_model:
 # ACTB ########################################################################
 	python3 ../../../spawn-tools/generate_spawndata.py ${TESTCASE}
-	(cd ../testcases/SpawnResources/${TESTCASE}/ && cp dataFromModel.csv emissions.csv prices.csv weather.csv ../../${TESTCASE}/models/Resources/)
 ###############################################################################
 	make run_jm
 	make copy_to_jm ARGS=parsing
