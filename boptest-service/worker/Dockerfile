@@ -6,12 +6,12 @@ ENV HOME /home/boptest
 WORKDIR /
 
 RUN apt-get update -y && apt-get install -y \
-    ca-certificates wget curl libglu1 libgfortran4 libjpeg8 libfreetype6 libxi6 libdbus-glib-1-2 libfontconfig1 libsm6 gdebi-core \
+    ca-certificates wget curl libglu1 libgfortran4 libjpeg8 libfreetype6 libtinfo5 libxi6 libdbus-glib-1-2 libfontconfig1 libsm6 gdebi-core \
     && apt-get install -y git
 
 # Install commands for Spawn
-ENV SPAWN_VERSION=0.3.0-8d93151657
-RUN wget https://spawn.s3.amazonaws.com/custom/Spawn-$SPAWN_VERSION-Linux.tar.gz \
+ENV SPAWN_VERSION=0.2.0-d7f1e095f3
+RUN wget https://spawn.s3.amazonaws.com/builds/Spawn-$SPAWN_VERSION-Linux.tar.gz \
     && tar -xzf Spawn-$SPAWN_VERSION-Linux.tar.gz \
     && ln -s /Spawn-$SPAWN_VERSION-Linux/bin/spawn-$SPAWN_VERSION /usr/local/bin/
 
